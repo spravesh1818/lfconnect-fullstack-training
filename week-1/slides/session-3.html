@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Class 3 - JavaScript to deployment</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 1 - Session 3</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 3: JavaScript to deployment</h1>
+        <p>Part 1: Functions and practical JavaScript | Part 2: Git, GitHub, and GitHub Pages</p>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 1</p>
+        <h1>JavaScript deepening</h1>
+        <p>Move from syntax knowledge to writing small, testable UI behavior with functions and arrays.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Bridge from session 2</h2>
+        <ul>
+            <li>You already know variables, conditions, loops, and basic DOM updates</li>
+            <li>Now we focus on writing reusable logic with <strong>functions</strong></li>
+            <li>Then we connect that logic to user actions and page rendering</li>
+            <li>Final goal this class: publish a simple static app publicly</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Function fundamentals</h2>
+        <ul>
+            <li>Functions package behavior with a name, inputs (parameters), and output (return value)</li>
+            <li>Prefer small functions with one clear responsibility</li>
+            <li>Use <code>return</code> when you want to pass data back to the caller</li>
+            <li>Functions without explicit return give <code>undefined</code></li>
+        </ul>
+        <pre>function addTax(price, rate) {
+  return price + price * rate;
+}</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Function styles you will see</h2>
+        <ul>
+            <li><strong>Declaration</strong>: <code>function greet(name) { ... }</code></li>
+            <li><strong>Expression</strong>: <code>const greet = function(name) { ... };</code></li>
+            <li><strong>Arrow</strong>: <code>const greet = (name) =&gt; ...;</code></li>
+            <li>Pick one style per file for consistency; arrow + const is common in modern frontend code</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Pure functions and side effects</h2>
+        <ul>
+            <li><strong>Pure</strong>: same input gives same output, does not mutate outside state</li>
+            <li><strong>Side effect</strong>: touching DOM, console, network, storage, timers, globals</li>
+            <li>Good pattern: compute with pure functions, then do one render side effect</li>
+        </ul>
+        <pre>const total = calculateTotal(items); // pure
+renderTotal(total);                  // side effect</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Scope and closures</h2>
+        <ul>
+            <li>Variables declared inside a function are local to that function</li>
+            <li><code>let</code>/<code>const</code> are block-scoped; <code>var</code> is function-scoped legacy</li>
+            <li>A closure happens when an inner function keeps access to outer variables</li>
+            <li>Closures are useful for counters, factories, and event handlers</li>
+        </ul>
+        <pre>function makeCounter() {
+  let count = 0;
+  return () =&gt; ++count;
+}</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Array methods for practical work</h2>
+        <ul>
+            <li><code>forEach</code> for side effects like rendering logs</li>
+            <li><code>map</code> transforms each item to a new array</li>
+            <li><code>filter</code> keeps items matching a condition</li>
+            <li><code>find</code> returns the first matching item (or <code>undefined</code>)</li>
+        </ul>
+        <pre>const activeNames = users
+  .filter(user =&gt; user.active)
+  .map(user =&gt; user.name);</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Mini app flow: input -&gt; function -&gt; render</h2>
+        <ol>
+            <li>Read input value from a form control</li>
+            <li>Pass value into one or more functions</li>
+            <li>Get result back and update output text in DOM</li>
+            <li>Repeat this flow on each click or submit event</li>
+        </ol>
+        <pre>button.addEventListener("click", () =&gt; {
+  const value = Number(input.value);
+  const result = calculate(value);
+  output.textContent = String(result);
+});</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Common beginner mistakes to catch early</h2>
+        <ul>
+            <li>Forgetting <code>return</code> in a function expected to produce a value</li>
+            <li>Mutating original arrays when you intended to create a new array</li>
+            <li>Using <code>querySelector</code> with the wrong selector (null errors)</li>
+            <li>Running script before DOM exists (place script at end of body or use <code>defer</code>)</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Quiz 1: JavaScript functions and arrays</h1>
+        <p class="quiz-hint">5 questions. Pick an answer, then use arrow keys to go to the next question.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 5</h2>
+        <p class="question">What does <code>return</code> do inside a function?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true"
+                data-explanation="return sends a value back and exits the function call.">Sends a value back to the caller</button>
+            <button type="button" data-correct="false"
+                data-explanation="Logging is a side effect and does not return a value by itself.">Prints to console automatically</button>
+            <button type="button" data-correct="false"
+                data-explanation="return does not create a global variable.">Creates a global variable</button>
+            <button type="button" data-correct="false"
+                data-explanation="Only event listeners react to clicks; return is language syntax.">Triggers button click handlers</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 5</h2>
+        <p class="question">Which method is best when you want a new array with transformed values?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="forEach is commonly used for side effects, not creating transformed arrays.">forEach</button>
+            <button type="button" data-correct="true"
+                data-explanation="map returns a new array where each item is transformed.">map</button>
+            <button type="button" data-correct="false"
+                data-explanation="find returns one item, not a full transformed array.">find</button>
+            <button type="button" data-correct="false"
+                data-explanation="querySelector is a DOM API, not an array transformation method.">querySelector</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 5</h2>
+        <p class="question">A closure is best described as:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="That describes a syntax error, not closure behavior.">A function with invalid braces</button>
+            <button type="button" data-correct="true"
+                data-explanation="Closures preserve access to variables from outer lexical scope.">A function that remembers variables from outer scope</button>
+            <button type="button" data-correct="false"
+                data-explanation="fetch handles network requests, unrelated to closure definition.">A network request helper</button>
+            <button type="button" data-correct="false"
+                data-explanation="Arrow function is one syntax; closure is a runtime behavior.">An arrow function only</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 5</h2>
+        <p class="question">In the flow input -> function -> render, what should usually happen last?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="You cannot render before computing a result.">Update DOM before reading input</button>
+            <button type="button" data-correct="false"
+                data-explanation="You generally need computed result before logging final output.">Skip the function and only log input</button>
+            <button type="button" data-correct="true"
+                data-explanation="Render should happen after computation so UI reflects result.">Update DOM with computed result</button>
+            <button type="button" data-correct="false"
+                data-explanation="Commit/push are Git tasks, unrelated to immediate UI flow.">Run git push</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 5</h2>
+        <p class="question">Which line correctly adds a click listener to a button element stored in <code>btn</code>?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="addEventListener requires an event name and callback function.">btn.addEventListener()</button>
+            <button type="button" data-correct="true"
+                data-explanation="This is the standard event subscription pattern.">btn.addEventListener("click", () =&gt; { ... })</button>
+            <button type="button" data-correct="false"
+                data-explanation="onclick can work, but this line is assignment text not callable pattern as shown.">btn.onclick("click")</button>
+            <button type="button" data-correct="false"
+                data-explanation="querySelector selects elements; it does not attach listeners on its own.">btn.querySelector("click")</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 2</p>
+        <h1>Git, GitHub, and deployment</h1>
+        <p>Track changes, collaborate, and publish your static app publicly with GitHub Pages.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Why version control?</h2>
+        <ul>
+            <li><strong>Git</strong> stores project history as commits</li>
+            <li>You can safely experiment and roll back to known good states</li>
+            <li>Core words: repository, commit, branch, remote, origin</li>
+            <li>GitHub hosts your remote repository and adds collaboration features</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Local Git workflow (minimum commands)</h2>
+        <pre>git init
+git status
+git add .
+git commit -m "Add feature"
+git log --oneline</pre>
+        <ul>
+            <li>Commit often with meaningful messages (what/why)</li>
+            <li>Use <code>git status</code> before and after every commit</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Connect to GitHub and push</h2>
+        <pre>git remote add origin https://github.com/&lt;username&gt;/&lt;repo&gt;.git
+git branch -M main
+git push -u origin main</pre>
+        <ul>
+            <li>Create a new repository on GitHub first</li>
+            <li>After first push, future pushes are usually just <code>git push</code></li>
+            <li>Keep a clear <code>README.md</code> with project purpose and run notes</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>GitHub Pages for static sites</h2>
+        <ul>
+            <li>GitHub Pages hosts static files: HTML, CSS, JavaScript, images</li>
+            <li>For this class: deploy from <strong>main branch root</strong></li>
+            <li>Your app needs an <code>index.html</code> at repository root</li>
+            <li>URL format: <code>https://username.github.io/repository-name/</code></li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Deployment checklist (root on main)</h2>
+        <ol>
+            <li>Ensure root has <code>index.html</code> and linked assets</li>
+            <li>Commit and push latest code to <code>main</code></li>
+            <li>GitHub repo -&gt; Settings -&gt; Pages -&gt; Deploy from branch</li>
+            <li>Select branch <code>main</code> and folder <code>/ (root)</code>, then Save</li>
+            <li>Wait for publish message and open generated URL</li>
+        </ol>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Common deployment issues and fixes</h2>
+        <ul>
+            <li><strong>404 page</strong>: verify repository name in URL and wait 1-2 minutes for publish</li>
+            <li><strong>Blank page</strong>: open browser DevTools console for JS errors</li>
+            <li><strong>Missing styles/images</strong>: check relative paths and file name casing</li>
+            <li><strong>Old content</strong>: hard refresh browser and confirm latest commit is on GitHub</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Quiz 2: Git, GitHub, and Pages</h1>
+        <p class="quiz-hint">5 questions. Pick an answer, then use arrow keys to go to the next question.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 5</h2>
+        <p class="question">What is the best description of a Git commit?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true"
+                data-explanation="A commit records a snapshot plus metadata and message.">A saved snapshot of tracked changes with a message</button>
+            <button type="button" data-correct="false"
+                data-explanation="A branch is a pointer to commits, not a commit itself.">A new branch on GitHub</button>
+            <button type="button" data-correct="false"
+                data-explanation="A pull request is a collaboration review feature, not local snapshot.">A review request between repositories</button>
+            <button type="button" data-correct="false"
+                data-explanation="Repository URL is remote location metadata, not commit object.">The URL of your repository</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 5</h2>
+        <p class="question">Which command sends your local commits to GitHub?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="git add stages changes; it does not send data to remote.">git add .</button>
+            <button type="button" data-correct="false"
+                data-explanation="git status shows state, no remote update.">git status</button>
+            <button type="button" data-correct="true"
+                data-explanation="git push updates the remote branch with your local commits.">git push</button>
+            <button type="button" data-correct="false"
+                data-explanation="git log reads history and does not publish changes.">git log</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 5</h2>
+        <p class="question">For this class setup, GitHub Pages should deploy from:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true"
+                data-explanation="We use main branch root for the beginner-friendly flow in this session.">main branch, / (root) folder</button>
+            <button type="button" data-correct="false"
+                data-explanation="That can work in other setups but is not this class default.">main branch, /docs folder only</button>
+            <button type="button" data-correct="false"
+                data-explanation="Tags do not represent the teaching workflow here.">Latest git tag</button>
+            <button type="button" data-correct="false"
+                data-explanation="Local machine path is not a GitHub Pages source option.">Any local folder on your laptop</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 5</h2>
+        <p class="question">Which file must exist at repository root for a basic static homepage?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="README is useful documentation but not homepage entry file.">README.md</button>
+            <button type="button" data-correct="false"
+                data-explanation="package.json is for Node tooling and dependencies, not static entry.">package.json</button>
+            <button type="button" data-correct="true"
+                data-explanation="GitHub Pages serves index.html as default entry point for static root deployment.">index.html</button>
+            <button type="button" data-correct="false"
+                data-explanation="main.js is a script file and cannot replace HTML entry page.">main.js</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 5</h2>
+        <p class="question">Your deployed page shows old content after pushing new code. What is the best first check?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true"
+                data-explanation="Confirm latest commit is pushed and hard-refresh browser; Pages may also need a short build delay.">Verify latest commit on GitHub and hard refresh</button>
+            <button type="button" data-correct="false"
+                data-explanation="Deleting the repo is unnecessary and destructive.">Delete and recreate the repository</button>
+            <button type="button" data-correct="false"
+                data-explanation="Disabling HTTPS is unrelated to stale content issue.">Disable HTTPS in browser settings</button>
+            <button type="button" data-correct="false"
+                data-explanation="Changing default branch immediately is not the first troubleshooting step.">Rename main to master</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Assignment 1</h2>
+        <p>Open <code>class-3-handson.html</code> and complete Exercises 1-3: build the mini app structure and implement
+            function logic with one array method.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Assignment 2</h2>
+        <p>Complete Exercises 4-5: initialize git, create at least three meaningful commits, and push to your GitHub
+            repository.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Assignment 3</h2>
+        <p>Complete Exercise 6: enable GitHub Pages from <code>main</code> branch root and submit both the repository URL
+            and live Pages URL.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of class</h1>
+        <p>Next: deeper JavaScript + project workflows with branches and pull requests.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!--
+  Class 3 hands-on lab — JavaScript functions to GitHub Pages deployment
+  Companion deck: ../slides/session-3.html
+
+  Goals:
+  1) Build a tiny interactive static app with reusable functions
+  2) Use at least one array method
+  3) Create meaningful git history
+  4) Publish using GitHub Pages (main branch root)
+
+  Estimated time: 75-100 minutes
+-->
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Class 3 hands-on — JS to deployment</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        .practice-shell label,
+        .practice-shell button,
+        .practice-shell input {
+            font: inherit;
+        }
+
+        .practice-shell input {
+            padding: 0.5rem 0.6rem;
+            margin-right: 0.5rem;
+        }
+
+        .practice-shell button {
+            padding: 0.5rem 0.8rem;
+            cursor: pointer;
+        }
+
+        .hint {
+            color: #334155;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Class 3 Lab</strong> -
+        <a href="../slides/session-3.html">Open session deck</a>
+        - Build a mini app, commit history, and deploy to GitHub Pages
+    </div>
+
+    <div class="exercise-instructions" id="ex1">
+        <h2>Exercise 1 - Build app structure (HTML)</h2>
+        <ol>
+            <li>Create a tiny app named <strong>Score Helper</strong> in the practice area below.</li>
+            <li>Keep one numeric input (<code>id="score-input"</code>), one button (<code>id="calc-btn"</code>), and one
+                output paragraph (<code>id="result"</code>).</li>
+            <li>Add a short title and one instruction sentence for users.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> app has title, input, button, and output placeholder visible
+            before JavaScript logic.</div>
+    </div>
+
+    <div class="exercise-instructions" id="ex2">
+        <h2>Exercise 2 - Add reusable functions (JavaScript)</h2>
+        <ol>
+            <li>In the script block, write a pure function
+                <code>gradeFromScore(score)</code> that returns one of: <code>A</code>, <code>B</code>, <code>C</code>,
+                <code>F</code>.
+            </li>
+            <li>Write a second function <code>renderResult(text)</code> that updates <code>#result</code>.</li>
+            <li>Wire button click: read input, convert to number, call both functions, show output.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> clicking button shows grade text for valid scores.</div>
+    </div>
+
+    <div class="exercise-instructions" id="ex3">
+        <h2>Exercise 3 - Use one array method</h2>
+        <ol>
+            <li>Add an array in script, for example:
+                <code>const sampleScores = [55, 68, 72, 88, 93];</code>
+            </li>
+            <li>Use at least one method among <code>map</code>, <code>filter</code>, <code>find</code>, or
+                <code>forEach</code>.
+            </li>
+            <li>Example: create a list of passing scores, or map scores into grade letters.</li>
+            <li>Display that summary below the main result paragraph (<code>id="summary"</code>).</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> UI shows dynamic summary generated from an array method.</div>
+    </div>
+
+    <div class="exercise-instructions" id="ex4">
+        <h2>Exercise 4 - Initialize git and create commit history</h2>
+        <ol>
+            <li>In terminal from <code>week-1</code> folder, run:
+                <code>git init</code>
+            </li>
+            <li>Create a repository history with at least 3 meaningful commits, such as:
+                <ul>
+                    <li><code>feat: add score helper html shell</code></li>
+                    <li><code>feat: add grading functions and click handler</code></li>
+                    <li><code>feat: add array summary output</code></li>
+                </ul>
+            </li>
+            <li>Use <code>git status</code> before each commit to check staged files.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> <code>git log --oneline</code> shows at least 3 clear commits.
+        </div>
+    </div>
+
+    <div class="exercise-instructions" id="ex5">
+        <h2>Exercise 5 - Push to GitHub</h2>
+        <ol>
+            <li>Create a new empty repository on GitHub (do not add README from web if you already have local files).</li>
+            <li>Connect remote and push:
+                <pre>git remote add origin https://github.com/&lt;your-username&gt;/&lt;repo-name&gt;.git
+git branch -M main
+git push -u origin main</pre>
+            </li>
+            <li>Confirm files appear on GitHub, including <code>index.html</code> at repo root.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> GitHub repository contains your project and commit history.
+        </div>
+    </div>
+
+    <div class="exercise-instructions" id="ex6">
+        <h2>Exercise 6 - Deploy with GitHub Pages (main branch root)</h2>
+        <ol>
+            <li>Rename this file to <code>index.html</code> before deploying (or create a root index that links here).</li>
+            <li>On GitHub: <strong>Settings -> Pages -> Build and deployment -> Deploy from a branch</strong>.</li>
+            <li>Select <strong>Branch: main</strong> and <strong>Folder: / (root)</strong>, then Save.</li>
+            <li>Wait for publish message and open:
+                <code>https://&lt;username&gt;.github.io/&lt;repo-name&gt;/</code>
+            </li>
+            <li>Verify app interaction works on the live URL.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> you can share both repository URL and live GitHub Pages URL.
+        </div>
+    </div>
+
+    <section class="practice-shell" aria-labelledby="practice-title">
+        <h1 id="practice-title">Score Helper (Practice App)</h1>
+        <p class="hint">Enter a score from 0 to 100, then click Calculate Grade.</p>
+
+        <label for="score-input">Score:</label>
+        <input id="score-input" type="number" min="0" max="100" value="75" />
+        <button type="button" id="calc-btn">Calculate Grade</button>
+
+        <p id="result" aria-live="polite">Result appears here.</p>
+        <p id="summary" aria-live="polite">Array summary appears here.</p>
+    </section>
+
+    <script>
+        // Exercise starter (replace with your own implementation during class):
+        // const scoreInput = document.querySelector("#score-input");
+        // const calcBtn = document.querySelector("#calc-btn");
+        // const result = document.querySelector("#result");
+        // const summary = document.querySelector("#summary");
+        //
+        // function gradeFromScore(score) {
+        //   if (score >= 90) return "A";
+        //   if (score >= 80) return "B";
+        //   if (score >= 70) return "C";
+        //   return "F";
+        // }
+        //
+        // function renderResult(text) {
+        //   result.textContent = text;
+        // }
+        //
+        // const sampleScores = [55, 68, 72, 88, 93];
+        // const passing = sampleScores.filter(score => score >= 70);
+        // summary.textContent = `Passing scores: ${passing.join(", ")}`;
+        //
+        // calcBtn.addEventListener("click", () => {
+        //   const value = Number(scoreInput.value);
+        //   renderResult(`Grade: ${gradeFromScore(value)}`);
+        // });
+    </script>
+</body>
+
+</html>

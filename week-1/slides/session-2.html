@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Class 2 - Layout and JavaScript intro</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="session-deck-theme.css" />
+
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 1 - Session 2</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 2: Layout deep dive and JavaScript intro</h1>
+        <p>Part 1: Flexbox and CSS Grid | Part 2: JavaScript basics in the browser</p>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 1</p>
+        <h1>Flexbox and CSS Grid</h1>
+        <p>Go from “what the properties mean” to common patterns, then responsive layouts you can maintain.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Bridge from session 1</h2>
+        <ul>
+            <li><strong>Normal flow</strong> is still the default: blocks stack, inline text wraps</li>
+            <li><strong>Flexbox</strong> shines for <strong>one-dimensional</strong> alignment: a row of nav links, a
+                column of stacked cards</li>
+            <li><strong>CSS Grid</strong> shines for <strong>two-dimensional</strong> layouts: columns and rows at once
+                (dashboards, page shells)</li>
+            <li>Most real pages mix flow + flex + grid in different regions</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Flexbox mental model</h2>
+        <ul>
+            <li>A <strong>flex container</strong> is an element with <code>display: flex</code> (or
+                <code>inline-flex</code>)
+            </li>
+            <li>Its <strong>direct children</strong> become flex items (not deeper descendants)</li>
+            <li>Layout is described along two directions: the <strong>main axis</strong> and <strong>cross axis</strong>
+            </li>
+            <li>The main axis follows <code>flex-direction</code> (for example <code>row</code> vs <code>column</code>)
+            </li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Flex container: direction and wrapping</h2>
+        <ul>
+            <li><code>flex-direction</code>: <code>row</code> (default), <code>row-reverse</code>, <code>column</code>,
+                <code>column-reverse</code></li>
+            <li><code>flex-wrap</code>: <code>nowrap</code> (default) keeps one line; <code>wrap</code> moves overflow to
+                new lines</li>
+            <li><code>flex-flow</code> is shorthand for <code>flex-direction</code> + <code>flex-wrap</code></li>
+        </ul>
+        <pre>.toolbar { display: flex; flex-flow: row wrap; gap: 0.5rem; }</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Flex container: distributing space</h2>
+        <ul>
+            <li><code>justify-content</code> — how items sit along the <strong>main axis</strong> (start, end, center,
+                space-between, …)</li>
+            <li><code>align-items</code> — how items align on the <strong>cross axis</strong> per line (stretch, flex-start,
+                center, …)</li>
+            <li><code>align-content</code> — when there are <strong>multiple flex lines</strong>, how those lines pack on
+                the cross axis</li>
+            <li><code>gap</code> — consistent spacing between items (and between lines when wrapped)</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Flex items: grow, shrink, basis</h2>
+        <ul>
+            <li><code>flex-grow</code> — how much of <strong>free space</strong> on the main axis this item should take
+                (default 0)</li>
+            <li><code>flex-shrink</code> — whether the item may shrink when space is tight (default 1)</li>
+            <li><code>flex-basis</code> — starting size before growing/shrinking (often <code>auto</code> or a length)
+            </li>
+            <li>Shorthand <code>flex: 1</code> commonly means “take equal flexible space” (equivalent to
+                <code>1 1 0%</code> in many resets)
+            </li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Flex items: self-alignment and order</h2>
+        <ul>
+            <li><code>align-self</code> overrides <code>align-items</code> for a single item</li>
+            <li><code>order</code> changes <strong>visual</strong> order with integers (default 0)</li>
+            <li>Use <code>order</code> sparingly: it can disagree with tab order and confuse keyboard and screen reader
+                users unless you also fix focus order</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Common Flexbox patterns</h2>
+        <ul>
+            <li><strong>Horizontal nav</strong>: flex row + <code>gap</code> + <code>align-items: center</code></li>
+            <li><strong>Vertically centered hero</strong>: min-height section + flex column + <code>justify-content:
+                    center</code></li>
+            <li><strong>Sticky footer</strong>: <code>body { min-height: 100vh; display: flex; flex-direction: column; }</code>
+                and <code>main { flex: 1; }</code> so the footer sits at the bottom when content is short</li>
+        </ul>
+        <pre>body { min-height: 100vh; display: flex; flex-direction: column; }
+main { flex: 1; }</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>CSS Grid mental model</h2>
+        <ul>
+            <li>A <strong>grid container</strong> defines rows and columns as <strong>tracks</strong></li>
+            <li>Items are placed into <strong>cells</strong> at the intersection of a row and column</li>
+            <li>Unlike flex’s “content-sized” rows, grid can size the <strong>whole track system</strong> up front</li>
+            <li>Grid lines are numbered (and can be named) for placement with <code>grid-column</code> /
+                <code>grid-row</code>
+            </li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Defining the grid</h2>
+        <ul>
+            <li><code>grid-template-columns</code> and <code>grid-template-rows</code> list track sizes</li>
+            <li><code>fr</code> (“fraction”) splits <strong>remaining</strong> space after fixed tracks</li>
+            <li><code>repeat(12, 1fr)</code> or <code>repeat(auto-fit, minmax(240px, 1fr))</code> reduce repetition</li>
+            <li><code>minmax(200px, 1fr)</code> keeps a sensible minimum while still growing</li>
+            <li><code>grid-template-areas</code> gives readable “ASCII art” layouts tied to <code>grid-area</code> on
+                children</li>
+        </ul>
+        <pre>.layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Alignment in Grid</h2>
+        <ul>
+            <li><strong>Item inside its cell</strong>: <code>justify-items</code> / <code>align-items</code> (or
+                <code>place-items</code> shorthand)
+            </li>
+            <li><strong>Whole grid inside the container</strong> when extra room exists: <code>justify-content</code> /
+                <code>align-content</code></li>
+            <li>Single item override: <code>justify-self</code> / <code>align-self</code></li>
+        </ul>
+        <p>Same vocabulary as Flexbox (start/end/center), but applied to grid tracks and cells.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Flexbox vs Grid (when to reach for which)</h2>
+        <div class="comparison">
+            <article>
+                <h3>Flexbox</h3>
+                <ul>
+                    <li>Toolbars, chip lists, form rows, “distribute these siblings in one direction”</li>
+                    <li>Great when the number of items is unknown or content-driven</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Grid</h3>
+                <ul>
+                    <li>Page shells, card galleries with strict columns, marketing sections with overlapping layers</li>
+                    <li>Great when you think in rows <em>and</em> columns together</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Responsive layout recap</h2>
+        <ul>
+            <li><strong>Flex wrap</strong>: <code>flex-wrap: wrap</code> + sensible basis widths lets nav and chips
+                reflow</li>
+            <li><strong>Responsive grid</strong>: <code>repeat(auto-fit, minmax(...))</code> builds as many columns as fit
+            </li>
+            <li><strong>Media queries</strong>: change <code>grid-template-columns</code>, gaps, or font sizes at
+                breakpoints</li>
+            <li>Combine with fluid widths and <code>rem</code> from session 1 so the page scales across devices</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Quiz 1: Flexbox and CSS Grid</h1>
+        <p class="quiz-hint">6 questions. Pick an answer, then use arrow keys to go to the next question.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 6</h2>
+        <p class="question">In a default row-direction flex container, <code>justify-content</code> controls alignment
+            along which axis?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true"
+                data-explanation="justify-content distributes items along the main axis; for row, that is horizontal.">The
+                main axis</button>
+            <button type="button" data-correct="false"
+                data-explanation="Cross-axis alignment on the container is align-items / align-content.">The cross axis
+                only</button>
+            <button type="button" data-correct="false"
+                data-explanation="Z-order is stacking; use z-index and positioning contexts, not justify-content.">The
+                z-depth axis</button>
+            <button type="button" data-correct="false"
+                data-explanation="Block flow is separate from flex main/cross axes inside a flex container.">The block
+                formatting context only</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 6</h2>
+        <p class="question">In row flex, which property aligns all items along the cross axis (for example vertical
+            centering in a horizontal bar)?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="justify-content works on the main axis, not cross-axis per-item alignment.">justify-content</button>
+            <button type="button" data-correct="true"
+                data-explanation="align-items controls cross-axis alignment for items in each flex line.">align-items</button>
+            <button type="button" data-correct="false"
+                data-explanation="flex-basis sets a starting main size, not cross-axis alignment.">flex-basis</button>
+            <button type="button" data-correct="false"
+                data-explanation="grid-template-rows belongs to CSS Grid, not flex cross alignment.">grid-template-rows</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 6</h2>
+        <p class="question">What does <code>flex-wrap: wrap</code> do when items do not fit on one line?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="Items can still shrink depending on flex-shrink, but wrap specifically creates new lines.">It
+                hides overflow</button>
+            <button type="button" data-correct="true"
+                data-explanation="Wrapping moves overflowing items onto additional flex lines.">It moves extra items to a
+                new line</button>
+            <button type="button" data-correct="false"
+                data-explanation="Changing main axis direction is flex-direction’s job.">It reverses the main axis</button>
+            <button type="button" data-correct="false"
+                data-explanation="Grid placement is unrelated to flex-wrap.">It converts the container to Grid</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 6</h2>
+        <p class="question">In CSS Grid, the <code>fr</code> unit mainly represents:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="rem is relative to root font size; fr is grid-specific.">Root font size relative
+                units</button>
+            <button type="button" data-correct="true"
+                data-explanation="fr splits leftover space in the grid container among tracks after min/max rules.">A
+                fraction of available grid space along that axis</button>
+            <button type="button" data-correct="false"
+                data-explanation="Fractional units do not measure frame rate.">Frames per second for animation</button>
+            <button type="button" data-correct="false"
+                data-explanation="Border width uses px, rem, etc.; fr is for tracks.">Border width only</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 6</h2>
+        <p class="question">Which declaration creates a responsive column layout that automatically fits as many
+            ~260px-wide columns as the viewport allows?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="float is legacy for this use case and does not auto-fit columns this way.">display:
+                float</button>
+            <button type="button" data-correct="true"
+                data-explanation="auto-fit with minmax is a common responsive grid recipe.">grid-template-columns:
+                repeat(auto-fit, minmax(260px, 1fr))</button>
+            <button type="button" data-correct="false"
+                data-explanation="flex-direction chooses main axis direction; it does not define grid columns.">flex-direction:
+                column</button>
+            <button type="button" data-correct="false"
+                data-explanation="position sticky pins an element while scrolling; it is not a full grid template.">position:
+                sticky</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 6</h2>
+        <p class="question">You are building a dense admin dashboard with rows and columns of panels. What is usually the
+            best primary layout tool?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="Tables should represent tabular data, not general app chrome.">HTML table layout for
+                the whole page</button>
+            <button type="button" data-correct="true"
+                data-explanation="Grid models 2D tracks explicitly, which matches dashboards.">CSS Grid</button>
+            <button type="button" data-correct="false"
+                data-explanation="Flexbox is great for 1D toolbars but less ideal as the sole 2D system for dense grids.">Flexbox
+                only, never Grid</button>
+            <button type="button" data-correct="false"
+                data-explanation="Absolute positioning everywhere is brittle and hard to maintain.">position: absolute on
+                every panel</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 2</p>
+        <h1>JavaScript basics</h1>
+        <p>Add behavior in the browser: react to input, update the page, and prepare for deeper programming topics.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>What is JavaScript here?</h2>
+        <ul>
+            <li><strong>HTML</strong> structures content; <strong>CSS</strong> presents it; <strong>JavaScript</strong>
+                can change structure, style, and fetch data</li>
+            <li>In this course track, we start with JS that runs in the <strong>browser</strong> alongside your pages
+            </li>
+            <li>Later you will also run JavaScript on servers (Node.js) — same language, different environment APIs</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>How scripts attach to a page</h2>
+        <ul>
+            <li><strong>External</strong> (common): <code>&lt;script src="app.js"&gt;&lt;/script&gt;</code> — cached,
+                testable, reusable</li>
+            <li><strong>Inline</strong> at the bottom of <code>body</code> or with <code>defer</code>: quick demos; keep
+                larger code in files</li>
+            <li><code>defer</code> downloads early but runs after HTML parse (good for many apps); <code>async</code> runs
+                when ready (order not guaranteed)</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Developer tools and the console</h2>
+        <ul>
+            <li>Open DevTools in your browser (often F12 or Cmd+Opt+I) and use the <strong>Console</strong> tab</li>
+            <li><code>console.log(value)</code> prints values while you learn and debug</li>
+            <li>Red error messages point to file and line — read them slowly; they are your fastest teacher</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Variables: let and const</h2>
+        <ul>
+            <li><code>let</code> declares a block-scoped variable you <strong>may reassign</strong></li>
+            <li><code>const</code> declares a block-scoped binding that <strong>cannot be reassigned</strong> (object
+                properties can still change)</li>
+            <li>Prefer <code>const</code> by default, then use <code>let</code> when you need reassignment</li>
+            <li><code>var</code> exists in older code (function scope, hoisting quirks) — avoid in new projects</li>
+        </ul>
+        <pre>const title = "Hello";
+let count = 0;
+count += 1;</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Types and typeof</h2>
+        <ul>
+            <li>Common primitives: <code>string</code>, <code>number</code>, <code>boolean</code>,
+                <code>undefined</code>, <code>bigint</code>, <code>symbol</code></li>
+            <li><code>null</code> represents an intentional empty value (historically <code>typeof null === "object"</code>
+                — a JS quirk)</li>
+            <li><code>typeof x</code> returns a string describing the primitive type in many cases</li>
+        </ul>
+        <pre>typeof "hi";   // "string"
+typeof 42;     // "number"
+typeof true;   // "boolean"</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Operators and type conversion</h2>
+        <ul>
+            <li><strong>Arithmetic</strong>: <code>+</code> <code>-</code> <code>*</code> <code>/</code> <code>%</code>
+                <code>**</code> — e.g. <code>2 ** 10</code> is 1024</li>
+            <li><code>+</code> also <strong>concatenates strings</strong>; mixing types can surprise you:
+                <code>"5" + 1</code> → <code>"51"</code>, but <code>"5" - 1</code> → <code>4</code> (subtraction coerces
+                toward number)</li>
+            <li><strong>Comparisons</strong>: prefer <code>===</code> and <code>!==</code> (value <em>and</em> type).
+                Loose <code>==</code> / <code>!=</code> allow coercion — avoid until you fully understand the rules</li>
+            <li><strong>Logical</strong>: <code>&amp;&amp;</code> <code>||</code> <code>!</code>; <code>&amp;&amp;</code>
+                and <code>||</code> short-circuit (skip the right side when the result is already decided)</li>
+            <li><strong>Explicit conversion</strong> (clear “casting”): <code>Number("12")</code>,
+                <code>parseInt("10", 10)</code>, <code>parseFloat("3.14")</code>, <code>String(42)</code>, template
+                literals for strings, <code>Boolean(value)</code> (next slide: truthy/falsy in <code>if</code>)</li>
+            <li>Unary <code>+value</code> coerces to number (common in minified code); prefer <code>Number(value)</code>
+                for readability while learning</li>
+        </ul>
+        <p>Default habit: <strong>strict equality</strong> and <strong>explicit conversions</strong> when types might
+            mix.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Control flow: decisions</h2>
+        <ul>
+            <li><code>if</code> / <code>else if</code> / <code>else</code> choose branches based on conditions</li>
+            <li>Comparisons: <code>===</code> and <code>!==</code> test value <strong>and</strong> type (prefer these)</li>
+            <li>Values can be “truthy” or “falsy” in boolean contexts (for example empty string is falsy) — use explicit
+                comparisons when unsure</li>
+        </ul>
+        <pre>if (count &gt; 5) {
+  console.log("many");
+} else {
+  console.log("few");
+}</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Loops</h2>
+        <ul>
+            <li><code>for</code> loops are explicit: initializer, condition, afterthought</li>
+            <li><code>while</code> repeats while a condition stays true</li>
+            <li>Use clear exit conditions to avoid infinite loops while learning</li>
+        </ul>
+        <pre>for (let i = 0; i &lt; 3; i += 1) {
+  console.log(i);
+}
+
+let n = 0;
+while (n &lt; 3) {
+  n += 1;
+}</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Functions</h2>
+        <ul>
+            <li><strong>Declaration</strong>: <code>function add(a, b) { return a + b; }</code> — hoisted in its scope</li>
+            <li><strong>Arrow</strong>: <code>const add = (a, b) =&gt; a + b;</code> — concise; <code>this</code> behaves
+                differently (we will revisit with objects and classes)</li>
+            <li>Functions are values: pass them to <code>addEventListener</code>, array methods, and timers</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Arrays and objects (light touch)</h2>
+        <ul>
+            <li><strong>Array</strong>: ordered list — <code>[1, 2, 3]</code>, length via <code>.length</code>, access with
+                <code>items[0]</code>
+            </li>
+            <li><strong>Object</strong>: keyed bag of properties — <code>{ name: "Ada" }</code>, read with
+                <code>dot</code> or <code>["bracket"]</code> keys</li>
+            <li>Later: methods like <code>map</code>/<code>filter</code>, destructuring, and JSON</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>DOM bridge: query and react</h2>
+        <p>The browser exposes the page as the <strong>Document Object Model</strong>. Your HTML becomes a tree of
+            nodes you can read and update.</p>
+        <ul>
+            <li><code>document.querySelector(".card")</code> returns the first match (or <code>null</code>)</li>
+            <li><code>element.textContent = "Updated";</code> changes visible text inside that element</li>
+            <li><code>button.addEventListener("click", () =&gt; { ... });</code> runs code when the user clicks</li>
+        </ul>
+        <pre>const btn = document.querySelector("#go");
+btn.addEventListener("click", () =&gt; {
+  document.querySelector("#status").textContent = "Clicked!";
+});</pre>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Quiz 2: JavaScript basics</h1>
+        <p class="quiz-hint">6 questions. Pick an answer, then use arrow keys to go to the next question.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 6</h2>
+        <p class="question">You have a value that should never be rebound to a different reference. Which keyword fits
+            best?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="var is legacy and not the default choice for new code.">var</button>
+            <button type="button" data-correct="true"
+                data-explanation="const prevents rebinding the identifier; use let when reassignment is required.">const</button>
+            <button type="button" data-correct="false"
+                data-explanation="function declares a function, not a generic immutable binding for any value.">function</button>
+            <button type="button" data-correct="false"
+                data-explanation="class declares a class; the question is about variable bindings.">class</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 6</h2>
+        <p class="question">What does <code>typeof 42</code> evaluate to in JavaScript?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="There is no typeof result named integer in standard JS typeof strings.">"integer"</button>
+            <button type="button" data-correct="true"
+                data-explanation="All IEEE-754 numbers share the typeof string number.">"number"</button>
+            <button type="button" data-correct="false"
+                data-explanation="42 is not a string literal here, so typeof is not string.">"string"</button>
+            <button type="button" data-correct="false"
+                data-explanation="42 is not a boolean.">"boolean"</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 6</h2>
+        <p class="question">A plain <code>&lt;script&gt;</code> in an HTML file you open in Chrome runs where?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="DNS resolves names; it does not execute JS from your page.">Inside DNS servers</button>
+            <button type="button" data-correct="true"
+                data-explanation="Browser-embedded JS uses Web APIs like the DOM.">In the user’s browser</button>
+            <button type="button" data-correct="false"
+                data-explanation="Without a Node server, the script is not magically running on a remote server.">Only on
+                the web server that sent HTML</button>
+            <button type="button" data-correct="false"
+                data-explanation="SQL databases store data; they do not execute your script tag.">Inside the SQL
+                database</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 6</h2>
+        <p class="question">Which API selects the first element matching a CSS selector string?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="document.write exists but is not the modern selection API.">document.write</button>
+            <button type="button" data-correct="true"
+                data-explanation="querySelector returns the first matching element or null.">document.querySelector</button>
+            <button type="button" data-correct="false"
+                data-explanation="getElementById selects by id attribute only, not arbitrary selectors.">document.getElementById</button>
+            <button type="button" data-correct="false"
+                data-explanation="console.log prints; it does not select DOM nodes.">console.log</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 6</h2>
+        <p class="question">What does the expression <code>"3" + 2</code> evaluate to in JavaScript?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="+ with a string starts string concatenation; it does not add 3 and 2 as numbers.">The
+                number 5</button>
+            <button type="button" data-correct="true"
+                data-explanation="The number is coerced to a string, then concatenated: '3' + '2' → '32'.">The string
+                "32"</button>
+            <button type="button" data-correct="false"
+                data-explanation="Subtraction would coerce toward a number; addition with a string prefers concatenation.">The
+                number 32</button>
+            <button type="button" data-correct="false"
+                data-explanation="NaN appears when a value cannot be converted sensibly for that operation; not the case here.">NaN</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 6</h2>
+        <p class="question">Which is a valid arrow function that returns the sum of <code>a</code> and <code>b</code>?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false"
+                data-explanation="Arrow functions use =&gt;, not just =.">const sum = (a, b) = (a + b)</button>
+            <button type="button" data-correct="true"
+                data-explanation="Concise body returns the expression after =&gt;.">const sum = (a, b) =&gt; a + b</button>
+            <button type="button" data-correct="false"
+                data-explanation="Missing arrow and parameters list is invalid for this intent.">const sum = a + b</button>
+            <button type="button" data-correct="false"
+                data-explanation="function arrow is not valid syntax.">function =&gt; (a, b) { a + b }</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Assignment 1</h2>
+        <p>Open <code>class-2-handson.html</code> and complete <strong>Exercises 1–2</strong>: semantic page shell and
+            flex navigation (see numbered steps and “Done when” lists in the file).</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Assignment 2</h2>
+        <p>In the same file, complete <strong>Exercises 3–5</strong>: flex card row, responsive CSS Grid on
+            <code>main</code>, and polish (typography, spacing, <code>box-sizing</code>).
+        </p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Assignment 3</h2>
+        <p>Complete <strong>Exercise 6</strong>: wire the button to update <code>#status</code> with
+            <code>querySelector</code> and <code>addEventListener</code>. Try the optional stretch (counter or theme toggle)
+            if you have time.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of class</h1>
+        <p>Next: deeper DOM, events, and small projects that combine layout + behavior.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>
