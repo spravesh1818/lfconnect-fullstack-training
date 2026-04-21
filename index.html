@@ -6,80 +6,163 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Full Stack Training - Course Home</title>
     <style>
+        :root {
+            --bg: #f5faf7;
+            --surface: #ffffff;
+            --text: #0f2a1c;
+            --text-muted: #4b6356;
+            --border: #d7e7dd;
+            --accent: #1f8f57;
+            --accent-dark: #166a40;
+            --accent-soft: #d9f3e4;
+            --radius: 14px;
+            --shadow: 0 14px 34px rgba(15, 42, 28, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
+            min-height: 100vh;
             font-family: Inter, system-ui, -apple-system, sans-serif;
-            background: linear-gradient(180deg, #f8fafc, #eef2ff);
-            color: #0f172a;
+            color: var(--text);
+            background:
+                radial-gradient(900px 400px at 8% -20%, #d9f3e4, transparent 58%),
+                radial-gradient(700px 320px at 95% 0%, #eef8f2, transparent 58%),
+                var(--bg);
         }
 
         main {
-            max-width: 980px;
+            max-width: 780px;
             margin: 0 auto;
-            padding: 2.5rem 1rem 3rem;
+            padding: 2.6rem 1rem 3rem;
         }
 
-        h1 {
-            margin-bottom: 0.25rem;
+        .shell {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
         }
 
-        .sub {
-            color: #475569;
-            margin-top: 0;
+        .hero {
+            text-align: center;
+            padding: 1.8rem 1.2rem 1.35rem;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, #ffffff, #f7fcf9);
         }
 
-        .grid {
+        .logo-wrap {
+            width: 112px;
+            height: 112px;
+            margin: 0 auto 0.95rem;
+            border-radius: 999px;
+            border: 1px solid #4ea16f;
+            background: linear-gradient(180deg, #2a8f5b, #1f7447);
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1rem;
-            margin-top: 1.25rem;
+            place-items: center;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 16px rgba(19, 70, 44, 0.22);
         }
 
-        .card {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
+        .brand-logo {
+            width: 82px;
+            height: 82px;
+            object-fit: contain;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(1.8rem, 3.2vw, 2.2rem);
+            line-height: 1.1;
+            letter-spacing: 0.01em;
+        }
+
+        .hero p {
+            margin: 0.52rem 0 0;
+            color: var(--text-muted);
+            font-size: 0.98rem;
+        }
+
+        nav {
             padding: 1rem;
         }
 
-        .card h2 {
-            margin-top: 0;
-            font-size: 1.1rem;
+        .week-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.72rem;
         }
 
-        a {
-            color: #0ea5e9;
+        .week-link {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            padding: 0.95rem 1rem;
+            background: #fff;
+            transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
         }
 
-        .muted {
-            color: #64748b;
-            font-size: 0.95rem;
+        .week-link:hover,
+        .week-link:focus-visible {
+            transform: translateY(-1px);
+            border-color: #8fd4aa;
+            background-color: #f3fcf6;
+            outline: none;
+        }
+
+        .week-name {
+            font-weight: 700;
+            margin-bottom: 0.22rem;
+        }
+
+        .week-desc {
+            color: var(--text-muted);
+            font-size: 0.93rem;
+        }
+
+        .foot-note {
+            margin: 0;
+            padding: 0.9rem 1.25rem 1.2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
         }
     </style>
 </head>
 
 <body>
     <main>
-        <h1>Full Stack Training</h1>
-        <p class="sub">Student portal for weekly slides, hands-on labs, and exercises.</p>
+        <section class="shell">
+            <header class="hero">
+                <div class="logo-wrap">
+                    <img class="brand-logo" src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+                </div>
+                <h1>Full Stack Engineering</h1>
+                <p>Student portal for slides, hands-on labs, and exercises.</p>
+            </header>
 
-        <div class="grid">
-            <article class="card">
-                <h2>Week 1</h2>
-                <p class="muted">Web foundations, CSS layouts, JavaScript basics, and deployment.</p>
-                <p><a href="week-1/index.html">Open week 1 materials</a></p>
-            </article>
+            <nav aria-label="Available weeks">
+                <ul class="week-list">
+                    <!-- Add a new week item only when week-x/index.html exists. -->
+                    <li>
+                        <a class="week-link" href="week-1/index.html">
+                            <div class="week-name">Week 1</div>
+                            <div class="week-desc">Web foundations, CSS layouts, JavaScript basics, and deployment.</div>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
 
-            <article class="card">
-                <h2>Week 2</h2>
-                <p class="muted">Placeholder for upcoming content.</p>
-            </article>
-
-            <article class="card">
-                <h2>Week 3+</h2>
-                <p class="muted">Add future weeks using the same structure: slides, handson, exercises.</p>
-            </article>
-        </div>
+            <p class="foot-note">More weeks will appear here as soon as their materials are published.</p>
+        </section>
     </main>
 </body>
 
