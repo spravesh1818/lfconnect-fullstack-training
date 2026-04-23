@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 1 Assignments</title>
+
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            padding: 24px;
+            line-height: 1.6;
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        h1 {
+            max-width: 56rem;
+            margin: 0 auto 1.5rem;
+            padding: 1rem 1.25rem;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 8px;
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+        }
+
+        section {
+            max-width: 56rem;
+            margin: 0 auto 2rem;
+            padding: 1.25rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.6rem;
+            color: #0f172a;
+        }
+
+        a {
+            color: #0369a1;
+        }
+
+        /* ---------- Assignment 2 Styles ---------- */
+        .hero {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .hero img {
+            width: min(100%, 320px);
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        button {
+            font: inherit;
+            padding: 0.5rem 0.8rem;
+            cursor: pointer;
+            transition: 0.2s ease;
+            border: 1px solid #0f172a;
+            border-radius: 6px;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        button:hover {
+            background: #1e293b;
+            transform: translateY(-1px);
+        }
+
+        button:focus-visible,
+        a:focus-visible {
+            outline: 2px solid #7dd3fc;
+            outline-offset: 2px;
+        }
+
+        /* ---------- Assignment 3 Styles ---------- */
+        .carousel {
+            width: 300px;
+            overflow: hidden;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .slides {
+            display: flex;
+            width: 900px;
+            animation: slide 6s infinite;
+        }
+
+        .slides img {
+            width: 300px;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        @keyframes slide {
+            0% {
+                transform: translateX(0);
+            }
+
+            33% {
+                transform: translateX(-300px);
+            }
+
+            66% {
+                transform: translateX(-600px);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        /* ---------- Assignment 4 Styles ---------- */
+        .card {
+            width: 150px;
+            height: 100px;
+            background: #64748b;
+            margin: 10px 0;
+            transition: 0.3s;
+            border-radius: 6px;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid lightgray;
+            border-top: 5px solid #0284c7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .pulse {
+            width: 50px;
+            height: 50px;
+            background: #ef4444;
+            animation: pulse 1s infinite;
+            border-radius: 6px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+            50% {
+                transform: scale(1.3);
+            }
+        }
+
+        /* ---------- Assignment 5 Styles ---------- */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            grid-template-rows: 60px 1fr 60px;
+            grid-template-areas:
+                "header header"
+                "sidebar main"
+                "footer footer";
+            height: 400px;
+            gap: 10px;
+        }
+
+        .grid-header {
+            grid-area: header;
+            background: #0f172a;
+            color: white;
+            display: grid;
+            place-items: center;
+            border-radius: 6px;
+        }
+
+        .grid-sidebar {
+            grid-area: sidebar;
+            background: #e2e8f0;
+            border-radius: 6px;
+            padding: 0.75rem;
+        }
+
+        .grid-main {
+            grid-area: main;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+
+        .grid-footer {
+            grid-area: footer;
+            background: #0f172a;
+            color: white;
+            display: grid;
+            place-items: center;
+            border-radius: 6px;
+        }
+
+        .products {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .product {
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+
+        /* ---------- Assignment 6 Styles ---------- */
+        .assignment-6-portfolio {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .assignment-6-header {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .assignment-6-nav {
+            display: flex;
+            gap: 0.9rem;
+            flex-wrap: wrap;
+        }
+
+        .assignment-6-nav a {
+            color: #7dd3fc;
+            text-decoration: none;
+        }
+
+        .assignment-6-hero {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            padding: 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .assignment-6-tagline {
+            margin-top: 0.2rem;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        .assignment-6-avatar {
+            width: 100%;
+            max-width: 180px;
+            justify-self: center;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .assignment-6-main {
+            padding: 1.25rem;
+            display: grid;
+            gap: 1.25rem;
+        }
+
+        .assignment-6-block h3 {
+            margin: 0 0 0.5rem;
+        }
+
+        .assignment-6-timeline {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .assignment-6-item {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #ffffff;
+        }
+
+        .assignment-6-item strong {
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+
+        .assignment-6-meta {
+            color: #334155;
+            font-size: 0.92rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .assignment-6-projects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .assignment-6-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0.8rem;
+            background: #ffffff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .assignment-6-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+        }
+
+        .assignment-6-footer {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 0.8rem;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 700px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                grid-template-areas:
+                    "header"
+                    "sidebar"
+                    "main"
+                    "footer";
+                height: auto;
+            }
+
+            .products {
+                grid-template-columns: 1fr;
+            }
+
+            .assignment-6-hero {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Week 1 Student Assignment Sheet</h1>
+
+    <section>
+        <h2>How to Approach This Week</h2>
+        <p>You have learned HTML/CSS basics, Flexbox and Grid, and JavaScript basics. This assignment pushes you to
+            explore more on your own while building mini real-world UI blocks.</p>
+        <ul>
+            <li>Complete all five assignments in order (difficulty increases step by step).</li>
+            <li>Each assignment has at most 2 questions: Q1 is core, Q2 is challenge.</li>
+            <li>Use the starter HTML for each part and extend it with your own CSS.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>GitHub Submission Note</h2>
+        <p>Add all your assignment work to a GitHub repository so it can be shared and reviewed easily.</p>
+        <p>Use this structure:</p>
+        <pre><code>project-root/
+  index.html
+  style.css
+  week-1/
+    assignments/</code></pre>
+    </section>
+
+    <!-- ================= Assignment 1 ================= -->
+    <section>
+        <h2>Assignment 1: Semantic HTML Foundations</h2>
+        <p><strong>Objective:</strong> Learn semantic tags like <code>article</code>, <code>aside</code>,
+            <code>video</code>, and <code>audio</code> by structuring content properly.
+        </p>
+
+        <h3>Questions</h3>
+        <ol>
+            <li><strong>Q1 (Core):</strong> Build a blog page using semantic structure with
+                <code>header</code>, <code>nav</code>, <code>main</code>, <code>article</code>, <code>aside</code>,
+                and <code>footer</code>.
+            </li>
+            <li><strong>Q2 (Challenge):</strong> Inside the article, include one <code>video</code> and one
+                <code>audio</code> element, and explain in a short note why they are placed there.
+            </li>
+        </ol>
+
+        <h3>Starter HTML</h3>
+        <pre><code>&lt;header&gt;
+  &lt;h1&gt;My Blog&lt;/h1&gt;
+  &lt;nav&gt;
+    &lt;a href="#"&gt;Home&lt;/a&gt;
+    &lt;a href="#"&gt;Articles&lt;/a&gt;
+  &lt;/nav&gt;
+&lt;/header&gt;
+
+&lt;main&gt;
+  &lt;article&gt;
+    &lt;h2&gt;Blog Title&lt;/h2&gt;
+    &lt;p&gt;Write your article content here.&lt;/p&gt;
+    &lt;video controls width="320"&gt;&lt;/video&gt;
+    &lt;audio controls&gt;&lt;/audio&gt;
+  &lt;/article&gt;
+  &lt;aside&gt;Related posts or notes&lt;/aside&gt;
+&lt;/main&gt;
+
+&lt;footer&gt;Copyright 2026&lt;/footer&gt;</code></pre>
+
+        <p><strong>Deliverable:</strong> One HTML page where each semantic tag has a clear purpose.</p>
+    </section>
+
+    <!-- ================= Assignment 2 ================= -->
+    <section>
+        <h2>Assignment 2: Basic Tags and Styling Practice</h2>
+        <p><strong>Objective:</strong> Practice headings, navbars, images, and basic styling behavior including
+            <code>object-fit</code>.
+        </p>
+
+        <h3>Questions</h3>
+        <ol>
+            <li><strong>Q1 (Core):</strong> Build a product hero section with heading, short description, navbar, image,
+                and one CTA button.</li>
+            <li><strong>Q2 (Challenge):</strong> Show three image boxes side-by-side that compare
+                <code>object-fit: cover</code>, <code>contain</code>, and <code>fill</code>.
+            </li>
+        </ol>
+
+        <h3>Starter HTML</h3>
+        <pre><code>&lt;header&gt;
+  &lt;h1&gt;Amazing Product&lt;/h1&gt;
+  &lt;nav&gt;
+    &lt;a href="#"&gt;Home&lt;/a&gt;
+    &lt;a href="#"&gt;Features&lt;/a&gt;
+    &lt;a href="#"&gt;Contact&lt;/a&gt;
+  &lt;/nav&gt;
+&lt;/header&gt;
+
+&lt;section class="hero"&gt;
+  &lt;img src="https://via.placeholder.com/400x240" alt="Product image"&gt;
+  &lt;div&gt;
+    &lt;h2&gt;Designed for learners&lt;/h2&gt;
+    &lt;p&gt;Write one paragraph about your product.&lt;/p&gt;
+    &lt;button&gt;Buy Now&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/section&gt;
+
+&lt;section class="image-fit-lab"&gt;
+  &lt;div class="fit-cover"&gt;cover&lt;/div&gt;
+  &lt;div class="fit-contain"&gt;contain&lt;/div&gt;
+  &lt;div class="fit-fill"&gt;fill&lt;/div&gt;
+&lt;/section&gt;</code></pre>
+
+        <p><strong>Deliverable:</strong> Styled hero block plus visual comparison of image fit behavior.</p>
+    </section>
+
+    <!-- ================= Assignment 3 ================= -->
+    <section>
+        <h2>Assignment 3: Scenario - Featured Carousel (No JavaScript)</h2>
+        <p><strong>Scenario:</strong> You are building a landing page for a small store. The owner wants a moving
+            featured-items carousel using only HTML + CSS.</p>
+        <p><strong>Objective:</strong> Use Flexbox and keyframes to create a CSS-only image carousel.</p>
+
+        <h3>Questions</h3>
+        <ol>
+            <li><strong>Q1 (Core):</strong> Build a carousel that auto-slides 3 cards/images horizontally using
+                Flexbox and <code>@keyframes</code>.</li>
+            <li><strong>Q2 (Challenge):</strong> Add <code>:hover</code> pause behavior and label each slide clearly
+                for readability.</li>
+        </ol>
+
+        <h3>Starter HTML</h3>
+        <pre><code>&lt;section class="carousel-wrap"&gt;
+  &lt;h2&gt;Featured This Week&lt;/h2&gt;
+  &lt;div class="carousel"&gt;
+    &lt;div class="slides"&gt;
+      &lt;article class="slide"&gt;Slide 1&lt;/article&gt;
+      &lt;article class="slide"&gt;Slide 2&lt;/article&gt;
+      &lt;article class="slide"&gt;Slide 3&lt;/article&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+
+        <p><strong>Deliverable:</strong> Smooth CSS-only carousel with visible card content and no JavaScript.</p>
+    </section>
+
+    <!-- ================= Assignment 4 ================= -->
+    <section>
+        <h2>Assignment 4: Scenario - Interactive Promo Widgets</h2>
+        <p><strong>Scenario:</strong> A client asks for a small promo card area that feels interactive and modern.</p>
+        <p><strong>Objective:</strong> Practice transitions and keyframe animations for UI feedback.</p>
+
+        <h3>Questions</h3>
+        <ol>
+            <li><strong>Q1 (Core):</strong> Create one button and one card with hover/focus transition effects
+                (color, shadow, move, or scale).</li>
+            <li><strong>Q2 (Challenge):</strong> Build one animated loader/pulse element using
+                <code>@keyframes</code>.
+            </li>
+        </ol>
+
+        <h3>Starter HTML</h3>
+        <pre><code>&lt;section class="promo-ui"&gt;
+  &lt;h2&gt;New Launch&lt;/h2&gt;
+  &lt;button class="promo-btn"&gt;Explore Offer&lt;/button&gt;
+  &lt;article class="promo-card"&gt;Hover over this card&lt;/article&gt;
+  &lt;div class="promo-loader" aria-label="Loading"&gt;&lt;/div&gt;
+&lt;/section&gt;</code></pre>
+
+        <p><strong>Deliverable:</strong> One mini promo interface with transition + keyframe animation.</p>
+    </section>
+
+    <!-- ================= Assignment 5 ================= -->
+    <section>
+        <h2>Assignment 5: Scenario - Ecommerce Grid Page</h2>
+        <p><strong>Scenario:</strong> You are designing a basic ecommerce layout for desktop and mobile.</p>
+        <p><strong>Objective:</strong> Use CSS Grid to build page structure and product layout blocks.</p>
+
+        <h3>Questions</h3>
+        <ol>
+            <li><strong>Q1 (Core):</strong> Build a grid layout with areas:
+                <code>header</code>, <code>sidebar</code>, <code>main</code>, and <code>footer</code>. Inside main,
+                create a product card grid.
+            </li>
+            <li><strong>Q2 (Challenge):</strong> Add a mobile breakpoint so the layout stacks in one column while
+                keeping content clear.</li>
+        </ol>
+
+        <h3>Starter HTML</h3>
+        <pre><code>&lt;div class="shop-layout"&gt;
+  &lt;header class="shop-header"&gt;Store Header&lt;/header&gt;
+  &lt;aside class="shop-sidebar"&gt;Filters / Categories&lt;/aside&gt;
+  &lt;main class="shop-main"&gt;
+    &lt;section class="product-grid"&gt;
+      &lt;article class="product-card"&gt;Product 1&lt;/article&gt;
+      &lt;article class="product-card"&gt;Product 2&lt;/article&gt;
+      &lt;article class="product-card"&gt;Product 3&lt;/article&gt;
+      &lt;article class="product-card"&gt;Product 4&lt;/article&gt;
+    &lt;/section&gt;
+  &lt;/main&gt;
+  &lt;footer class="shop-footer"&gt;Store Footer&lt;/footer&gt;
+&lt;/div&gt;</code></pre>
+
+        <p><strong>Deliverable:</strong> Responsive ecommerce mockup using CSS Grid for both page and product layout.
+        </p>
+    </section>
+
+    <!-- ================= Assignment 6 ================= -->
+    <section>
+        <h2>Assignment 6: Scenario - Portfolio Page</h2>
+        <p><strong>Scenario:</strong> Build your personal portfolio website to showcase your learning journey and share
+            it publicly. Take inspiration from <a href="https://spravesh1818.github.io/">this portfolio example</a>.
+        </p>
+        <p><strong>Objective:</strong> Create a clean, responsive portfolio using semantic HTML and CSS layout
+            techniques.</p>
+
+        <h3>Questions</h3>
+        <ol>
+            <li><strong>Q1 (Core):</strong> Create a portfolio page with navigation, intro/hero, experience, projects,
+                and contact sections.</li>
+            <li><strong>Q2 (Challenge):</strong> Improve the page with responsive layout, hover interactions, and visual
+                hierarchy (spacing, card blocks, and typography contrast).</li>
+        </ol>
+
+        <h3>Starter HTML</h3>
+        <pre><code>&lt;header class="portfolio-header"&gt;
+  &lt;h1&gt;Pravesh Chapagain&lt;/h1&gt;
+  &lt;nav&gt;
+    &lt;a href="#home"&gt;Home&lt;/a&gt;
+    &lt;a href="#experience"&gt;Experience&lt;/a&gt;
+    &lt;a href="#projects"&gt;Projects&lt;/a&gt;
+    &lt;a href="#contact"&gt;Contact&lt;/a&gt;
+  &lt;/nav&gt;
+&lt;/header&gt;
+
+&lt;section id="home" class="portfolio-hero"&gt;
+  &lt;h2&gt;Hello, I am Pravesh Chapagain&lt;/h2&gt;
+  &lt;p&gt;I enjoy building responsive and clean websites.&lt;/p&gt;
+&lt;/section&gt;
+
+&lt;section id="experience"&gt;
+  &lt;h3&gt;Experience&lt;/h3&gt;
+  &lt;article&gt;Frontend Learning Journey&lt;/article&gt;
+&lt;/section&gt;
+
+&lt;section id="projects"&gt;
+  &lt;h3&gt;Projects&lt;/h3&gt;
+  &lt;article&gt;Responsive Portfolio&lt;/article&gt;
+&lt;/section&gt;
+
+&lt;section id="contact"&gt;
+  &lt;h3&gt;Contact&lt;/h3&gt;
+  &lt;p&gt;Email: pravesh@example.com&lt;/p&gt;
+&lt;/section&gt;</code></pre>
+
+        <p><strong>Deliverable:</strong> A portfolio page that is readable on desktop/mobile and ready to publish as
+            your root <code>index.html</code>.</p>
+    </section>
+
+</body>
+
+</html>
