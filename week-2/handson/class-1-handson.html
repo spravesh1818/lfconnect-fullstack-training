@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 2 Class 1 hands-on - Weather API</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        .hint {
+            color: #334155;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 2 - Class 1 Lab</strong> -
+        <a href="../slides/session-1.html">Open session deck</a>
+        - Build weather app with OpenWeatherMap API
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Build Weather App UI</h2>
+        <ol>
+            <li>Create input (<code>id="city-input"</code>), button (<code>id="search-btn"</code>), and result area
+                (<code>id="weather-result"</code>).</li>
+            <li>Add placeholder text and basic card layout.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> UI shell is visible and ready for API integration.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Connect Weather API</h2>
+        <ol>
+            <li>Create <code>fetchWeather(city)</code> async function.</li>
+            <li>Call OpenWeatherMap weather endpoint with metric units.</li>
+            <li>Display city, temperature, weather summary, humidity, and wind speed.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> searching a valid city renders live weather data.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Handle Loading and Errors</h2>
+        <ol>
+            <li>Show loading message before API response returns.</li>
+            <li>Show clear error text for invalid city or network failure.</li>
+            <li>Reset old status on every new search.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> app handles success, loading, and error states cleanly.</div>
+    </div>
+
+    <section class="practice-shell" aria-labelledby="practice-title">
+        <h1 id="practice-title">Weather Finder</h1>
+        <p class="hint">Search a city and display current weather data from OpenWeatherMap.</p>
+        <p class="hint">Starter IDs to use: <code>city-input</code>, <code>search-btn</code>, <code>status</code>,
+            <code>weather-result</code>.
+        </p>
+    </section>
+</body>
+
+</html>

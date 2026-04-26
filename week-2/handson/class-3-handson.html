@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 2 Class 3 hands-on - React Weather App Build</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        .hint {
+            color: #334155;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 2 - Class 3 Lab</strong> -
+        <a href="../slides/session-3.html">Open session deck</a>
+        - Build weather app in React and compare with vanilla JavaScript
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Scaffold React App</h2>
+        <ol>
+            <li>Create a React app using Vite.</li>
+            <li>Add components: <code>SearchForm</code>, <code>WeatherCard</code>, and <code>StatusMessage</code>.</li>
+            <li>Render static UI first before API integration.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> app runs locally with reusable components rendered.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Connect API with React State</h2>
+        <ol>
+            <li>Use state for city input, loading, error, and weather payload.</li>
+            <li>Handle form submit to fetch OpenWeatherMap data.</li>
+            <li>Render weather card only when valid data exists.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> city search updates UI through React state flow.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Compare with Vanilla JS Version</h2>
+        <ol>
+            <li>Create a short comparison note with sections: structure, state handling, and maintainability.</li>
+            <li>List 2 advantages of React and 1 case where vanilla JS is still enough.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> comparison explains tradeoffs with concrete examples.</div>
+    </div>
+
+    <section class="practice-shell" aria-labelledby="practice-title">
+        <h1 id="practice-title">React Weather Build Checklist</h1>
+        <p class="hint">Track completed steps here while coding your React app.</p>
+        <ul>
+            <li>[ ] Component structure created</li>
+            <li>[ ] API call integrated</li>
+            <li>[ ] Loading/error states displayed</li>
+            <li>[ ] Comparison note completed</li>
+        </ul>
+    </section>
+</body>
+
+</html>

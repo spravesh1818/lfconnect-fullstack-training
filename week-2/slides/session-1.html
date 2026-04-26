@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 2 - Session 1 - Weather API Tutorial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 2 - Session 1</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 1: Guided Weather App Tutorial</h1>
+        <p>Today we build a weather app step by step: API key, HTML structure, CSS styling, JavaScript logic, and final
+            result.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>What You Will Finish Today</h2>
+        <ul>
+            <li>Working weather search app by city name</li>
+            <li>Live weather data from OpenWeatherMap</li>
+            <li>Clean layout with loading and error messages</li>
+            <li>Project ready for improvement in next classes</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Before We Start</h2>
+        <ul>
+            <li>Basic HTML/CSS/JavaScript from Week 1</li>
+            <li>Internet connection for API calls</li>
+            <li>Code editor and browser DevTools open</li>
+            <li>Hands-on file: <code>week-2/handson/class-1-handson.html</code></li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Step 1</p>
+        <h1>Get OpenWeatherMap API Key</h1>
+        <p>First we create an account and generate an API key that authorizes our requests.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Why Do We Need an API Key?</h2>
+        <ul>
+            <li>API key identifies who is sending requests</li>
+            <li>Provider can manage usage limits and access</li>
+            <li>Requests without key are rejected</li>
+            <li>This is common in most public APIs</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Create Account (Guided)</h2>
+        <ol>
+            <li>Go to <a href="https://openweathermap.org/" target="_blank" rel="noopener noreferrer">openweathermap.org</a>
+            </li>
+            <li>Sign up and verify your email</li>
+            <li>Log in and open API keys dashboard</li>
+            <li>Copy your generated key for class use</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Endpoint We Will Use</h2>
+        <pre>GET https://api.openweathermap.org/data/2.5/weather
+?q={city}
+&appid={api_key}
+&units=metric</pre>
+        <p><code>q</code> is city name, <code>appid</code> is your key, <code>units=metric</code> gives Celsius.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>API Key Safety Note</h2>
+        <ul>
+            <li>Never post real keys in public repositories</li>
+            <li>For class demos, keep key local in your file</li>
+            <li>Later we will learn env files and secure setups</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Step 2</p>
+        <h1>Project Setup</h1>
+        <p>Create simple structure first, then implement features in small steps.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>File Structure</h2>
+        <pre>weather-app/
+  index.html
+  style.css
+  script.js</pre>
+        <p>We keep HTML, CSS, and JavaScript separate for clarity.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Connect Files in HTML</h2>
+        <pre>&lt;head&gt;
+  &lt;link rel="stylesheet" href="style.css" /&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  ...
+  &lt;script src="script.js"&gt;&lt;/script&gt;
+&lt;/body&gt;</pre>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Step 3</p>
+        <h1>Build HTML Structure</h1>
+        <p>Now we create the app skeleton before styling and JavaScript logic.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>HTML - App Shell</h2>
+        <pre>&lt;main class="app"&gt;
+  &lt;h1&gt;Weather Finder&lt;/h1&gt;
+  &lt;p&gt;Search city weather in real time.&lt;/p&gt;
+&lt;/main&gt;</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>HTML - Search Controls</h2>
+        <pre>&lt;label for="city-input"&gt;City&lt;/label&gt;
+&lt;input id="city-input" type="text" placeholder="Kathmandu" /&gt;
+&lt;button id="search-btn" type="button"&gt;Search&lt;/button&gt;</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>HTML - Status and Result Areas</h2>
+        <pre>&lt;p id="status" aria-live="polite"&gt;Enter a city and click search.&lt;/p&gt;
+&lt;section id="weather-result" aria-live="polite"&gt;
+  &lt;h2&gt;City name&lt;/h2&gt;
+  &lt;p&gt;Temperature: --&lt;/p&gt;
+  &lt;p&gt;Condition: --&lt;/p&gt;
+&lt;/section&gt;</pre>
+    </div>
+
+    <div class="slide bg1">
+        <h2>HTML Checkpoint</h2>
+        <ul>
+            <li>Input, button, status text, result card visible</li>
+            <li>IDs match exactly: <code>city-input</code>, <code>search-btn</code>, <code>status</code>,
+                <code>weather-result</code>
+            </li>
+            <li>No JavaScript yet: just structure</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Step 4</p>
+        <h1>Add CSS Styling</h1>
+        <p>Start with layout basics, then style cards and controls.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>CSS - Base and Container</h2>
+        <pre>body {
+  font-family: system-ui, sans-serif;
+  background: #f1f5f9;
+}
+.app {
+  max-width: 540px;
+  margin: 40px auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+}</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>CSS - Inputs and Button</h2>
+        <pre>input, button {
+  font: inherit;
+  padding: 10px;
+}
+button {
+  cursor: pointer;
+  background: #0f172a;
+  color: white;
+  border: 0;
+}</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>CSS - Result Card and Status</h2>
+        <pre>#status {
+  color: #334155;
+}
+#weather-result {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Styling Checkpoint</h2>
+        <ul>
+            <li>App centered and readable</li>
+            <li>Input and button look usable</li>
+            <li>Result card visually separated</li>
+            <li>Ready for JavaScript integration</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Step 5</p>
+        <h1>Add JavaScript Logic</h1>
+        <p>We wire DOM events, call API, and render weather output.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>JavaScript - Select Elements</h2>
+        <pre>const cityInput = document.querySelector("#city-input");
+const searchBtn = document.querySelector("#search-btn");
+const statusEl = document.querySelector("#status");
+const weatherResult = document.querySelector("#weather-result");</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>JavaScript - Add API Constants</h2>
+        <pre>const API_KEY = "PASTE_YOUR_KEY_HERE";
+const BASE_URL = "https://api.openweathermap.org/data/2.5/weather";</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>JavaScript - Fetch Function</h2>
+        <pre>async function fetchWeather(city) {
+  const url = `${BASE_URL}?q=${city}&appid=${API_KEY}&units=metric`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("City not found");
+  return response.json();
+}</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>JavaScript - Render Function</h2>
+        <pre>function renderWeather(data) {
+  weatherResult.innerHTML = `
+    &lt;h2&gt;${data.name}&lt;/h2&gt;
+    &lt;p&gt;Temperature: ${data.main.temp} C&lt;/p&gt;
+    &lt;p&gt;Condition: ${data.weather[0].description}&lt;/p&gt;
+    &lt;p&gt;Humidity: ${data.main.humidity}%&lt;/p&gt;
+  `;
+}</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>JavaScript - Button Click Handler</h2>
+        <pre>searchBtn.addEventListener("click", async () => {
+  const city = cityInput.value.trim();
+  if (!city) return;
+  const data = await fetchWeather(city);
+  renderWeather(data);
+});</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Add Loading + Error (Minimal)</h2>
+        <pre>statusEl.textContent = "Loading weather...";
+try {
+  const data = await fetchWeather(city);
+  renderWeather(data);
+  statusEl.textContent = "Done.";
+} catch (error) {
+  statusEl.textContent = error.message;
+}</pre>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Final Integration Checklist</h2>
+        <ul>
+            <li>Search valid city -> weather details shown</li>
+            <li>Invalid city -> clear error text shown</li>
+            <li>Loading text appears while waiting</li>
+            <li>No JavaScript console errors</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Common Beginner Issues</h2>
+        <ul>
+            <li>Wrong element IDs between HTML and JavaScript</li>
+            <li>Missing API key or typo in query URL</li>
+            <li>Forgetting <code>await</code> in async flow</li>
+            <li>Not checking <code>response.ok</code> before JSON parse</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>What To Improve Next</h2>
+        <ul>
+            <li>Add wind speed and icon from response data</li>
+            <li>Add Enter-key search support</li>
+            <li>Improve mobile spacing and typography</li>
+            <li>Prepare for React version in Session 3</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Session 1</h1>
+        <p>You built a complete weather app from API key setup to final working UI.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

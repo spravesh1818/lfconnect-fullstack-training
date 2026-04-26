@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 2 - Session 2 - Frontend History and React Intro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 2 - Session 2</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 2: Frontend Evolution to React</h1>
+        <p>History of frontend, rise of SPAs, React internals (including Virtual DOM), and why the ecosystem exploded.
+        </p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Frontend timeline and platform changes</li>
+            <li>SPA model and trade-offs</li>
+            <li>React foundations and growth</li>
+            <li>Virtual DOM, reconciliation, render cycle</li>
+            <li>TypeScript touchpoint + long quiz</li>
+        </ol>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Learning Outcomes</h2>
+        <ul>
+            <li>Explain why frontend architecture changed over time</li>
+            <li>Compare MPA and SPA request/navigation flows</li>
+            <li>Describe VDOM and reconciliation at high level</li>
+            <li>Understand why React became widely adopted</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Frontend History</h1>
+        <p>Let us trace how developer pain points shaped modern frameworks.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Era 1: Static Documents</h2>
+        <ul>
+            <li>Early websites were mostly linked HTML documents</li>
+            <li>Styling was basic and interaction was minimal</li>
+            <li>Each navigation triggered full page reload</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Era 2: Server Rendered Dynamic Pages</h2>
+        <ul>
+            <li>Templating on server produced HTML per request</li>
+            <li>Good for SEO and straightforward hosting</li>
+            <li>Complex UI interactions were still difficult</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>AJAX Shift</h2>
+        <ul>
+            <li>Browsers started requesting data without full reload</li>
+            <li>Parts of page could update asynchronously</li>
+            <li>This unlocked richer app-like experiences</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>jQuery Era</h2>
+        <ul>
+            <li>jQuery simplified DOM selection and events</li>
+            <li>Rapid productivity for small interactive features</li>
+            <li>Large apps became hard to maintain with ad-hoc updates</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Timeline Visualization</h2>
+        <div class="diagram-card">
+            <svg viewBox="0 0 980 220" role="img" aria-label="Frontend timeline">
+                <line x1="80" y1="120" x2="900" y2="120" stroke="#0f172a" stroke-width="4" />
+                <circle cx="140" cy="120" r="14" fill="#0284c7" />
+                <circle cx="320" cy="120" r="14" fill="#16a34a" />
+                <circle cx="500" cy="120" r="14" fill="#ca8a04" />
+                <circle cx="690" cy="120" r="14" fill="#9333ea" />
+                <circle cx="860" cy="120" r="14" fill="#dc2626" />
+                <text x="95" y="90" font-size="18" fill="#334155">Static HTML</text>
+                <text x="250" y="90" font-size="18" fill="#334155">Server Templates</text>
+                <text x="470" y="90" font-size="18" fill="#334155">AJAX</text>
+                <text x="635" y="90" font-size="18" fill="#334155">jQuery</text>
+                <text x="810" y="90" font-size="18" fill="#334155">SPA/React</text>
+            </svg>
+        </div>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Pain Points Before SPAs</h2>
+        <ul>
+            <li>Repeated server round-trips for small UI changes</li>
+            <li>Difficult state synchronization across pages</li>
+            <li>Inconsistent user experience between routes</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Traditional MPA Request Flow</h2>
+        <div class="diagram-card">
+            <svg viewBox="0 0 980 260" role="img" aria-label="MPA flow">
+                <rect x="80" y="70" width="220" height="120" rx="12" fill="#e0f2fe" stroke="#0284c7" />
+                <rect x="390" y="70" width="220" height="120" rx="12" fill="#fef9c3" stroke="#ca8a04" />
+                <rect x="700" y="70" width="180" height="120" rx="12" fill="#dcfce7" stroke="#16a34a" />
+                <text x="190" y="135" text-anchor="middle" font-size="22" fill="#0f172a">Browser</text>
+                <text x="500" y="135" text-anchor="middle" font-size="22" fill="#0f172a">Server</text>
+                <text x="790" y="135" text-anchor="middle" font-size="22" fill="#0f172a">DB</text>
+                <line x1="300" y1="105" x2="390" y2="105" stroke="#0f172a" stroke-width="3" />
+                <line x1="390" y1="155" x2="300" y2="155" stroke="#0f172a" stroke-width="3" />
+                <line x1="610" y1="130" x2="700" y2="130" stroke="#0f172a" stroke-width="3" />
+                <text x="340" y="95" text-anchor="middle" font-size="14">New route request</text>
+                <text x="340" y="175" text-anchor="middle" font-size="14">Full HTML response</text>
+            </svg>
+        </div>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Rise of SPAs</h1>
+        <p>SPAs optimized app-like UX by moving more rendering to the browser.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>What is an SPA?</h2>
+        <ul>
+            <li>Single HTML shell loaded once</li>
+            <li>Client-side routing updates visible view</li>
+            <li>Data fetched from APIs as needed</li>
+            <li>UI updates without full page reload</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Why SPAs Became Popular</h2>
+        <ul>
+            <li>Faster route transitions after initial load</li>
+            <li>Rich interactions similar to desktop apps</li>
+            <li>Reusable UI component architecture</li>
+            <li>Backend can focus on API contracts</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>SPA Lifecycle Visualization</h2>
+        <div class="diagram-card">
+            <svg viewBox="0 0 980 260" role="img" aria-label="SPA lifecycle">
+                <rect x="60" y="80" width="180" height="100" rx="12" fill="#e0f2fe" stroke="#0284c7" />
+                <rect x="280" y="80" width="180" height="100" rx="12" fill="#dbeafe" stroke="#2563eb" />
+                <rect x="500" y="80" width="180" height="100" rx="12" fill="#fef9c3" stroke="#ca8a04" />
+                <rect x="720" y="80" width="180" height="100" rx="12" fill="#dcfce7" stroke="#16a34a" />
+                <text x="150" y="135" text-anchor="middle" font-size="18">App Shell</text>
+                <text x="370" y="135" text-anchor="middle" font-size="18">Client Route</text>
+                <text x="590" y="135" text-anchor="middle" font-size="18">API Request</text>
+                <text x="810" y="135" text-anchor="middle" font-size="18">UI Update</text>
+                <line x1="240" y1="130" x2="280" y2="130" stroke="#0f172a" stroke-width="3" />
+                <line x1="460" y1="130" x2="500" y2="130" stroke="#0f172a" stroke-width="3" />
+                <line x1="680" y1="130" x2="720" y2="130" stroke="#0f172a" stroke-width="3" />
+            </svg>
+        </div>
+    </div>
+
+    <div class="slide bg3">
+        <h2>MPA vs SPA Comparison</h2>
+        <div class="comparison">
+            <article>
+                <h3>MPA Strengths</h3>
+                <ul>
+                    <li>Straightforward SEO defaults</li>
+                    <li>Simple deployment mental model</li>
+                    <li>Route-level server ownership</li>
+                </ul>
+            </article>
+            <article>
+                <h3>SPA Strengths</h3>
+                <ul>
+                    <li>Interactive UX and faster transitions</li>
+                    <li>Component reuse and client state model</li>
+                    <li>API-first backend compatibility</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg3">
+        <h2>SPA Trade-offs</h2>
+        <ul>
+            <li>Initial bundle size can hurt first load</li>
+            <li>Client state complexity grows quickly</li>
+            <li>SEO needs extra handling in some setups</li>
+            <li>Routing/auth edge cases require discipline</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>SPA Framework Landscape</h2>
+        <ul>
+            <li>React: UI library with massive ecosystem</li>
+            <li>Angular: full framework with strong conventions</li>
+            <li>Vue: progressive model with smooth learning curve</li>
+            <li>Svelte: compile-time optimization approach</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>React Fundamentals and Growth</h1>
+        <p>React’s model made large UI codebases more manageable.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>What is React?</h2>
+        <ul>
+            <li>Library for building user interfaces</li>
+            <li>Component-based composition</li>
+            <li>Declarative updates driven by state</li>
+            <li>One-way data flow by default</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Declarative vs Imperative UI</h2>
+        <div class="comparison">
+            <article>
+                <h3>Imperative</h3>
+                <ul>
+                    <li>Manually select and mutate DOM nodes</li>
+                    <li>Easy to create scattered update logic</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Declarative</h3>
+                <ul>
+                    <li>Describe desired UI for current state</li>
+                    <li>Library handles DOM update strategy</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Components as Building Blocks</h2>
+        <pre>function WeatherCard({ city, temp }) {
+  return &lt;h2&gt;{city}: {temp} C&lt;/h2&gt;;
+}</pre>
+        <p>Small focused components are easier to reason about and test.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Props and State</h2>
+        <ul>
+            <li><strong>Props</strong>: input data passed from parent</li>
+            <li><strong>State</strong>: local mutable data inside component</li>
+            <li>State changes trigger re-render</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Unidirectional Data Flow</h2>
+        <div class="diagram-card">
+            <svg viewBox="0 0 980 230" role="img" aria-label="React data flow">
+                <rect x="110" y="70" width="220" height="100" rx="12" fill="#dbeafe" stroke="#2563eb" />
+                <rect x="380" y="70" width="220" height="100" rx="12" fill="#e0f2fe" stroke="#0284c7" />
+                <rect x="650" y="70" width="220" height="100" rx="12" fill="#dcfce7" stroke="#16a34a" />
+                <text x="220" y="130" text-anchor="middle" font-size="20">Parent State</text>
+                <text x="490" y="130" text-anchor="middle" font-size="20">Props Down</text>
+                <text x="760" y="130" text-anchor="middle" font-size="20">Child UI</text>
+                <line x1="330" y1="120" x2="380" y2="120" stroke="#0f172a" stroke-width="3" />
+                <line x1="600" y1="120" x2="650" y2="120" stroke="#0f172a" stroke-width="3" />
+            </svg>
+        </div>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Hooks Snapshot</h2>
+        <ul>
+            <li><code>useState</code> for component state</li>
+            <li><code>useEffect</code> for side effects (API, subscriptions)</li>
+            <li><code>useMemo</code> and <code>useCallback</code> for optimization</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Why React Grew Fast</h2>
+        <ul>
+            <li>Simple component mental model</li>
+            <li>Strong open-source ecosystem</li>
+            <li>Large hiring demand and community support</li>
+            <li>Adaptable for web, mobile, and hybrid stacks</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Ecosystem Snapshot</h2>
+        <ul>
+            <li><code>react-router-dom</code> for routing</li>
+            <li><code>vite</code> for fast builds and DX</li>
+            <li><code>react-query</code> for server state</li>
+            <li><code>redux-toolkit</code> / <code>zustand</code> for app state</li>
+            <li><code>jest</code> + <code>rtl</code> for testing</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Typical React App Structure</h2>
+        <pre>src/
+  main.tsx
+  App.tsx
+  components/
+  pages/
+  hooks/
+  services/
+  styles/</pre>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 4</p>
+        <h1>Virtual DOM and Reconciliation</h1>
+        <p>This is one of the most important React interview and design topics.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Why Direct DOM Updates Hurt</h2>
+        <ul>
+            <li>Manual DOM operations are verbose and error-prone</li>
+            <li>Frequent layout recalculation can be expensive</li>
+            <li>Large apps need predictable update strategy</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>What is the Virtual DOM?</h2>
+        <ul>
+            <li>Lightweight in-memory representation of UI tree</li>
+            <li>React compares previous and next virtual trees</li>
+            <li>Applies minimal required changes to real DOM</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>DOM vs VDOM Visualization</h2>
+        <div class="comparison">
+            <article>
+                <h3>Real DOM</h3>
+                <ul>
+                    <li>Browser-rendered node tree</li>
+                    <li>Direct mutations can be costly</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Virtual DOM</h3>
+                <ul>
+                    <li>JS object tree in memory</li>
+                    <li>Diff first, then patch real DOM</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Reconciliation Steps</h2>
+        <ol>
+            <li>State/props change triggers new virtual tree</li>
+            <li>React diffs old vs new trees</li>
+            <li>Changed nodes are identified</li>
+            <li>Minimal patch applied to real DOM</li>
+        </ol>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Why Keys Matter in Lists</h2>
+        <ul>
+            <li>Keys identify stable identity of list items</li>
+            <li>Bad keys cause unnecessary re-renders</li>
+            <li>Use persistent IDs instead of array index where possible</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>React Render Cycle (Simplified)</h2>
+        <div class="diagram-card">
+            <svg viewBox="0 0 980 250" role="img" aria-label="React render cycle">
+                <rect x="70" y="80" width="180" height="90" rx="10" fill="#e0f2fe" stroke="#0284c7" />
+                <rect x="290" y="80" width="180" height="90" rx="10" fill="#dbeafe" stroke="#2563eb" />
+                <rect x="510" y="80" width="180" height="90" rx="10" fill="#fef9c3" stroke="#ca8a04" />
+                <rect x="730" y="80" width="180" height="90" rx="10" fill="#dcfce7" stroke="#16a34a" />
+                <text x="160" y="132" text-anchor="middle" font-size="16">State Change</text>
+                <text x="380" y="132" text-anchor="middle" font-size="16">Render Phase</text>
+                <text x="600" y="132" text-anchor="middle" font-size="16">Diff</text>
+                <text x="820" y="132" text-anchor="middle" font-size="16">Commit</text>
+                <line x1="250" y1="125" x2="290" y2="125" stroke="#0f172a" stroke-width="3" />
+                <line x1="470" y1="125" x2="510" y2="125" stroke="#0f172a" stroke-width="3" />
+                <line x1="690" y1="125" x2="730" y2="125" stroke="#0f172a" stroke-width="3" />
+            </svg>
+        </div>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Batching and Scheduling (High Level)</h2>
+        <ul>
+            <li>React can batch multiple state updates</li>
+            <li>Reduces unnecessary intermediate renders</li>
+            <li>Improves perceived responsiveness in complex UIs</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>When React Re-renders</h2>
+        <ul>
+            <li>Component state changes</li>
+            <li>Parent renders and passes new props</li>
+            <li>Context value changes</li>
+            <li>Forced update (rare and usually avoidable)</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Optimization Basics (Beginner Friendly)</h2>
+        <ul>
+            <li>Keep component responsibility small</li>
+            <li>Avoid unnecessary state duplication</li>
+            <li>Use stable keys in dynamic lists</li>
+            <li>Memoize only when profiling shows benefit</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 5</p>
+        <h1>TypeScript Touchpoint</h1>
+        <p>Type safety complements React component-driven architecture.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Why TypeScript in React?</h2>
+        <ul>
+            <li>Catch prop and API shape mismatches early</li>
+            <li>Improve editor autocomplete and refactors</li>
+            <li>Reduce runtime bugs in growing codebases</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Simple Typed Props Example</h2>
+        <pre>type WeatherCardProps = {
+  city: string;
+  temp: number;
+};
+
+function WeatherCard({ city, temp }: WeatherCardProps) {
+  return &lt;p&gt;{city}: {temp} C&lt;/p&gt;;
+}</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Session Summary Before Quiz</h2>
+        <ul>
+            <li>Frontend evolved because complexity evolved</li>
+            <li>SPAs improved UX but introduced trade-offs</li>
+            <li>React scaled UI development with components and VDOM</li>
+            <li>TypeScript adds reliability in larger apps</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Session 2 Master Quiz</h1>
+        <p class="quiz-hint">10 questions. Correct answers are intentionally shuffled across A/B/C/D.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 10</h2>
+        <p class="question">What was a major limitation of pre-SPA full page navigation?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true"
+                data-explanation="Every route change required full HTML reload, increasing latency and UI reset.">Each route often caused full page reload</button>
+            <button type="button" data-correct="false" data-explanation="CDNs existed before SPAs.">CDNs did not exist yet</button>
+            <button type="button" data-correct="false" data-explanation="CSS support was not the core issue here.">Browsers had no CSS rendering</button>
+            <button type="button" data-correct="false" data-explanation="APIs can be used with both MPA and SPA.">APIs only work with SPAs</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 10</h2>
+        <p class="question">Which best describes an SPA?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="SPAs usually use one shell, not separate HTML per route.">A separate full HTML file for each route</button>
+            <button type="button" data-correct="false" data-explanation="SSR can be combined, but this is not core SPA definition.">A server-only template engine pattern</button>
+            <button type="button" data-correct="true" data-explanation="SPAs load a shell and update views via client routing and API data.">Single shell with client-side route/view updates</button>
+            <button type="button" data-correct="false" data-explanation="SPAs are not limited to static pages.">A static website with no dynamic data</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 10</h2>
+        <p class="question">Why did React become popular for large UIs?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Direct DOM updates are not React's primary model.">It requires direct manual DOM updates</button>
+            <button type="button" data-correct="false" data-explanation="React can be used with many tools.">It only works with one backend framework</button>
+            <button type="button" data-correct="false" data-explanation="Server rendering is optional.">It removes need for all client JavaScript</button>
+            <button type="button" data-correct="true" data-explanation="Components + declarative updates improved maintainability and scaling.">Component architecture and predictable rendering model</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 10</h2>
+        <p class="question">What is Virtual DOM in React?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="VDOM is not a browser-level replacement.">A new browser engine that replaces DOM</button>
+            <button type="button" data-correct="true" data-explanation="VDOM is an in-memory tree React diffs before patching real DOM.">In-memory UI representation used for diffing updates</button>
+            <button type="button" data-correct="false" data-explanation="State and VDOM are related but not identical.">Same thing as React state objects</button>
+            <button type="button" data-correct="false" data-explanation="React still uses real DOM eventually.">A way to avoid real DOM completely</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 10</h2>
+        <p class="question">What does reconciliation do?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Reconciliation compares trees and computes minimal changes.">Diffs old/new virtual trees and applies minimal DOM patch</button>
+            <button type="button" data-correct="false" data-explanation="Compilation is separate from reconciliation.">Compiles TypeScript to JavaScript</button>
+            <button type="button" data-correct="false" data-explanation="Routing is separate concern.">Maps URL route to component tree only</button>
+            <button type="button" data-correct="false" data-explanation="Database writes are backend work.">Writes UI state directly into database</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 10</h2>
+        <p class="question">Which statement about list keys is correct?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Random keys break stability across renders.">Random keys each render improve performance</button>
+            <button type="button" data-correct="false" data-explanation="Keys are required in dynamic list rendering.">Keys are optional for changing lists</button>
+            <button type="button" data-correct="false" data-explanation="Index may be risky for reordered lists.">Array index is always best key choice</button>
+            <button type="button" data-correct="true" data-explanation="Stable unique keys help React preserve identity efficiently.">Stable unique IDs help accurate list reconciliation</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 10</h2>
+        <p class="question">Which is a common SPA trade-off?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="SPAs can still be tested effectively.">SPAs cannot be tested</button>
+            <button type="button" data-correct="false" data-explanation="Many SPAs improve navigation smoothness.">Route changes are always slower than MPA</button>
+            <button type="button" data-correct="true" data-explanation="Initial JS payload and client complexity can increase.">Larger initial bundle and client state complexity</button>
+            <button type="button" data-correct="false" data-explanation="SPAs still use APIs heavily.">No need for backend APIs</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 10</h2>
+        <p class="question">What does TypeScript mainly add to React projects?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Runtime speed is not the main purpose.">Guaranteed runtime performance boost</button>
+            <button type="button" data-correct="true" data-explanation="Static typing catches mismatches and improves tooling.">Static type checking and safer refactoring</button>
+            <button type="button" data-correct="false" data-explanation="TypeScript is optional in React.">Mandatory replacement for JavaScript</button>
+            <button type="button" data-correct="false" data-explanation="DOM updates are still handled by React runtime.">Directly updates browser DOM faster by default</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 9 of 10</h2>
+        <p class="question">Which package is commonly used for client-side routing in React apps?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="This package is for unit testing.">jest</button>
+            <button type="button" data-correct="false" data-explanation="This is a bundler/dev server.">vite</button>
+            <button type="button" data-correct="false" data-explanation="React DOM renders roots, not route matching.">react-dom</button>
+            <button type="button" data-correct="true" data-explanation="react-router-dom provides declarative client-side routing.">react-router-dom</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 10 of 10</h2>
+        <p class="question">In a simplified React update cycle, what comes right before commit?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="After render, React diffs virtual trees before commit.">Diff/reconciliation phase</button>
+            <button type="button" data-correct="false" data-explanation="Fetching may happen in effects, not fixed render stage.">Network request phase always</button>
+            <button type="button" data-correct="false" data-explanation="Database save is not React render lifecycle.">Database persistence</button>
+            <button type="button" data-correct="false" data-explanation="Type compilation is build-time, not runtime cycle.">TypeScript compilation</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Session 2</h1>
+        <p>Next session: build weather app in React and compare code architecture with vanilla JavaScript.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>
