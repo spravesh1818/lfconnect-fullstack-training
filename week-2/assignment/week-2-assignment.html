@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 2 Assignments</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            padding: 24px;
+            line-height: 1.6;
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        h1 {
+            max-width: 56rem;
+            margin: 0 auto 1.5rem;
+            padding: 1rem 1.25rem;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 8px;
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+        }
+
+        section {
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1.25rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.6rem;
+            color: #0f172a;
+        }
+
+        a {
+            color: #0369a1;
+        }
+
+        code {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 0.05rem 0.35rem;
+        }
+
+        .deadline {
+            border-left: 5px solid #ef4444;
+            background: #fff1f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Week 2 Student Assignment Sheet</h1>
+
+    <section class="deadline">
+        <h2>Deadline</h2>
+        <p><strong>Submission deadline:</strong> Sunday, May 3, 2026 at 11:59 PM.</p>
+        <p>Plan enough time for local testing and final GitHub push before the deadline.</p>
+    </section>
+
+    <section>
+        <h2>How to Approach This Week</h2>
+        <p>This week combines API integration, polished UI behavior, and React app architecture.</p>
+        <ul>
+            <li>Build features in small steps: UI first, API wiring next, then loading/error handling.</li>
+            <li>Use clear states: initial, loading, success, and error.</li>
+            <li>Follow Vite + React (JavaScript) for React tasks.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Submission and API Key Safety</h2>
+        <ul>
+            <li>Test locally with your real API key.</li>
+            <li>Commit only fake placeholders like <code>API_KEY=&quot;YOUR_FAKE_API_KEY&quot;</code>.</li>
+            <li>Use <code>.env</code> for real keys and keep it out of version control.</li>
+            <li>Add or keep a <code>.env.example</code> file for shared setup instructions.</li>
+        </ul>
+    </section>
+    <section>
+        <h2>Assignment 1: Improve Vanilla Weather App</h2>
+        <p><strong>Target:</strong> <code>week-2/handson/weather-app/</code></p>
+        <ol>
+            <li>Add weather icon display from API response.</li>
+            <li>Customize styling to your preferred look while keeping readability.</li>
+            <li>Add loading and error scenarios with <code>try/catch</code>.</li>
+        </ol>
+        <p><strong>Deliverable:</strong> A polished weather app with icon, loading, success, and error states.</p>
+    </section>
+
+    <section>
+        <h2>Assignment 2: Complete React Weather App</h2>
+        <p><strong>Stack:</strong> Vite + React (JavaScript)</p>
+        <p><strong>Project note:</strong> Continue and improve the React weather project created in class. Do not create
+            a
+            new project.</p>
+        <ol>
+            <li>Refine the existing weather search flow using reusable components.</li>
+            <li>Show clear loading, success, and error states.</li>
+            <li>Render weather details including icon and condition text.</li>
+        </ol>
+        <p><strong>Deliverable:</strong> Fully working React weather app with clean UI and resilient state handling.</p>
+    </section>
+
+    <section>
+        <h2>Assignment 3: Build TMDB Frontend with React</h2>
+        <p><strong>Stack:</strong> Vite + React (JavaScript)</p>
+        <p><strong>TMDB Docs:</strong> <a href="https://developer.themoviedb.org/reference/intro/getting-started"
+                target="_blank" rel="noopener noreferrer">Getting started guide</a></p>
+        <ol>
+            <li>Get TMDB API key and configure local environment variables.</li>
+            <li>Build movie listing/search interface in React.</li>
+            <li>Display poster, title, release date, and short overview.</li>
+            <li>Commit with fake key placeholders only. Do not expose real API key.</li>
+        </ol>
+        <p><strong>Deliverable:</strong> React FE connected to TMDB API, tested locally, and pushed without secrets.</p>
+    </section>
+
+    <section class="deadline">
+        <h2>Final Checklist Before Submission</h2>
+        <ul>
+            <li>All three assignments are complete and linked clearly in your repo.</li>
+            <li>UI has loading and error coverage where APIs are used.</li>
+            <li>No real API keys are present in committed files.</li>
+            <li>Submitted before Sunday, May 3, 2026 at 11:59 PM.</li>
+        </ul>
+    </section>
+</body>
+
+</html>
