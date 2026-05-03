@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 3 Class 2 hands-on - Performance and Custom Hooks</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 3 - Class 2 Lab</strong> -
+        <a href="../slides/session-2.html">Open session deck</a>
+        - useMemo/useCallback, custom hooks, HOF, and React best practices
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Optimize Derived Data Carefully</h2>
+        <ol>
+            <li>Add expensive list filtering or sorting logic to a component.</li>
+            <li>Use <code>useMemo</code> only for computations that are measurably expensive.</li>
+            <li>Document one place where memoization is not necessary.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> memoization has a clear reason, not just blanket usage.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Extract Reusable Custom Hook</h2>
+        <ol>
+            <li>Create a <code>useDebouncedValue</code> or <code>useAsyncResource</code> hook.</li>
+            <li>Use it in at least two components.</li>
+            <li>Confirm dependencies and cleanup logic are correct.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> duplicated logic is removed and hook behavior is stable.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Apply Higher-Order Functions</h2>
+        <ol>
+            <li>Refactor data handling using <code>map</code>, <code>filter</code>, and <code>reduce</code>.</li>
+            <li>Create one utility function for reusable transform logic.</li>
+            <li>Keep components focused on rendering and composition.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> data transforms are readable, testable, and detached from UI clutter.</div>
+    </div>
+
+    <section class="practice-shell" aria-labelledby="practice-title">
+        <h1 id="practice-title">Class 2 Lab Checklist</h1>
+        <ul>
+            <li>[ ] useMemo/useCallback used only where justified</li>
+            <li>[ ] Custom hook extracted and reused</li>
+            <li>[ ] HOF refactor completed with cleaner component code</li>
+        </ul>
+    </section>
+</body>
+
+</html>

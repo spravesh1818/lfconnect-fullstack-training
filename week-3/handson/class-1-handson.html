@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 3 Class 1 hands-on - Local State and Effects</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 3 - Class 1 Lab</strong> -
+        <a href="../slides/session-1.html">Open session deck</a>
+        - Local state, hooks basics, useEffect quirks, and debouncing
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Build Local State Search UI</h2>
+        <ol>
+            <li>Create a React component that tracks query text, loading, and results state.</li>
+            <li>Keep state minimal and derive computed values when possible.</li>
+            <li>Add status labels for idle/loading/success/error.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> all states are visible with predictable UI transitions.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Handle useEffect with Debouncing</h2>
+        <ol>
+            <li>Use <code>useEffect</code> to run API search when query changes.</li>
+            <li>Implement debouncing with <code>setTimeout</code> and cleanup function.</li>
+            <li>Prevent stale responses from overwriting latest results.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> typing quickly does not spam requests and old responses are ignored.</div>
+    </div>
+
+    <section class="practice-shell" aria-labelledby="practice-title">
+        <h1 id="practice-title">Class 1 Lab Checklist</h1>
+        <ul>
+            <li>[ ] Local state model added</li>
+            <li>[ ] Effect dependencies reviewed and cleaned</li>
+            <li>[ ] Debounced request flow implemented</li>
+        </ul>
+    </section>
+</body>
+
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 3 Class 3 hands-on - Global State, Styling, and Deployment</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 3 - Class 3 Lab</strong> -
+        <a href="../slides/session-3.html">Open session deck</a>
+        - Context, Zustand, Tailwind, Chakra UI, Docker, and Netlify
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Add Global State Layer</h2>
+        <ol>
+            <li>Implement shared state once with Context and once with Zustand (small feature scope).</li>
+            <li>Compare boilerplate, readability, and update performance.</li>
+            <li>Keep local UI state local; move only truly shared state globally.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> both approaches work and you can explain when to use each.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Styling Strategy</h2>
+        <ol>
+            <li>Use Tailwind for layout and spacing.</li>
+            <li>Use <strong>Chakra UI</strong> for required reusable UI components.</li>
+            <li>Try one optional extension with Radix UI primitive for contrast.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> app has coherent design system and accessibility-friendly components.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Dockerize and Deploy</h2>
+        <ol>
+            <li>Create production build and lightweight Dockerfile.</li>
+            <li>Verify app runs in container locally.</li>
+            <li>Deploy app to Netlify and document deployment URL.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> deployment is live and reproducible from repository instructions.</div>
+    </div>
+
+    <section class="practice-shell" aria-labelledby="practice-title">
+        <h1 id="practice-title">Class 3 Lab Checklist</h1>
+        <ul>
+            <li>[ ] Context and Zustand comparison complete</li>
+            <li>[ ] Tailwind + Chakra integrated, Radix extension attempted</li>
+            <li>[ ] Dockerfile validated locally</li>
+            <li>[ ] Netlify deployment link captured</li>
+        </ul>
+    </section>
+</body>
+
+</html>

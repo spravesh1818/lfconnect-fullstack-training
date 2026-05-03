@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 3 - Session 1 - React Application Anatomy and Hooks in Practice</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 3 - Session 1</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 1: React Application Anatomy to useEffect</h1>
+        <p>We move from project structure and JSX mechanics to practical state, effects, refs, and form patterns.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Anatomy of a React application</li>
+            <li>Adding packages with practical examples</li>
+            <li>JavaScript inside JSX</li>
+            <li>Environment variables in Vite and <code>import.meta.env</code></li>
+            <li><code>useState</code> deep dive</li>
+            <li>Checkpoint Quiz 1</li>
+            <li><code>useEffect</code> + dependency array deep dive</li>
+            <li><code>useRef</code>, debouncing, and state-only forms</li>
+            <li>Final Quiz</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Anatomy of a React Application</h1>
+        <p>Before hooks, understand where code belongs and how data flows through the app.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Typical Project Structure</h2>
+        <pre>src/
+  main.jsx
+  App.jsx
+  components/
+    SearchBar.jsx
+    ProductCard.jsx
+  hooks/
+    useDebouncedValue.js
+  services/
+    apiClient.js
+  pages/
+    HomePage.jsx
+  styles/
+    globals.css</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Role of Core Files</h2>
+        <ul>
+            <li><code>main.jsx</code>: bootstraps app with <code>createRoot</code></li>
+            <li><code>App.jsx</code>: top-level composition and routing shell</li>
+            <li><code>components/</code>: reusable UI units with props</li>
+            <li><code>hooks/</code>: reusable stateful logic</li>
+            <li><code>services/</code>: API and external system wrappers</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>From Click to UI Update</h2>
+        <ol>
+            <li>User clicks button in component</li>
+            <li>Event handler calls state setter</li>
+            <li>React schedules re-render</li>
+            <li>JSX re-evaluates with new state</li>
+            <li>DOM updates are committed efficiently</li>
+        </ol>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Adding Packages in React Projects</h1>
+        <p>Package choice should be driven by app needs, not trend-following.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Example 1: Router Package</h2>
+        <pre># install
+npm install react-router-dom
+
+// usage
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+export default function App() {
+  return (
+    &lt;BrowserRouter&gt;
+      &lt;Routes&gt;
+        &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+        &lt;Route path="/profile" element={&lt;Profile /&gt;} /&gt;
+      &lt;/Routes&gt;
+    &lt;/BrowserRouter&gt;
+  );
+}</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Example 2: API Data Package</h2>
+        <pre># install
+npm install axios
+
+// usage
+import axios from "axios";
+
+const api = axios.create({ baseURL: "https://api.example.com" });
+const { data } = await api.get("/users");</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Example 3: Styling + Utility Packages</h2>
+        <pre># install styling
+npm install @chakra-ui/react @emotion/react
+
+# install utility
+npm install clsx
+
+// usage
+import { Button } from "@chakra-ui/react";
+import clsx from "clsx";
+
+&lt;Button className={clsx("w-full", isError && "border-red-500")}&gt;
+  Save
+&lt;/Button&gt;</pre>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>JavaScript in JSX</h1>
+        <p>JSX is JavaScript syntax sugar, so expressions and logic are valid in curly braces.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Expressions and Function Calls</h2>
+        <pre>const user = { first: "Asha", score: 92 };
+const isPassing = user.score >= 50;
+
+&lt;h2&gt;{user.first}&lt;/h2&gt;
+&lt;p&gt;Final score: {user.score + 8}&lt;/p&gt;
+&lt;p&gt;Status: {isPassing ? "Pass" : "Retry"}&lt;/p&gt;</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Conditional Rendering Patterns</h2>
+        <pre>{isLoading && &lt;Spinner /&gt;}
+{error ? &lt;ErrorBanner msg={error} /&gt; : &lt;DataTable rows={rows} /&gt;}</pre>
+        <p>Use short-circuit for optional fragments and ternary for explicit two-branch rendering.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Lists and Object Values in JSX</h2>
+        <pre>const style = { color: "#0369a1", fontWeight: 700 };
+
+&lt;ul&gt;
+  {products.map(product =&gt; (
+    &lt;li key={product.id} style={style}&gt;
+      {product.name}
+    &lt;/li&gt;
+  ))}
+&lt;/ul&gt;</pre>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 4</p>
+        <h1>Environment Variables in Vite</h1>
+        <p>Configure API URLs and other per-environment values without hardcoding them in source.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Why env files?</h2>
+        <ul>
+            <li>Same codebase, different settings per machine (local vs teammate) or deploy target (staging vs production)</li>
+            <li>Typical files: <code>.env</code>, <code>.env.local</code> (often gitignored), <code>.env.development</code>, <code>.env.production</code></li>
+            <li>Anything bundled into the client is visible in the browser: do not put real secrets in <code>VITE_*</code> variables</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Vite exposure rules</h2>
+        <ul>
+            <li>Only variables whose names start with <code>VITE_</code> are exposed to your React code</li>
+            <li>Read them with <code>import.meta.env.VITE_SOME_NAME</code></li>
+            <li><code>import.meta.env.MODE</code> — current mode string (e.g. <code>development</code>)</li>
+            <li><code>import.meta.env.DEV</code> — <code>true</code> in development</li>
+            <li><code>import.meta.env.PROD</code> — <code>true</code> in production build</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Using env in code (axios)</h2>
+        <pre># .env (project root)
+VITE_API_URL=https://api.example.com
+
+// app code
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+});</pre>
+        <p>After adding or changing <code>.env</code> files, restart the Vite dev server so values reload.</p>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 5</p>
+        <h1>useState: Anatomy and Patterns</h1>
+        <p>State design quality usually determines how maintainable your component becomes.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>useState Anatomy</h2>
+        <pre>const [count, setCount] = useState(0);
+// value: count
+// setter: setCount(nextValue)</pre>
+        <ul>
+            <li>First item is current state value</li>
+            <li>Second item is stable setter function</li>
+            <li>Setter schedules next render, not immediate synchronous mutation</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Functional Updates for Safety</h2>
+        <pre>const [count, setCount] = useState(0);
+
+function incrementTwiceSafely() {
+  setCount(prev =&gt; prev + 1);
+  setCount(prev =&gt; prev + 1);
+}</pre>
+        <p>When next state depends on previous state, functional form avoids stale reads.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Array/Object State Update Pattern</h2>
+        <pre>const [form, setForm] = useState({ email: "", role: "student" });
+
+function onEmailChange(nextEmail) {
+  setForm(prev =&gt; ({ ...prev, email: nextEmail }));
+}</pre>
+        <p>Never mutate object/array state in place; create new references.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Mini Scenario: Counter + Filter + Form</h2>
+        <ul>
+            <li><strong>counter</strong>: primitive <code>number</code> state</li>
+            <li><strong>filter</strong>: primitive <code>string</code> query</li>
+            <li><strong>form</strong>: grouped object for related fields</li>
+            <li>Derived values (like filtered length) computed during render</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Checkpoint</p>
+        <h1 class="quiz-round-title">Quiz 1: JSX, Vite env, + useState</h1>
+        <p class="quiz-hint">5 questions before moving to effects.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 5</h2>
+        <p class="question">Which JSX line correctly renders a conditional message?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="JSX expressions use braces, not template tags in plain markup.">&lt;p&gt;${isReady ? "Ready" : "Loading"}&lt;/p&gt;</button>
+            <button type="button" data-correct="true" data-explanation="Ternary inside braces is the valid JSX pattern.">&lt;p&gt;{isReady ? "Ready" : "Loading"}&lt;/p&gt;</button>
+            <button type="button" data-correct="false" data-explanation="if/else statements cannot be placed directly inside JSX expression position.">&lt;p&gt;{if (isReady) "Ready" else "Loading"}&lt;/p&gt;</button>
+            <button type="button" data-correct="false" data-explanation="Condition should not be passed as string literal.">&lt;p&gt;"isReady &amp;&amp; Ready"&lt;/p&gt;</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 5</h2>
+        <p class="question">Why is this recommended? <code>setCount(prev =&gt; prev + 1)</code></p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="It reads from freshest queued value and avoids stale closure issues.">It guarantees updates are based on latest state value</button>
+            <button type="button" data-correct="false" data-explanation="Functional updates do not bypass rendering.">It prevents component rerenders entirely</button>
+            <button type="button" data-correct="false" data-explanation="Setters can still be called inside handlers and effects.">It is only valid inside useEffect</button>
+            <button type="button" data-correct="false" data-explanation="It is a runtime behavior, not TypeScript-specific.">It is required only in TypeScript projects</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 5</h2>
+        <p class="question">What is the issue with storing both <code>items</code> and <code>itemCount</code> state if count is always items length?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Performance impact depends on context; main issue is consistency risk.">It always makes rendering slower by 90%</button>
+            <button type="button" data-correct="true" data-explanation="Duplicate state can become inconsistent and requires unnecessary synchronization.">It duplicates derivable state and can drift</button>
+            <button type="button" data-correct="false" data-explanation="React allows number state values.">Numbers are not valid state values</button>
+            <button type="button" data-correct="false" data-explanation="This is a runtime design issue, not parser error.">JSX parser fails when using length</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 5</h2>
+        <p class="question">Best key choice when rendering a user list from API?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Indexes are fragile when list order changes.">Array index from <code>map</code></button>
+            <button type="button" data-correct="false" data-explanation="Random values break stable identity on rerender.">Math.random() per row</button>
+            <button type="button" data-correct="true" data-explanation="Stable unique backend IDs preserve identity correctly.">Persistent <code>user.id</code> from data</button>
+            <button type="button" data-correct="false" data-explanation="Names may collide and are not guaranteed unique.">User display name text</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 5</h2>
+        <p class="question">Which object state update is safe?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Direct mutation keeps same reference and can cause bugs."><code>form.email = next; setForm(form)</code></button>
+            <button type="button" data-correct="true" data-explanation="Spread copy creates a new object reference with updated field."><code>setForm(prev =&gt; ({ ...prev, email: next }))</code></button>
+            <button type="button" data-correct="false" data-explanation="Stringifying object turns structure into text, not updated object state."><code>setForm(JSON.stringify(form))</code></button>
+            <button type="button" data-correct="false" data-explanation="Refs do not replace render-driving state for form fields."><code>formRef.current.email = next</code></button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 6</p>
+        <h1>useEffect In Depth</h1>
+        <p>Effects synchronize React state with external systems like APIs, timers, subscriptions, and browser APIs.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>When useEffect is Appropriate</h2>
+        <ul>
+            <li>Data fetching after initial render or dependency change</li>
+            <li>Subscribing/unsubscribing to sockets or events</li>
+            <li>Interacting with timers and intervals</li>
+            <li>Syncing with external widgets not controlled by React</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Dependency Array Modes</h2>
+        <pre>// after every render
+useEffect(() => { logRender(); });
+
+// once after mount
+useEffect(() => { connect(); }, []);
+
+// mount + when userId changes
+useEffect(() => { fetchUser(userId); }, [userId]);</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Stale Closure Example</h2>
+        <pre>useEffect(() => {
+  const id = setInterval(() => {
+    console.log(count); // stale when count missing in deps
+  }, 1000);
+  return () => clearInterval(id);
+}, []);</pre>
+        <p>Fix by including <code>count</code> or by redesigning with refs/callback strategies.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Cleanup Pattern for External Resources</h2>
+        <pre>useEffect(() => {
+  const socket = connectRoom(roomId);
+  socket.on("message", handleMessage);
+  return () => socket.disconnect();
+}, [roomId, handleMessage]);</pre>
+        <p>Cleanup prevents memory leaks and duplicated subscriptions.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Strict Mode Note (Development)</h2>
+        <ul>
+            <li>Effect setup and cleanup can run twice on mount in development</li>
+            <li>Purpose: reveal unsafe side-effect logic</li>
+            <li>Production behavior is not doubled in the same way</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 7</p>
+        <h1>useRef and Debouncing</h1>
+        <p>Refs store mutable values across renders without triggering rerenders.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>useRef vs useState</h2>
+        <div class="comparison">
+            <article>
+                <h3>useState</h3>
+                <ul>
+                    <li>Triggers rerender on update</li>
+                    <li>Use for UI-visible data</li>
+                </ul>
+            </article>
+            <article>
+                <h3>useRef</h3>
+                <ul>
+                    <li>No rerender on update</li>
+                    <li>Use for DOM handles or mutable instance values</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Practical useRef Examples</h2>
+        <pre>const inputRef = useRef(null);
+const renderCountRef = useRef(0);
+
+useEffect(() => {
+  renderCountRef.current += 1;
+}, []);
+
+function focusSearch() {
+  inputRef.current?.focus();
+}</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Debouncing Timeline</h2>
+        <ol>
+            <li>User types "r" -> timer starts</li>
+            <li>User types "re" before timeout -> previous timer cleared</li>
+            <li>User types "react" and pauses -> final timer completes</li>
+            <li>Only one API call runs for latest input</li>
+        </ol>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Debounced Search Example</h2>
+        <pre>const [query, setQuery] = useState("");
+
+useEffect(() => {
+  if (!query.trim()) return;
+  const timerId = setTimeout(() => searchBooks(query), 400);
+  return () => clearTimeout(timerId);
+}, [query]);</pre>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 8</p>
+        <h1>State-Only Form Implementation</h1>
+        <p>Build robust forms with controlled inputs and explicit validation state.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Controlled Form Pattern</h2>
+        <pre>const [form, setForm] = useState({ name: "", email: "" });
+const [errors, setErrors] = useState({});
+
+function onChange(event) {
+  const { name, value } = event.target;
+  setForm(prev =&gt; ({ ...prev, [name]: value }));
+}</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Submit + Validate + Reset</h2>
+        <pre>function onSubmit(event) {
+  event.preventDefault();
+  const nextErrors = {};
+  if (!form.name.trim()) nextErrors.name = "Name required";
+  if (!form.email.includes("@")) nextErrors.email = "Valid email required";
+  setErrors(nextErrors);
+  if (Object.keys(nextErrors).length) return;
+  saveUser(form);
+  setForm({ name: "", email: "" });
+}</pre>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Final Challenge</p>
+        <h1 class="quiz-round-title">Quiz 2: Effects, Refs, Debounce, and Forms</h1>
+        <p class="quiz-hint">6 questions to validate practical reasoning across all advanced topics.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 6</h2>
+        <p class="question">When should you prefer <code>useRef</code> over <code>useState</code>?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Refs are ideal for mutable values that should not trigger rerenders.">Tracking timer IDs or DOM element references</button>
+            <button type="button" data-correct="false" data-explanation="Displayed text should usually use state so UI updates.">Displaying form input text in UI</button>
+            <button type="button" data-correct="false" data-explanation="Data fetched for rendering belongs in state.">Storing API response used by component render</button>
+            <button type="button" data-correct="false" data-explanation="Validation messages should rerender and belong in state.">Holding visible validation errors</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 6</h2>
+        <p class="question">What is the most accurate reading of this effect? <code>useEffect(fn, [])</code></p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="It runs after initial mount; cleanup runs on unmount (and strict mode replays in dev).">Runs on mount and cleans up on unmount</button>
+            <button type="button" data-correct="false" data-explanation="No dependency array is the mode that runs after every render.">Runs after every render</button>
+            <button type="button" data-correct="false" data-explanation="It is not tied to every state update with empty array.">Runs only when any state setter is called</button>
+            <button type="button" data-correct="false" data-explanation="Effects run after render commit, not before.">Runs before first render begins</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 6</h2>
+        <p class="question">Debouncing is most useful when:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Debounce intentionally delays action; not ideal for immediate click response.">Button click should trigger instantly</button>
+            <button type="button" data-correct="true" data-explanation="Typing generates rapid events; debounce reduces redundant requests.">Search input fires many changes in short intervals</button>
+            <button type="button" data-correct="false" data-explanation="Debounce does not solve static image loading concerns.">Loading static logos from local assets</button>
+            <button type="button" data-correct="false" data-explanation="Debounce is unrelated to route protection logic.">Guarding private routes by auth state</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 6</h2>
+        <p class="question">A form input is "controlled" when:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Direct DOM access is uncontrolled pattern.">Its value is read only with <code>document.querySelector</code></button>
+            <button type="button" data-correct="true" data-explanation="React state is source of truth and input value comes from state.">Its value is bound to state and updates through <code>onChange</code></button>
+            <button type="button" data-correct="false" data-explanation="Browser default value alone does not make control pattern.">It only uses the <code>defaultValue</code> prop</button>
+            <button type="button" data-correct="false" data-explanation="Local storage sync is optional and unrelated to controlled status.">It automatically syncs with localStorage</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 6</h2>
+        <p class="question">Which dependency array is correct if effect uses <code>roomId</code> and <code>handleMessage</code>?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Empty array can cause stale closure for changing values."><code>[]</code></button>
+            <button type="button" data-correct="true" data-explanation="All reactive values used by effect should be listed."><code>[roomId, handleMessage]</code></button>
+            <button type="button" data-correct="false" data-explanation="Missing callback can lead to stale behavior."><code>[roomId]</code></button>
+            <button type="button" data-correct="false" data-explanation="No array runs every render and may be inefficient/noisy.">No dependency array</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 6</h2>
+        <p class="question">Best reason to keep validation errors in state?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Errors drive visible UI feedback, so rerender-triggering state is appropriate.">Error messages need to update rendered UI</button>
+            <button type="button" data-correct="false" data-explanation="Refs are not ideal for render-driven user feedback.">Refs are always better than state for user-visible data</button>
+            <button type="button" data-correct="false" data-explanation="console logs are not a user-facing validation strategy.">So logs become easier to debug</button>
+            <button type="button" data-correct="false" data-explanation="State is a runtime concern, not a build optimizer.">It reduces bundle size automatically</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Wrap-up</h2>
+        <ul>
+            <li>You can now explain app anatomy and package decisions</li>
+            <li>You can configure API base URLs and other client-safe settings with Vite env variables</li>
+            <li>You can use JSX, state, effects, refs, and debouncing with intent</li>
+            <li>You can build and validate a state-driven controlled form</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Session 1</h1>
+        <p>Next: deeper optimization patterns and custom hooks in Session 2.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

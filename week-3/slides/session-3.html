@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 3 - Session 3 - Global State, Styling, and Deployment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 3 - Session 3</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 3: Shared State to Production</h1>
+        <p>Move from app architecture decisions to deployment-ready engineering workflow.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Context API mental model</li>
+            <li>Zustand for global state workflows</li>
+            <li>Tailwind + Chakra (required) + Radix (optional)</li>
+            <li>Dockerizing and deploying to Netlify</li>
+            <li>Challenge quiz</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Global State Architecture</h1>
+        <p>Choose the smallest state scope that satisfies product behavior.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>When Context API Fits</h2>
+        <ul>
+            <li>Theme, auth user, locale, feature flags</li>
+            <li>Moderate update frequency, broad read access</li>
+            <li>Built-in React solution with no external dependency</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Context Caveats</h2>
+        <ul>
+            <li>Provider updates can rerender many consumers</li>
+            <li>Large monolithic context becomes hard to maintain</li>
+            <li>Split providers by domain for better control</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Zustand Workflow</h1>
+        <p>External store with selective subscriptions and lightweight API.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Why Teams Pick Zustand</h2>
+        <ul>
+            <li>Minimal boilerplate compared with many state libraries</li>
+            <li>Selectors can reduce unnecessary rerenders</li>
+            <li>Works well for medium-to-large shared app state</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Context vs Zustand</h2>
+        <div class="comparison">
+            <article>
+                <h3>Context</h3>
+                <ul>
+                    <li>Built into React</li>
+                    <li>Great for stable global values</li>
+                    <li>Needs careful provider splitting</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Zustand</h3>
+                <ul>
+                    <li>External store abstraction</li>
+                    <li>Selector-based subscriptions</li>
+                    <li>Good for complex shared update flows</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Styling and UI Libraries</h1>
+        <p>Balance velocity, consistency, and accessibility.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Tailwind Utility Strategy</h2>
+        <ul>
+            <li>Fast composition with predictable utility classes</li>
+            <li>Works best with design tokens and agreed naming patterns</li>
+            <li>Avoid class bloat by extracting repeating patterns</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Component Libraries this Week</h2>
+        <ul>
+            <li><strong>Required:</strong> Chakra UI for reusable application components</li>
+            <li><strong>Optional extension:</strong> Radix UI primitives for advanced accessibility patterns</li>
+            <li>Combine with Tailwind carefully to avoid style conflicts</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 4</p>
+        <h1>Production Workflow</h1>
+        <p>A feature is complete when it can be deployed confidently.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Dockerization Basics</h2>
+        <ul>
+            <li>Use multi-stage build for small runtime images</li>
+            <li>Build static assets in one stage, serve in lightweight runtime</li>
+            <li>Keep environment values externalized</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Netlify Deployment Checklist</h2>
+        <ul>
+            <li>Set build command and publish directory correctly</li>
+            <li>Configure environment variables in Netlify dashboard</li>
+            <li>Verify SPA route fallback and production API behavior</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Summary</h2>
+        <ul>
+            <li>Context and Zustand solve different scales of shared state</li>
+            <li>Tailwind + Chakra can ship fast consistent UIs</li>
+            <li>Radix is an optional primitive layer for advanced patterns</li>
+            <li>Docker + Netlify closes the loop from dev to deployment</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Session 3 Quiz</h1>
+        <p class="quiz-hint">6 questions. Focus on tradeoffs, not tool slogans.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 6</h2>
+        <p class="question">Which state is the strongest candidate for Context API?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Theme mode is broadly consumed and changes infrequently, ideal for context.">Current theme mode used across the app shell</button>
+            <button type="button" data-correct="false" data-explanation="Input drafts usually belong to local component state.">Unsubmitted text inside one form field</button>
+            <button type="button" data-correct="false" data-explanation="Hover state should remain local and ephemeral.">Hovered card ID in a single grid</button>
+            <button type="button" data-correct="false" data-explanation="Animation frame counters are UI-local concerns.">Per-component animation tick value</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 6</h2>
+        <p class="question">What is a practical advantage of Zustand over a single large Context provider?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Zustand is primarily for state management, not built-in routing.">Automatic nested route generation</button>
+            <button type="button" data-correct="true" data-explanation="Selector subscriptions can reduce rerenders for unaffected components.">Selective subscriptions to only needed store slices</button>
+            <button type="button" data-correct="false" data-explanation="Zustand does not replace deployment configuration.">No need for environment variables</button>
+            <button type="button" data-correct="false" data-explanation="TypeScript support exists but is not mandatory.">It only works in TypeScript projects</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 6</h2>
+        <p class="question">Team uses Tailwind and Chakra together. What keeps this maintainable?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Clear boundaries prevent style conflicts and duplicated design decisions.">Define clear boundaries: layout utilities vs component primitives</button>
+            <button type="button" data-correct="false" data-explanation="Inline styles everywhere reduce consistency and theming control.">Prefer inline style objects for every component</button>
+            <button type="button" data-correct="false" data-explanation="Disabling Chakra theme removes design-system value.">Disable Chakra theme and hardcode colors per file</button>
+            <button type="button" data-correct="false" data-explanation="Copy-paste classes increase drift, not reduce it.">Duplicate class strings in all pages for speed</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 6</h2>
+        <p class="question">Why is Radix marked optional in this week plan?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Radix is actively maintained and widely used.">Because Radix is deprecated and unstable</button>
+            <button type="button" data-correct="false" data-explanation="Radix works with many frameworks and setups.">Because Radix only supports Next.js SSR apps</button>
+            <button type="button" data-correct="true" data-explanation="Chakra already satisfies required component-library outcomes; Radix is extension depth.">Chakra is required baseline, Radix adds advanced optional primitives</button>
+            <button type="button" data-correct="false" data-explanation="Accessibility is a strength of Radix, not a weakness.">Because Radix components are inaccessible by default</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 6</h2>
+        <p class="question">What is the main purpose of multi-stage Docker builds for React apps?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Separate build/runtime stages keep final image smaller and cleaner.">Produce a smaller runtime image with only deployment artifacts</button>
+            <button type="button" data-correct="false" data-explanation="Environment values still need explicit configuration.">Automatically inject all Netlify environment variables</button>
+            <button type="button" data-correct="false" data-explanation="Docker build does not eliminate package manager lockfiles.">Avoid all dependency lockfiles in production</button>
+            <button type="button" data-correct="false" data-explanation="Containerization does not replace static build generation.">Skip static build generation entirely</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 6</h2>
+        <p class="question">Netlify deploy works, but browser refresh on nested route returns 404. Most likely missing step?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="This does not affect SPA route fallback behavior.">Increase Docker image memory limit</button>
+            <button type="button" data-correct="true" data-explanation="SPAs need route rewrite/fallback so unknown paths resolve to index.html.">Configure SPA redirect/fallback to <code>index.html</code></button>
+            <button type="button" data-correct="false" data-explanation="Publishing source directory instead of build output is not the standard fix.">Set publish directory to <code>src/</code></button>
+            <button type="button" data-correct="false" data-explanation="Route 404 on refresh is unrelated to removing minification.">Disable asset minification in build pipeline</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 3 Sessions</h1>
+        <p>Next step: complete assignment deliverables and publish final deployment with architecture notes.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>
