@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 3 Class 2 hands-on - Performance and Custom Hooks</title>
+    <title>Week 3 Class 2 hands-on - React Router Foundations</title>
     <style>
         .lab-banner {
             font-family: system-ui, sans-serif;
@@ -54,46 +54,26 @@
     <div class="lab-banner">
         <strong>Week 3 - Class 2 Lab</strong> -
         <a href="../slides/session-2.html">Open session deck</a>
-        - useMemo/useCallback, custom hooks, HOF, and React best practices
+        - React Router foundations only (<code>BrowserRouter</code>, <code>Routes</code>, <code>Link</code>/<code>NavLink</code>, 404)
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 1 - Optimize Derived Data Carefully</h2>
+        <h2>Exercise 1 - React Router in Your App</h2>
         <ol>
-            <li>Add expensive list filtering or sorting logic to a component.</li>
-            <li>Use <code>useMemo</code> only for computations that are measurably expensive.</li>
-            <li>Document one place where memoization is not necessary.</li>
+            <li>Install <code>react-router</code> and wrap your app (or <code>App</code>) with <code>BrowserRouter</code>.</li>
+            <li>Define at least three routes (for example <code>/</code> Home, <code>/about</code> About, plus a catch-all <code>*</code> for a simple NotFound page).</li>
+            <li>Add a small nav using <code>NavLink</code> with a visible active state (e.g. via <code>className</code> callback or styles).</li>
+            <li>Confirm in-app navigation does not full-reload the page; unknown paths show your 404 view.</li>
         </ol>
-        <div class="done-when"><strong>Done when:</strong> memoization has a clear reason, not just blanket usage.</div>
-    </div>
-
-    <div class="exercise-instructions">
-        <h2>Exercise 2 - Extract Reusable Custom Hook</h2>
-        <ol>
-            <li>Create a <code>useDebouncedValue</code> or <code>useAsyncResource</code> hook.</li>
-            <li>Use it in at least two components.</li>
-            <li>Confirm dependencies and cleanup logic are correct.</li>
-        </ol>
-        <div class="done-when"><strong>Done when:</strong> duplicated logic is removed and hook behavior is stable.</div>
-    </div>
-
-    <div class="exercise-instructions">
-        <h2>Exercise 3 - Apply Higher-Order Functions</h2>
-        <ol>
-            <li>Refactor data handling using <code>map</code>, <code>filter</code>, and <code>reduce</code>.</li>
-            <li>Create one utility function for reusable transform logic.</li>
-            <li>Keep components focused on rendering and composition.</li>
-        </ol>
-        <div class="done-when"><strong>Done when:</strong> data transforms are readable, testable, and detached from UI clutter.</div>
+        <div class="done-when"><strong>Done when:</strong> all three routes work, active link styling is obvious, and unmatched URLs hit NotFound.</div>
     </div>
 
     <section class="practice-shell" aria-labelledby="practice-title">
         <h1 id="practice-title">Class 2 Lab Checklist</h1>
         <ul>
-            <li>[ ] useMemo/useCallback used only where justified</li>
-            <li>[ ] Custom hook extracted and reused</li>
-            <li>[ ] HOF refactor completed with cleaner component code</li>
+            <li>[ ] React Router: BrowserRouter, three+ routes, NavLink active state, catch-all 404</li>
         </ul>
+        <p style="margin-top: 1rem; color: #475569; font-size: 0.95rem;">Memoization, custom hooks, and HOF labs are in <a href="class-3-handson.html">Class 3 hands-on</a> (Session 3).</p>
     </section>
 </body>
 

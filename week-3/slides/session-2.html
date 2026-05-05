@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 3 - Session 2 - Memoization and Custom Hooks</title>
+    <title>Week 3 - Session 2 - React Router Foundations</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="session-deck-theme.css" />
@@ -19,207 +19,170 @@
     </header>
 
     <div class="slide active bg1">
-        <h1>Class 2: Performance and Reuse</h1>
-        <p>Learn where memoization helps, where it hurts, and how custom hooks simplify large React codebases.</p>
+        <h1>Class 2: Client-Side Routing</h1>
+        <p>React Router essentials: route table, navigation links, programmatic navigation — using the <code>react-router</code> package.</p>
     </div>
 
     <div class="slide bg1">
         <h2>Session Agenda</h2>
         <ol>
-            <li><code>useMemo</code> and <code>useCallback</code> tradeoffs</li>
-            <li>Custom hooks and dependency pitfalls</li>
-            <li>Higher-order functions for clean data flows</li>
-            <li>React best-practice checklist</li>
-            <li>Challenge quiz</li>
+            <li>Install <code>react-router</code> and <code>BrowserRouter</code></li>
+            <li><code>Routes</code>, <code>Route</code>, and the <code>element</code> prop</li>
+            <li><code>Link</code>, <code>NavLink</code>, and internal navigation</li>
+            <li>Catch-all (<code>path="*"</code>) and <code>useNavigate</code></li>
+            <li>Quiz</li>
         </ol>
     </div>
 
     <div class="slide bg2">
         <p class="part-kicker">Part 1</p>
-        <h1>Memoization in Practice</h1>
-        <p>Optimization is useful only when it solves a measured problem.</p>
+        <h1>Client-Side Routing with React Router</h1>
+        <p>URLs should reflect what the user sees: shareable links, back/forward, and navigation without full page reloads. We expand on the Session&nbsp;1 <code>react-router</code> install teaser.</p>
     </div>
 
     <div class="slide bg2">
-        <h2>useMemo Purpose</h2>
-        <ul>
-            <li>Cache expensive computed values between renders</li>
-            <li>Recompute only when dependencies change</li>
-            <li>Not required for trivial operations</li>
-        </ul>
+        <h2>Install and app shell</h2>
+        <pre># install
+npm install react-router</pre>
+        <p>Wrap the tree that needs routing once with <code>&lt;BrowserRouter&gt;</code> — typically in <code>main.jsx</code> around <code>&lt;App /&gt;</code> or at the top of <code>App.jsx</code>. Without it, <code>Link</code> and route hooks have no router context.</p>
+        <p>Older material may still show <code>react-router-dom</code>; it largely re-exports <code>react-router</code>. Prefer <code>react-router</code> for new apps.</p>
     </div>
 
     <div class="slide bg2">
-        <h2>useCallback Purpose</h2>
-        <ul>
-            <li>Stabilize function identity across renders</li>
-            <li>Useful when passing callbacks to memoized children</li>
-            <li>Can add noise if used everywhere without reason</li>
-        </ul>
-    </div>
+        <h2><code>Routes</code> and <code>Route</code> (v6)</h2>
+        <pre>import { Routes, Route } from "react-router";
+import Home from "./pages/Home.jsx";
+import About from "./pages/About.jsx";
 
-    <div class="slide bg2">
-        <h2>When Memoization Backfires</h2>
-        <ul>
-            <li>Dependency arrays are wrong or too broad</li>
-            <li>Code becomes harder to reason about</li>
-            <li>Cost of memoization exceeds saved work</li>
-        </ul>
-    </div>
-
-    <div class="slide bg3">
-        <p class="part-kicker">Part 2</p>
-        <h1>Custom Hooks</h1>
-        <p>Encapsulate reusable stateful logic while keeping components focused on UI.</p>
-    </div>
-
-    <div class="slide bg3">
-        <h2>What Makes a Good Custom Hook</h2>
-        <ul>
-            <li>Single responsibility and predictable API</li>
-            <li>Clear input/output contract</li>
-            <li>No hidden side effects beyond what name implies</li>
-        </ul>
-    </div>
-
-    <div class="slide bg3">
-        <h2>Custom Hook Example</h2>
-        <pre>function useDebouncedValue(value, delayMs) {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delayMs);
-    return () => clearTimeout(id);
-  }, [value, delayMs]);
-  return debounced;
+export default function AppRoutes() {
+  return (
+    &lt;Routes&gt;
+      &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+      &lt;Route path="/about" element={&lt;About /&gt;} /&gt;
+    &lt;/Routes&gt;
+  );
 }</pre>
+        <p>Declare the route table in one place. Each <code>path</code> maps to an <code>element</code> (a React node).</p>
     </div>
 
-    <div class="slide bg3">
-        <h2>Dependency Pitfalls in Hooks</h2>
-        <ul>
-            <li>Missing dependencies cause stale data</li>
-            <li>Unstable references trigger unnecessary reruns</li>
-            <li>Move stable utilities outside component when possible</li>
-        </ul>
+    <div class="slide bg2">
+        <h2><code>Link</code> and <code>NavLink</code></h2>
+        <pre>import { Link, NavLink } from "react-router";
+
+&lt;Link to="/about"&gt;About&lt;/Link&gt;
+
+&lt;NavLink
+  to="/about"
+  className={({ isActive }) =&gt; (isActive ? "nav-link active" : "nav-link")}
+&gt;
+  About
+&lt;/NavLink&gt;</pre>
+        <p>Use <code>Link</code> / <code>NavLink</code> for in-app paths so React Router updates the URL without a full document reload. Reserve plain <code>&lt;a href&gt;</code> for external sites or downloads.</p>
     </div>
 
-    <div class="slide bg4">
-        <p class="part-kicker">Part 3</p>
-        <h1>Higher-Order Functions + Best Practices</h1>
-        <p>Readable transforms and bounded component responsibilities reduce long-term bugs.</p>
-    </div>
+    <div class="slide bg2">
+        <h2>404 route and programmatic navigation</h2>
+        <pre>&lt;Route path="*" element={&lt;NotFound /&gt;} /&gt;
 
-    <div class="slide bg4">
-        <h2>HOFs in React Code</h2>
-        <ul>
-            <li><code>map</code> for list rendering</li>
-            <li><code>filter</code> for scoped subsets</li>
-            <li><code>reduce</code> for aggregate state</li>
-            <li>Prefer pure transforms over inline mutation</li>
-        </ul>
-    </div>
+// optional: redirect or navigate after an action
+import { useNavigate } from "react-router";
 
-    <div class="slide bg4">
-        <h2>Best Practices Checklist</h2>
-        <ul>
-            <li>State minimalism over state duplication</li>
-            <li>Effects only for side effects, not pure derivations</li>
-            <li>Memoization only where profiling suggests value</li>
-            <li>Hooks and utility abstractions named by intent</li>
-        </ul>
+const navigate = useNavigate();
+navigate("/thanks");</pre>
+        <p><code>path="*"</code> matches when nothing else does — your “not found” page. <code>useNavigate()</code> is useful after login, form submit, or guard logic.</p>
     </div>
 
     <div class="slide bg1">
         <h2>Session Summary</h2>
         <ul>
-            <li>Memoization is a tool, not a default rule</li>
-            <li>Custom hooks increase reuse and consistency</li>
-            <li>HOF-driven transforms improve clarity</li>
-            <li>Best practices focus on long-term maintainability</li>
+            <li>Wrap once with <code>BrowserRouter</code> so <code>Routes</code>, <code>Link</code>, and router hooks work</li>
+            <li>Declare URL-to-UI mappings with <code>Routes</code> / <code>Route</code> using the <code>element</code> prop</li>
+            <li>Prefer <code>Link</code> / <code>NavLink</code> for in-app navigation; use <code>path="*"</code> and <code>useNavigate</code> for not-found and redirects</li>
+            <li>Next session: dynamic segments, query strings, nested layouts — then performance patterns</li>
         </ul>
     </div>
 
     <div class="slide bg-quiz quiz-segment">
         <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
         <h1 class="quiz-round-title">Session 2 Quiz</h1>
-        <p class="quiz-hint">6 questions. Distractors are intentionally close to real-world mistakes.</p>
+        <p class="quiz-hint">6 questions on React Router foundations.</p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 1 of 6</h2>
-        <p class="question">Which scenario best justifies <code>useMemo</code>?</p>
+        <p class="question">Where should <code>&lt;BrowserRouter&gt;</code> live in a typical Vite + React app?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="false" data-explanation="Simple string interpolation is cheap; memoization adds unnecessary complexity.">Formatting a short title string each render</button>
-            <button type="button" data-correct="true" data-explanation="Expensive computation over large data is a valid memoization candidate.">Sorting/filtering a 5k-item list used in render</button>
-            <button type="button" data-correct="false" data-explanation="Effects are for synchronization, not mandatory with memoized values.">Making every effect dependency optional</button>
-            <button type="button" data-correct="false" data-explanation="useMemo does not persist values across page reloads.">Caching API responses between browser sessions</button>
+            <button type="button" data-correct="false" data-explanation="Router context must wrap components that use Link, Routes, or router hooks.">Only inside a leaf page component</button>
+            <button type="button" data-correct="true" data-explanation="One router at the root (e.g. around App) provides context for the whole tree that navigates.">Once near the root, wrapping the part of the tree that uses routing</button>
+            <button type="button" data-correct="false" data-explanation="index.html is static HTML; the React tree is mounted from main.jsx.">Inside <code>index.html</code> as raw HTML</button>
+            <button type="button" data-correct="false" data-explanation="Each Route declares a URL match; the router provider is separate.">Inside every <code>&lt;Route&gt;</code> element</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 2 of 6</h2>
-        <p class="question">A parent passes a callback to a memoized child. Child still rerenders often. What is a likely fix?</p>
+        <p class="question">You are linking to another view inside the same SPA. What is usually best?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="Stabilizing callback identity can prevent unnecessary rerenders in memoized children.">Wrap callback with <code>useCallback</code> and correct dependencies</button>
-            <button type="button" data-correct="false" data-explanation="Context introduces broader updates and is not a direct fix here.">Move callback into global context provider</button>
-            <button type="button" data-correct="false" data-explanation="Refs do not replace callback props for child interactions.">Store callback in <code>useRef</code> and never update it</button>
-            <button type="button" data-correct="false" data-explanation="Child rerendering is not solved by switching build tools.">Replace Vite with another bundler</button>
+            <button type="button" data-correct="false" data-explanation="Full navigation reloads the app and drops in-memory React state.">&lt;a href="/dashboard"&gt;Dashboard&lt;/a&gt;</button>
+            <button type="button" data-correct="true" data-explanation="Link performs client-side navigation and keeps the SPA mounted.">&lt;Link to="/dashboard"&gt;Dashboard&lt;/Link&gt;</button>
+            <button type="button" data-correct="false" data-explanation="window.location triggers a full page load like a normal anchor."><code>window.location.href = "/dashboard"</code></button>
+            <button type="button" data-correct="false" data-explanation="import is for modules, not UI navigation."><code>import("/dashboard")</code></button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 3 of 6</h2>
-        <p class="question">What is the strongest sign logic should move into a custom hook?</p>
+        <p class="question">In React Router v6, how do you render a component for a matched path?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="false" data-explanation="File length alone is not enough; extraction should improve coherence and reuse.">Component file exceeds 150 lines</button>
-            <button type="button" data-correct="true" data-explanation="Repeated state/effect workflow across components is ideal for custom hook extraction.">Same stateful effect pattern appears in multiple components</button>
-            <button type="button" data-correct="false" data-explanation="Custom hooks can include effects; this is not a reason to avoid them.">Any useEffect automatically disqualifies extraction</button>
-            <button type="button" data-correct="false" data-explanation="Hooks can return functions, objects, and primitives as needed.">You need to return more than one value</button>
+            <button type="button" data-correct="true" data-explanation="v6 uses the element prop with a React element.">Pass <code>element={&lt;Page /&gt;}</code> on <code>Route</code></button>
+            <button type="button" data-correct="false" data-explanation="component prop is not the v6 API on Route."><code>component={Page}</code> without element</button>
+            <button type="button" data-correct="false" data-explanation="render prop pattern is not the standard v6 Route API."><code>render={() =&gt; &lt;Page /&gt;}</code></button>
+            <button type="button" data-correct="false" data-explanation="Routes need explicit Route children; string alone is invalid."><code>&lt;Routes&gt;"Page"&lt;/Routes&gt;</code></button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 4 of 6</h2>
-        <p class="question">Inside a custom hook, dependency arrays are often wrong because:</p>
+        <p class="question">What does a <code>Route</code> with <code>path="*"</code> typically represent?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="false" data-explanation="TypeScript can help but does not auto-fix dependency logic.">TypeScript strips dependency arrays during build</button>
-            <button type="button" data-correct="true" data-explanation="Closed-over values not listed in dependencies cause stale behavior.">Hook closes over changing values that were omitted</button>
-            <button type="button" data-correct="false" data-explanation="Imports are static and not tracked as render-time dependencies.">Imported constants should always be effect dependencies</button>
-            <button type="button" data-correct="false" data-explanation="Dependency arrays do not require alphabetical ordering.">Dependencies are out of lexical order</button>
+            <button type="button" data-correct="true" data-explanation="Star matches when no more specific route matched; common for 404.">Catch-all / “not found” when no other route matches</button>
+            <button type="button" data-correct="false" data-explanation="Asterisk is not reserved for API proxy routes in RR config.">Only for proxying API requests</button>
+            <button type="button" data-correct="false" data-explanation="Wildcards do not disable client-side routing.">Disables React Router for that subtree</button>
+            <button type="button" data-correct="false" data-explanation="Multiple segments still need explicit nested routes; star is fallback.">Matches every URL including nested segments automatically</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 5 of 6</h2>
-        <p class="question">Which refactor best demonstrates proper higher-order function usage?</p>
+        <p class="question">Which hook returns a function you call to navigate programmatically?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="false" data-explanation="Imperative mutation is harder to reason about and test.">Mutating an array in-place across nested loops</button>
-            <button type="button" data-correct="true" data-explanation="Composed filter/map/reduce pipelines express intent clearly.">Composing <code>filter</code> + <code>map</code> for render-ready view models</button>
-            <button type="button" data-correct="false" data-explanation="Stringifying objects for comparison is fragile and unrelated to HOF benefits.">Converting objects to strings before every comparison</button>
-            <button type="button" data-correct="false" data-explanation="Inline mutation in JSX mixes concerns.">Writing accumulation logic directly inside JSX blocks</button>
+            <button type="button" data-correct="true" data-explanation="useNavigate returns the navigate function."><code>useNavigate()</code></button>
+            <button type="button" data-correct="false" data-explanation="useParams reads URL params; it does not navigate."><code>useParams()</code></button>
+            <button type="button" data-correct="false" data-explanation="useRouteError is for error boundaries in data routers."><code>useRouteError()</code></button>
+            <button type="button" data-correct="false" data-explanation="useMemo caches values; unrelated to routing."><code>useMemo()</code></button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 6 of 6</h2>
-        <p class="question">A team adds <code>useCallback</code> to every event handler by policy. Best critique?</p>
+        <p class="question">When is <code>NavLink</code> especially helpful compared to <code>Link</code>?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="false" data-explanation="useCallback does not remove the need for keys.">It prevents all key-related list bugs</button>
-            <button type="button" data-correct="true" data-explanation="Overuse adds cognitive load and can provide no measurable gain.">Blanket memoization can harm readability without real benefit</button>
-            <button type="button" data-correct="false" data-explanation="useCallback is runtime behavior, not static typing.">It only works in TypeScript projects</button>
-            <button type="button" data-correct="false" data-explanation="Callbacks are valid in function components; no class requirement.">Callbacks should be moved to class components</button>
+            <button type="button" data-correct="true" data-explanation="NavLink exposes active/pending state for styling active tabs.">You want active (or pending) styling for the current route</button>
+            <button type="button" data-correct="false" data-explanation="Both avoid full reload for internal routing; not the distinguisher.">Only when linking to external URLs</button>
+            <button type="button" data-correct="false" data-explanation="Programmatic navigation uses useNavigate.">Only inside useEffect hooks</button>
+            <button type="button" data-correct="false" data-explanation="Accessibility can use either with proper markup.">When Link would break accessibility</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg1">
         <h1>End of Session 2</h1>
-        <p>Next: shared state strategies, UI system choices, and production deployment workflow.</p>
+        <p>Session 3 continues with dynamic routes, query strings, nested layouts, then memoization and custom hooks. Week 4 covers global state and deployment.</p>
     </div>
 
     <div class="progress-wrap" aria-hidden="true">

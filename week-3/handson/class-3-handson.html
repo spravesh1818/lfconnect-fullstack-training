@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 3 Class 3 hands-on - Global State, Styling, and Deployment</title>
+    <title>Week 3 Class 3 hands-on - Router Advanced + Performance Patterns</title>
     <style>
         .lab-banner {
             font-family: system-ui, sans-serif;
@@ -54,47 +54,59 @@
     <div class="lab-banner">
         <strong>Week 3 - Class 3 Lab</strong> -
         <a href="../slides/session-3.html">Open session deck</a>
-        - Context, Zustand, Tailwind, Chakra UI, Docker, and Netlify
+        - Advanced React Router, useMemo/useCallback, custom hooks, and HOF patterns
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 1 - Add Global State Layer</h2>
+        <h2>Exercise 1 - Advanced Routing</h2>
         <ol>
-            <li>Implement shared state once with Context and once with Zustand (small feature scope).</li>
-            <li>Compare boilerplate, readability, and update performance.</li>
-            <li>Keep local UI state local; move only truly shared state globally.</li>
+            <li>Add a dynamic route (e.g. <code>/items/:itemId</code>) and read <code>itemId</code> with <code>useParams</code>.</li>
+            <li>Use <code>useSearchParams</code> for at least one filter or tab encoded in the query string (e.g. <code>?sort=price</code>).</li>
+            <li>Create a nested layout route with <code>Outlet</code> (e.g. parent path + two child segments).</li>
+            <li>Add an <strong>app shell</strong>: a parent layout route with persistent header or nav (and optional footer) plus <code>&lt;Outlet /&gt;</code> where nested pages render — matching the Session&nbsp;3 app-shell slides.</li>
         </ol>
-        <div class="done-when"><strong>Done when:</strong> both approaches work and you can explain when to use each.</div>
+        <div class="done-when"><strong>Done when:</strong> chrome stays mounted while inner routes change; direct URLs and refreshes preserve param/query state.</div>
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 2 - Styling Strategy</h2>
+        <h2>Exercise 2 - Optimize Derived Data Carefully</h2>
         <ol>
-            <li>Use Tailwind for layout and spacing.</li>
-            <li>Use <strong>Chakra UI</strong> for required reusable UI components.</li>
-            <li>Try one optional extension with Radix UI primitive for contrast.</li>
+            <li>Add expensive list filtering or sorting logic to a component.</li>
+            <li>Use <code>useMemo</code> only for computations that are measurably expensive.</li>
+            <li>Document one place where memoization is not necessary.</li>
         </ol>
-        <div class="done-when"><strong>Done when:</strong> app has coherent design system and accessibility-friendly components.</div>
+        <div class="done-when"><strong>Done when:</strong> memoization has a clear reason, not just blanket usage.</div>
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 3 - Dockerize and Deploy</h2>
+        <h2>Exercise 3 - Extract Reusable Custom Hook</h2>
         <ol>
-            <li>Create production build and lightweight Dockerfile.</li>
-            <li>Verify app runs in container locally.</li>
-            <li>Deploy app to Netlify and document deployment URL.</li>
+            <li>Create a <code>useDebouncedValue</code> or <code>useAsyncResource</code> hook.</li>
+            <li>Use it in at least two components.</li>
+            <li>Confirm dependencies and cleanup logic are correct.</li>
         </ol>
-        <div class="done-when"><strong>Done when:</strong> deployment is live and reproducible from repository instructions.</div>
+        <div class="done-when"><strong>Done when:</strong> duplicated logic is removed and hook behavior is stable.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - Apply Higher-Order Functions</h2>
+        <ol>
+            <li>Refactor data handling using <code>map</code>, <code>filter</code>, and <code>reduce</code>.</li>
+            <li>Create one utility function for reusable transform logic.</li>
+            <li>Keep components focused on rendering and composition.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> data transforms are readable, testable, and detached from UI clutter.</div>
     </div>
 
     <section class="practice-shell" aria-labelledby="practice-title">
         <h1 id="practice-title">Class 3 Lab Checklist</h1>
         <ul>
-            <li>[ ] Context and Zustand comparison complete</li>
-            <li>[ ] Tailwind + Chakra integrated, Radix extension attempted</li>
-            <li>[ ] Dockerfile validated locally</li>
-            <li>[ ] Netlify deployment link captured</li>
+            <li>[ ] Dynamic segment + query string + app shell with persistent chrome + nested <code>Outlet</code></li>
+            <li>[ ] useMemo/useCallback used only where justified</li>
+            <li>[ ] Custom hook extracted and reused</li>
+            <li>[ ] HOF refactor completed with cleaner component code</li>
         </ul>
+        <p style="margin-top: 1rem; color: #475569; font-size: 0.95rem;">Global state and deployment: see <a href="../../week-4/handson/class-1-handson.html">Week 4 Class 1 hands-on</a>.</p>
     </section>
 </body>
 
