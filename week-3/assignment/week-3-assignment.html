@@ -56,6 +56,43 @@
             border-left: 5px solid #ef4444;
             background: #fff1f2;
         }
+
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 0.9rem;
+            margin: 0.9rem 0;
+        }
+
+        .screenshot-grid figure {
+            margin: 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+            overflow: hidden;
+        }
+
+        .screenshot-grid img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .screenshot-grid figcaption {
+            padding: 0.6rem 0.75rem;
+            font-size: 0.92rem;
+            color: #334155;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+
+        .hint-box {
+            margin-top: 0.85rem;
+            padding: 0.75rem 0.9rem;
+            border: 1px dashed #94a3b8;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
     </style>
 </head>
 
@@ -65,45 +102,73 @@
     <section class="deadline">
         <h2>Deadline</h2>
         <p><strong>Submission deadline:</strong> Sunday evening at 11:59 PM.</p>
-        <p>Plan enough time for testing and optimization checks.</p>
+        <p>Plan enough time for route testing, refresh checks, and useEffect cleanup validation.</p>
     </section>
 
     <section>
         <h2>How to Approach This Week</h2>
         <ul>
-            <li>Start with reliable local state before introducing shared global state (Week 4).</li>
-            <li>Use hook optimizations only when they reduce measurable cost or rerenders.</li>
-            <li>Global state, styling stack, Docker, and Netlify are covered in <a href="../../week-4/assignment/week-4-assignment.html">Week 4 assignment</a>.</li>
+            <li>Start with one tiny <code>useEffect</code> exercise, then move to the full router build.</li>
+            <li>Use the screenshots as your UI target for layout and navigation behavior.</li>
+            <li>Focus on route-driven UI: params, nested routes, URL query state, and 404 behavior.</li>
+            <li>Global state, advanced styling stack, Docker, and Netlify are covered in <a href="../../week-4/assignment/week-4-assignment.html">Week 4 assignment</a>.</li>
         </ul>
     </section>
 
     <section>
-        <h2>Assignment 1: Local State and Effects Refinement</h2>
-        <p><strong>Objective:</strong> Strengthen state modeling and effect correctness.</p>
+        <h2>Assignment 1: Live Digital Clock with <code>useEffect</code></h2>
+        <p><strong>Objective:</strong> Build one small standalone React component to practice <code>useEffect</code> and cleanup safely.</p>
         <ol>
-            <li>Refactor one existing React screen to use clear local state boundaries.</li>
-            <li>Implement debounced search with <code>useEffect</code> cleanup to avoid stale requests.</li>
-            <li>Document at least two <code>useEffect</code> pitfalls you resolved.</li>
+            <li>Create a component called <code>LiveClock</code>.</li>
+            <li>Use <code>useState</code> to store the current <code>Date</code>.</li>
+            <li>Use <code>useEffect</code> with <code>setInterval</code> to update the state every second.</li>
+            <li>Return a cleanup function that calls <code>clearInterval</code>.</li>
+            <li>Display the time as <code>HH:MM:SS</code> (date line is optional).</li>
         </ol>
-        <p><strong>Deliverable:</strong> Clean local-state flow with stable effect behavior and short technical notes.</p>
+        <p><strong>Deliverable:</strong> One component file plus a screenshot or short note proving the clock updates every second.</p>
+        <div class="hint-box">
+            <strong>Hints:</strong>
+            <ul>
+                <li><code>setInterval</code> returns an id. Save it and pass it to <code>clearInterval</code> in cleanup.</li>
+                <li>The effect can use an empty dependency array (<code>[]</code>) for this case.</li>
+            </ul>
+        </div>
     </section>
 
     <section>
-        <h2>Assignment 2: Reuse and Performance</h2>
-        <p><strong>Objective:</strong> Apply custom hooks and memoization intentionally.</p>
+        <h2>Assignment 2: Build Meeting Basum with React Router</h2>
+        <p><strong>Objective:</strong> Recreate the UI shown in these screenshots using React Router features from Week 3.</p>
+        <div class="screenshot-grid">
+            <figure>
+                <img src="./screenshot-dashboard.png" alt="Meeting Basum dashboard view screenshot" />
+                <figcaption>Dashboard route (<code>/</code> or <code>/dashboard</code>)</figcaption>
+            </figure>
+            <figure>
+                <img src="./screenshot-new-meeting.png" alt="Meeting Basum new meeting view screenshot" />
+                <figcaption>New Meeting route (<code>/new-meeting</code>)</figcaption>
+            </figure>
+        </div>
         <ol>
-            <li>Create one custom hook reused by at least two components.</li>
-            <li>Use <code>useMemo</code> and <code>useCallback</code> only in justified places.</li>
-            <li>Refactor at least one transform flow with higher-order functions (<code>map/filter/reduce</code>).</li>
+            <li>Set up <code>BrowserRouter</code> once at root and create an app-shell layout route with persistent sidebar, top header, footer, and <code>&lt;Outlet /&gt;</code>.</li>
+            <li>Use <code>NavLink</code> in the sidebar for: <code>/</code>, <code>/new-meeting</code>, <code>/join-meeting</code>, <code>/calendar</code>, <code>/schedule-meeting</code>, and <code>/profile-settings</code>.</li>
+            <li>Build the dashboard route with 3 quick-action cards and an upcoming meetings list from a local hardcoded array.</li>
+            <li>Each upcoming meeting row should navigate to <code>/meetings/:meetingId</code> using <code>useNavigate</code>. Read the id with <code>useParams</code>.</li>
+            <li>Inside <code>/meetings/:meetingId</code>, create nested routes (<code>details</code> and <code>participants</code>) rendered through another <code>&lt;Outlet /&gt;</code> with relative <code>NavLink</code>s.</li>
+            <li>On <code>/calendar</code>, implement <code>?view=month|week</code> switching via <code>useSearchParams</code>.</li>
+            <li>Add a catch-all route (<code>path="*"</code>) with a friendly Not Found page and link back home.</li>
         </ol>
-        <p><strong>Deliverable:</strong> App section showing cleaner abstraction and targeted optimization.</p>
+        <p><strong>Deliverable:</strong> Working screenshot-matched app plus a short <code>ROUTES.md</code> listing each route, what it renders, and which router hook(s) it uses.</p>
     </section>
 
     <section class="deadline">
         <h2>Week 3 Submission Checklist</h2>
         <ul>
-            <li>Assignments 1 and 2 include links to code.</li>
-            <li>Hook usage decisions are explained (why used, why not used elsewhere).</li>
+            <li>Assignment 1 includes a <code>LiveClock</code> that updates every second.</li>
+            <li><code>LiveClock</code> cleanup is implemented correctly with <code>clearInterval</code>.</li>
+            <li>Assignment 2 matches the Meeting Basum screenshots with sidebar, header, content, and footer layout.</li>
+            <li>Routes work on direct URL load and browser refresh, including <code>/meetings/:meetingId</code>.</li>
+            <li>Nested meeting tabs (<code>details</code> and <code>participants</code>) and calendar query param (<code>?view=</code>) are working.</li>
+            <li>404 route and <code>ROUTES.md</code> are included in your submission.</li>
         </ul>
         <p><strong>Deployment and Context/Zustand:</strong> complete <a href="../../week-4/assignment/week-4-assignment.html">Week 4 assignment</a>.</p>
     </section>
