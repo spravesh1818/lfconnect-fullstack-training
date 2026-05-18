@@ -20,57 +20,176 @@
 
     <div class="slide active bg1">
         <h1>Class 1: Shared State to Production</h1>
-        <p>Move from app architecture decisions to deployment-ready engineering workflow.</p>
+        <p>Install, wire, use, and verify: Context, Zustand, styling stack, Docker, and Netlify.</p>
     </div>
 
     <div class="slide bg1">
         <h2>Session Agenda</h2>
         <ol>
-            <li>Context API mental model</li>
-            <li>Zustand for global state workflows</li>
+            <li>Context API — create, provide, consume, verify</li>
+            <li>Zustand — install, store, selectors, verify</li>
             <li>Tailwind + Chakra (required) + Radix (optional)</li>
-            <li>Dockerizing and deploying to Netlify</li>
-            <li>Challenge quiz</li>
+            <li>Docker — multi-stage build, run locally, verify</li>
+            <li>Netlify — build settings, env vars, deploy, verify live URL</li>
+            <li>Challenge quiz (8 questions)</li>
         </ol>
     </div>
 
     <div class="slide bg2">
         <p class="part-kicker">Part 1</p>
-        <h1>Global State Architecture</h1>
-        <p>Choose the smallest state scope that satisfies product behavior.</p>
+        <h1>Context API — Mental Model</h1>
+        <p>Context shares values across a subtree without prop drilling. Best for stable, broadly read data (theme, auth user, locale).</p>
     </div>
 
     <div class="slide bg2">
         <h2>When Context API Fits</h2>
         <ul>
-            <li>Theme, auth user, locale, feature flags</li>
-            <li>Moderate update frequency, broad read access</li>
-            <li>Built-in React solution with no external dependency</li>
+            <li>Theme mode, signed-in user profile, locale</li>
+            <li>Moderate update frequency, many consumers</li>
+            <li>No extra package — built into React</li>
         </ul>
     </div>
 
     <div class="slide bg2">
-        <h2>Context Caveats</h2>
+        <h2>Step 1 — Create context</h2>
+        <pre>// src/context/ThemeContext.jsx
+import { createContext, useMemo, useState } from "react";
+
+export const ThemeContext = createContext({
+  mode: "light",
+  toggle: () =&gt; {},
+});</pre>
+        <p><code>createContext</code> needs a default value used when no provider is above a consumer.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Step 2 — Build the provider</h2>
+        <pre>export function ThemeProvider({ children }) {
+  const [mode, setMode] = useState("light");
+
+  const value = useMemo(
+    () =&gt; ({
+      mode,
+      toggle: () =&gt;
+        setMode(current =&gt; (current === "light" ? "dark" : "light")),
+    }),
+    [mode]
+  );
+
+  return (
+    &lt;ThemeContext.Provider value={value}&gt;
+      {children}
+    &lt;/ThemeContext.Provider&gt;
+  );
+}</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Step 3 — Wrap the app</h2>
+        <pre>// src/main.jsx
+import { ThemeProvider } from "./context/ThemeContext.jsx";
+
+createRoot(document.getElementById("root")).render(
+  &lt;ThemeProvider&gt;
+    &lt;App /&gt;
+  &lt;/ThemeProvider&gt;
+);</pre>
+        <p>Place providers near the root so all routes and layouts can consume shared state.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Step 4 — Custom hook + consumer</h2>
+        <pre>import { useContext } from "react";
+import { ThemeContext } from "./ThemeContext.jsx";
+
+export function useTheme() {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error("useTheme must be used inside ThemeProvider");
+  return ctx;
+}
+
+// Header.jsx
+const { mode, toggle } = useTheme();
+&lt;button onClick={toggle}&gt;Mode: {mode}&lt;/button&gt;</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Step 5 — Split providers by domain</h2>
+        <pre>&lt;ThemeProvider&gt;
+  &lt;AuthProvider&gt;
+    &lt;App /&gt;
+  &lt;/AuthProvider&gt;
+&lt;/ThemeProvider&gt;</pre>
+        <p>Separate <code>ThemeProvider</code> and <code>AuthProvider</code> so auth updates do not rerender theme-only consumers.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Verify Context works</h2>
         <ul>
-            <li>Provider updates can rerender many consumers</li>
-            <li>Large monolithic context becomes hard to maintain</li>
-            <li>Split providers by domain for better control</li>
+            <li>Click toggle — header and any other consumer update together</li>
+            <li>Refresh page — default mode returns (unless you persist to <code>localStorage</code>)</li>
+            <li>React DevTools shows your provider tree above <code>App</code></li>
+        </ul>
+        <p><strong>Done when:</strong> at least two components read theme without props.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Context pitfalls</h2>
+        <ul>
+            <li>Missing provider → consumers get default value silently</li>
+            <li>One giant context with fast-changing data → many rerenders</li>
+            <li>Putting fetch logic in context without memoization → extra work each render</li>
         </ul>
     </div>
 
     <div class="slide bg3">
         <p class="part-kicker">Part 2</p>
-        <h1>Zustand Workflow</h1>
-        <p>External store with selective subscriptions and lightweight API.</p>
+        <h1>Zustand — Install and Create Store</h1>
+        <p>External store with a small API. Great when multiple features share update-heavy state.</p>
     </div>
 
     <div class="slide bg3">
-        <h2>Why Teams Pick Zustand</h2>
-        <ul>
-            <li>Minimal boilerplate compared with many state libraries</li>
-            <li>Selectors can reduce unnecessary rerenders</li>
-            <li>Works well for medium-to-large shared app state</li>
-        </ul>
+        <h2>Install Zustand</h2>
+        <pre># from your Vite + React project root
+npm install zustand</pre>
+        <p>No provider required — import the store hook directly in components.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Create a store</h2>
+        <pre>// src/store/useMeetingStore.js
+import { create } from "zustand";
+
+export const useMeetingStore = create(set =&gt; ({
+  upcomingCount: 3,
+  increment: () =&gt; set(state =&gt; ({ upcomingCount: state.upcomingCount + 1 })),
+  reset: () =&gt; set({ upcomingCount: 0 }),
+}));</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Read with a selector</h2>
+        <pre>import { useMeetingStore } from "../store/useMeetingStore.js";
+
+// only rerenders when upcomingCount changes
+const count = useMeetingStore(state =&gt; state.upcomingCount);
+const increment = useMeetingStore(state =&gt; state.increment);
+
+&lt;p&gt;Upcoming: {count}&lt;/p&gt;
+&lt;button onClick={increment}&gt;Add meeting&lt;/button&gt;</pre>
+        <p>Always select the slice you need — avoid <code>useMeetingStore()</code> with no selector.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Update state from actions</h2>
+        <pre>// inside store
+setMeetings: meetings =&gt; set({ meetings }),
+addMeeting: meeting =&gt;
+  set(state =&gt; ({ meetings: [...state.meetings, meeting] })),
+
+// in component
+const addMeeting = useMeetingStore(s =&gt; s.addMeeting);
+addMeeting({ id: "m-4", title: "Sprint Review" });</pre>
     </div>
 
     <div class="slide bg3">
@@ -80,87 +199,348 @@
                 <h3>Context</h3>
                 <ul>
                     <li>Built into React</li>
-                    <li>Great for stable global values</li>
-                    <li>Needs careful provider splitting</li>
+                    <li>Provider tree required</li>
+                    <li>Great for theme, auth, locale</li>
                 </ul>
             </article>
             <article>
                 <h3>Zustand</h3>
                 <ul>
-                    <li>External store abstraction</li>
+                    <li><code>npm install zustand</code></li>
                     <li>Selector-based subscriptions</li>
-                    <li>Good for complex shared update flows</li>
+                    <li>Great for shared app workflows</li>
                 </ul>
             </article>
         </div>
     </div>
 
+    <div class="slide bg3">
+        <h2>Verify Zustand works</h2>
+        <ul>
+            <li>Two unrelated components show the same count</li>
+            <li>Clicking action in one updates the other without prop drilling</li>
+            <li>Components that select unrelated slices do not rerender on every store change</li>
+        </ul>
+        <p><strong>Done when:</strong> you can explain one case for Context and one for Zustand in your app.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Zustand pitfall</h2>
+        <pre>// causes rerender on ANY store change
+const store = useMeetingStore();
+
+// better
+const meetings = useMeetingStore(s =&gt; s.meetings);</pre>
+    </div>
+
     <div class="slide bg4">
         <p class="part-kicker">Part 3</p>
-        <h1>Styling and UI Libraries</h1>
-        <p>Balance velocity, consistency, and accessibility.</p>
+        <h1>Styling Stack — Tailwind + Chakra</h1>
+        <p>Install each tool, wire it once, then compose: Tailwind for layout, Chakra for UI primitives.</p>
     </div>
 
     <div class="slide bg4">
-        <h2>Tailwind Utility Strategy</h2>
+        <h2>Tailwind — Install (Vite)</h2>
+        <pre>npm install tailwindcss @tailwindcss/vite</pre>
+        <pre>// vite.config.js
+import tailwindcss from "@tailwindcss/vite";
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+});</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Tailwind — Enable in CSS</h2>
+        <pre>/* src/index.css */
+@import "tailwindcss";</pre>
+        <pre>// src/main.jsx
+import "./index.css";</pre>
+        <p>Restart dev server after first Tailwind install if styles do not appear.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Tailwind — Usage on layout</h2>
+        <pre>&lt;main className="flex min-h-screen gap-4 p-4 bg-slate-50"&gt;
+  &lt;aside className="w-64 shrink-0 rounded-lg bg-white p-4 shadow-sm"&gt;
+    …sidebar…
+  &lt;/aside&gt;
+  &lt;section className="flex-1 rounded-lg bg-white p-6"&gt;
+    …content…
+  &lt;/section&gt;
+&lt;/main&gt;</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Chakra UI — Install</h2>
+        <pre>npm install @chakra-ui/react @emotion/react</pre>
+        <p>Same packages introduced in Week 3 — now we wire the provider and use components in pages.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Chakra UI — Provider in main.jsx</h2>
+        <pre>import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
+
+createRoot(document.getElementById("root")).render(
+  &lt;ChakraProvider value={defaultSystem}&gt;
+    &lt;ThemeProvider&gt;
+      &lt;App /&gt;
+    &lt;/ThemeProvider&gt;
+  &lt;/ChakraProvider&gt;
+);</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Chakra UI — Use components</h2>
+        <pre>import { Button, Card, Heading, Stack } from "@chakra-ui/react";
+
+export default function QuickActions() {
+  return (
+    &lt;Stack gap={4}&gt;
+      &lt;Heading size="md"&gt;Quick Actions&lt;/Heading&gt;
+      &lt;Card.Root&gt;
+        &lt;Card.Body&gt;
+          &lt;Button colorPalette="blue"&gt;Start Now →&lt;/Button&gt;
+        &lt;/Card.Body&gt;
+      &lt;/Card.Root&gt;
+    &lt;/Stack&gt;
+  );
+}</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Combining Tailwind + Chakra safely</h2>
         <ul>
-            <li>Fast composition with predictable utility classes</li>
-            <li>Works best with design tokens and agreed naming patterns</li>
-            <li>Avoid class bloat by extracting repeating patterns</li>
+            <li><strong>Tailwind:</strong> page grid, spacing, responsive layout wrappers</li>
+            <li><strong>Chakra:</strong> buttons, cards, modals, form controls</li>
+            <li>Avoid styling the same element with conflicting rules</li>
+            <li>Extract repeated utility groups into small layout components</li>
         </ul>
     </div>
 
     <div class="slide bg4">
-        <h2>Component Libraries this Week</h2>
+        <h2>Radix UI — Optional extension</h2>
+        <pre>npm install @radix-ui/react-dialog
+
+import * as Dialog from "@radix-ui/react-dialog";
+
+&lt;Dialog.Root&gt;
+  &lt;Dialog.Trigger&gt;Meeting details&lt;/Dialog.Trigger&gt;
+  &lt;Dialog.Portal&gt;
+    &lt;Dialog.Content&gt;…&lt;/Dialog.Content&gt;
+  &lt;/Dialog.Portal&gt;
+&lt;/Dialog.Root&gt;</pre>
+        <p>Use when you need accessible primitives beyond Chakra — not required for Week 4 baseline.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Verify styling stack</h2>
         <ul>
-            <li><strong>Required:</strong> Chakra UI for reusable application components</li>
-            <li><strong>Optional extension:</strong> Radix UI primitives for advanced accessibility patterns</li>
-            <li>Combine with Tailwind carefully to avoid style conflicts</li>
+            <li>Tailwind classes visibly change layout (flex, gap, padding)</li>
+            <li>Chakra <code>Button</code> / <code>Card</code> render with theme styles</li>
+            <li>No console errors about missing Chakra provider</li>
         </ul>
+        <p><strong>Done when:</strong> dashboard shell uses Tailwind and at least one Chakra component on the page.</p>
     </div>
 
     <div class="slide bg1">
         <p class="part-kicker">Part 4</p>
-        <h1>Production Workflow</h1>
-        <p>A feature is complete when it can be deployed confidently.</p>
+        <h1>Docker — Build and Run Locally</h1>
+        <p>Package your production build so anyone can run the same artifact with one command.</p>
     </div>
 
     <div class="slide bg1">
-        <h2>Dockerization Basics</h2>
+        <h2>Why Docker for frontend apps?</h2>
         <ul>
-            <li>Use multi-stage build for small runtime images</li>
-            <li>Build static assets in one stage, serve in lightweight runtime</li>
-            <li>Keep environment values externalized</li>
+            <li>Same build runs on any machine (laptop, CI, server)</li>
+            <li>Multi-stage images keep runtime small (nginx only serves <code>dist/</code>)</li>
+            <li>Useful before handing off to ops or running in cloud VMs</li>
+        </ul>
+        <p>Prerequisite: <code>docker --version</code> works (Docker Desktop installed).</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Dockerfile — multi-stage build</h2>
+        <pre># Dockerfile
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]</pre>
+    </div>
+
+    <div class="slide bg1">
+        <h2>nginx.conf — SPA fallback</h2>
+        <pre>server {
+  listen 80;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  location / {
+    try_files $uri /index.html;
+  }
+}</pre>
+        <p>Required so React Router deep links work after refresh inside the container.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>.dockerignore</h2>
+        <pre>node_modules
+dist
+.git
+.env
+npm-debug.log</pre>
+        <p>Keeps build context small and prevents copying secrets into the image.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Build the image</h2>
+        <pre>docker build -t meeting-basum .</pre>
+        <p>First build may take a few minutes. Subsequent builds are faster with layer cache.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Run the container</h2>
+        <pre>docker run --rm -p 8080:80 meeting-basum</pre>
+        <p>Maps host port <code>8080</code> → container port <code>80</code> (nginx).</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Verify Docker locally</h2>
+        <ul>
+            <li>Open <code>http://localhost:8080</code></li>
+            <li>Home/dashboard loads with styles</li>
+            <li>Navigate to nested route, refresh — page still loads</li>
+            <li>Stop container with <code>Ctrl+C</code></li>
+        </ul>
+        <p><strong>Done when:</strong> app runs from image without <code>npm run dev</code>.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Docker env note (<code>VITE_*</code>)</h2>
+        <pre># values are baked in at build time
+ARG VITE_API_KEY
+ENV VITE_API_KEY=$VITE_API_KEY
+RUN npm run build</pre>
+        <p>For local Docker demos, you can build without secrets if the app uses mock data. Never copy real <code>.env</code> into git.</p>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 5</p>
+        <h1>Netlify — Deploy and Verify Live</h1>
+        <p>Ship the static <code>dist/</code> folder to a public URL students can open and share.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Step 1 — Local production build</h2>
+        <pre>npm run build
+ls dist</pre>
+        <p>Confirm <code>dist/index.html</code> and asset files exist before deploying.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Step 2 — Netlify site settings</h2>
+        <ul>
+            <li><strong>Build command:</strong> <code>npm run build</code></li>
+            <li><strong>Publish directory:</strong> <code>dist</code></li>
+            <li><strong>Node version:</strong> match your local LTS if builds fail on CI</li>
         </ul>
     </div>
 
     <div class="slide bg1">
-        <h2>Netlify Deployment Checklist</h2>
+        <h2>Step 3 — Environment variables</h2>
+        <pre># .env.local (never commit real keys)
+VITE_TMDB_API_KEY=your_key_here
+
+# access in React
+const key = import.meta.env.VITE_TMDB_API_KEY;</pre>
+        <p>Add the same keys in Netlify: Site settings → Environment variables. Rebuild after changes.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Step 4 — SPA fallback for React Router</h2>
+        <pre># public/_redirects
+/*    /index.html   200</pre>
+        <p>Netlify serves this rule so refreshing <code>/meetings/123</code> does not return 404.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Step 5 — Deploy options</h2>
         <ul>
-            <li>Set build command and publish directory correctly</li>
-            <li>Configure environment variables in Netlify dashboard</li>
-            <li>Verify SPA route fallback and production API behavior</li>
+            <li><strong>Git-connected:</strong> push to GitHub → Netlify auto-builds on each push</li>
+            <li><strong>Manual demo:</strong> drag-and-drop <code>dist/</code> folder in Netlify UI</li>
+        </ul>
+        <p>Git-connected deploy is preferred for the assignment so steps are reproducible.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Step 6 — Verify live deployment</h2>
+        <ol>
+            <li>Open the Netlify URL (e.g. <code>https://your-app.netlify.app</code>)</li>
+            <li>Click through sidebar routes — no full page reload</li>
+            <li>Copy a deep link, open in new tab, refresh — still works</li>
+            <li>Check browser console for missing env or asset errors</li>
+        </ol>
+        <p><strong>Done when:</strong> you can share a working public URL in your submission.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Docker vs Netlify</h2>
+        <div class="comparison">
+            <article>
+                <h3>Docker</h3>
+                <ul>
+                    <li>Portable runtime you control</li>
+                    <li>Runs anywhere Docker is installed</li>
+                    <li>Great for local prod parity and CI</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Netlify</h3>
+                <ul>
+                    <li>Managed static hosting</li>
+                    <li>Fastest path to public URL</li>
+                    <li>Built-in CDN and deploy previews</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Troubleshooting deploy issues</h2>
+        <ul>
+            <li><strong>Blank page:</strong> publish directory is not <code>dist</code></li>
+            <li><strong>404 on refresh:</strong> missing <code>_redirects</code> SPA fallback</li>
+            <li><strong>API fails in prod:</strong> <code>VITE_*</code> not set in Netlify before build</li>
+            <li><strong>Stale UI:</strong> trigger a new deploy after env changes</li>
         </ul>
     </div>
 
     <div class="slide bg1">
         <h2>Session Summary</h2>
         <ul>
-            <li>Context and Zustand solve different scales of shared state</li>
-            <li>Tailwind + Chakra can ship fast consistent UIs</li>
-            <li>Radix is an optional primitive layer for advanced patterns</li>
-            <li>Docker + Netlify closes the loop from dev to deployment</li>
+            <li>Every tool follows: <strong>install → wire → use → verify</strong></li>
+            <li>Context for stable shared values; Zustand for selector-based app state</li>
+            <li>Tailwind layouts + Chakra components; Radix optional for primitives</li>
+            <li>Docker proves prod build locally; Netlify publishes it for real users</li>
         </ul>
     </div>
 
     <div class="slide bg-quiz quiz-segment">
         <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
         <h1 class="quiz-round-title">Week 4 Session 1 Quiz</h1>
-        <p class="quiz-hint">6 questions. Focus on tradeoffs, not tool slogans.</p>
+        <p class="quiz-hint">8 questions — install, usage, and deployment checkpoints.</p>
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 1 of 6</h2>
+        <h2>Question 1 of 8</h2>
         <p class="question">Which state is the strongest candidate for Context API?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="true" data-explanation="Theme mode is broadly consumed and changes infrequently, ideal for context.">Current theme mode used across the app shell</button>
@@ -172,7 +552,7 @@
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 2 of 6</h2>
+        <h2>Question 2 of 8</h2>
         <p class="question">What is a practical advantage of Zustand over a single large Context provider?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="false" data-explanation="Zustand is primarily for state management, not built-in routing.">Automatic nested route generation</button>
@@ -184,7 +564,7 @@
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 3 of 6</h2>
+        <h2>Question 3 of 8</h2>
         <p class="question">Team uses Tailwind and Chakra together. What keeps this maintainable?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="true" data-explanation="Clear boundaries prevent style conflicts and duplicated design decisions.">Define clear boundaries: layout utilities vs component primitives</button>
@@ -196,7 +576,7 @@
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 4 of 6</h2>
+        <h2>Question 4 of 8</h2>
         <p class="question">Why is Radix marked optional in this week plan?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="false" data-explanation="Radix is actively maintained and widely used.">Because Radix is deprecated and unstable</button>
@@ -208,7 +588,7 @@
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 5 of 6</h2>
+        <h2>Question 5 of 8</h2>
         <p class="question">What is the main purpose of multi-stage Docker builds for React apps?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="true" data-explanation="Separate build/runtime stages keep final image smaller and cleaner.">Produce a smaller runtime image with only deployment artifacts</button>
@@ -220,7 +600,7 @@
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 6 of 6</h2>
+        <h2>Question 6 of 8</h2>
         <p class="question">Netlify deploy works, but browser refresh on nested route returns 404. Most likely missing step?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="false" data-explanation="This does not affect SPA route fallback behavior.">Increase Docker image memory limit</button>
@@ -231,9 +611,33 @@
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">You run <code>docker run -p 8080:80 meeting-basum</code>. What does <code>8080:80</code> mean?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Host port 8080 forwards traffic to container port 80 where nginx listens.">Host port 8080 maps to container port 80</button>
+            <button type="button" data-correct="false" data-explanation="The mapping is host:container, not container:host in this notation.">Container port 8080 maps to host port 80</button>
+            <button type="button" data-correct="false" data-explanation="Port mapping does not set environment variables.">It injects 80 environment variables into the image</button>
+            <button type="button" data-correct="false" data-explanation="That flag controls port mapping, not image tags.">It renames the image tag to 8080</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">Netlify build succeeds but the site shows a blank page. What should you check first?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Vite outputs production files to dist; publishing src or root causes blank deployments.">Publish directory is set to <code>dist</code></button>
+            <button type="button" data-correct="false" data-explanation="Removing React from dependencies would break the app entirely, not just Netlify.">Remove React from package.json dependencies</button>
+            <button type="button" data-correct="false" data-explanation="Docker is separate from Netlify static hosting configuration.">Delete the Dockerfile before deploy</button>
+            <button type="button" data-correct="false" data-explanation="Zustand is unrelated to static file publish path issues.">Uninstall Zustand after build</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
     <div class="slide bg1">
         <h1>End of Week 4 Session 1</h1>
-        <p>Complete the Week 4 assignment deliverables: global state comparison, styling stack, Docker, and Netlify deployment.</p>
+        <p>Next: complete <a href="../handson/class-1-handson.html">Class 1 hands-on</a> and the <a href="../assignment/week-4-assignment.html">Week 4 assignment</a> — Context vs Zustand, styling stack, Docker, and live Netlify URL.</p>
     </div>
 
     <div class="progress-wrap" aria-hidden="true">
