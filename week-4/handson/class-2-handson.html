@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 4 Class 2 hands-on - Forms and Data Tables</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 4 - Class 2 Lab</strong> -
+        <a href="../slides/session-2.html">Open session deck</a>
+        - classical forms, react-hook-form, Zod, and @tanstack/react-table
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 0 (optional) - Classical Controlled Form</h2>
+        <ol>
+            <li>Build Schedule Meeting with <code>useState</code> for <code>form</code> and <code>errors</code>.</li>
+            <li>Use <code>value</code> + <code>onChange</code> on each input.</li>
+            <li>On submit: <code>preventDefault</code>, run a <code>validate()</code> function, show errors, block invalid submit.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> you can explain controlled inputs without a form library.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Schedule Meeting (react-hook-form)</h2>
+        <ol>
+            <li>Install <code>react-hook-form</code>.</li>
+            <li>Rebuild the form with <code>register</code>, <code>handleSubmit</code>, and inline validation rules first.</li>
+            <li>Display field errors under inputs; block submit when invalid.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> RHF version works and you can compare it to Exercise 0.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1b - Add Zod validation</h2>
+        <ol>
+            <li>Install <code>zod</code> and <code>@hookform/resolvers</code>.</li>
+            <li>Create <code>meetingSchema</code> with rules for title, date, and participants.</li>
+            <li>Wire <code>zodResolver(meetingSchema)</code> into <code>useForm</code>.</li>
+            <li>Remove duplicate inline rules from <code>register</code> calls.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> all validation rules live in the Zod schema.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Upcoming Meetings Table (TanStack Table)</h2>
+        <ol>
+            <li>Install <code>@tanstack/react-table</code>.</li>
+            <li>Render upcoming meetings with at least 3 columns (title, host, time) plus a Join/action column.</li>
+            <li>Enable column sorting with <code>getSortedRowModel</code>.</li>
+            <li>On valid form submit from Exercise 1b, append a row to the table data.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> table sorts by header click and new meetings appear after submit.</div>
+    </div>
+
+    <section class="practice-shell" aria-labelledby="practice-title">
+        <h1 id="practice-title">Class 2 Lab Checklist</h1>
+        <ul>
+            <li>[ ] (Optional) classical controlled form completed</li>
+            <li>[ ] react-hook-form Schedule Meeting form working</li>
+            <li>[ ] Zod schema + zodResolver validates all three fields</li>
+            <li>[ ] @tanstack/react-table sortable upcoming meetings</li>
+            <li>[ ] Form submit updates meetings shown in the table</li>
+        </ul>
+        <p style="margin-top: 1rem; color: #475569; font-size: 0.95rem;">Next: <a href="class-3-handson.html">Class 3 hands-on</a> — auth and TypeScript.</p>
+    </section>
+</body>
+
+</html>

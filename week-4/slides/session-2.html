@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 4 - Session 2 - Forms and Data Tables</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 4 - Session 2</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 2: Forms and Data Tables in React</h1>
+        <p>Classical controlled forms → react-hook-form → Zod validation → TanStack Table in Meeting Basum.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Part 1A — Classical controlled forms with <code>useState</code></li>
+            <li>Part 1B — react-hook-form basics (inline validation)</li>
+            <li>Part 1C — Zod schema + <code>zodResolver</code></li>
+            <li>Part 2 — @tanstack/react-table for Upcoming Meetings</li>
+            <li>Challenge quiz (10 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1A</p>
+        <h1>Forms in React — The Classical Way</h1>
+        <p>Before libraries: one state object, controlled inputs, manual validation on submit.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Controlled inputs mental model</h2>
+        <ul>
+            <li>React state is the <strong>source of truth</strong></li>
+            <li>Input shows <code>value={form.title}</code></li>
+            <li><code>onChange</code> updates state on every keystroke</li>
+        </ul>
+        <p>This is the foundation every form library builds on.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Form state shape</h2>
+        <pre>const [form, setForm] = useState({
+  title: "",
+  date: "",
+  participants: "",
+});
+const [errors, setErrors] = useState({});</pre>
+        <p>One object for values, one object for field errors — keeps related data together.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Generic handleChange</h2>
+        <pre>function handleChange(e) {
+  const { name, value } = e.target;
+  setForm(prev =&gt; ({ ...prev, [name]: value }));
+}
+
+&lt;input
+  name="title"
+  value={form.title}
+  onChange={handleChange}
+/&gt;</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>handleSubmit with preventDefault</h2>
+        <pre>function handleSubmit(e) {
+  e.preventDefault();
+  const nextErrors = validateMeetingForm(form);
+  setErrors(nextErrors);
+  if (Object.keys(nextErrors).length &gt; 0) return;
+  onCreateMeeting(form);
+}
+
+&lt;form onSubmit={handleSubmit}&gt;…&lt;/form&gt;</pre>
+        <p>Without <code>preventDefault</code>, the browser reloads the page.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Manual validation function</h2>
+        <pre>function validateMeetingForm(values) {
+  const errs = {};
+  if (!values.title.trim()) errs.title = "Title is required";
+  else if (values.title.length &lt; 3) errs.title = "Min 3 characters";
+  if (!values.date) errs.date = "Date is required";
+  if (!values.participants.trim()) errs.participants = "Add a participant";
+  return errs;
+}</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Show errors from state</h2>
+        <pre>{errors.title &amp;&amp; (
+  &lt;p role="alert" className="text-red-600 text-sm"&gt;
+    {errors.title}
+  &lt;/p&gt;
+)}</pre>
+        <p>Validation runs on submit (or on blur if you add that logic yourself).</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Classical form pitfalls</h2>
+        <ul>
+            <li>Forgetting <code>e.preventDefault()</code> on submit</li>
+            <li>Duplicated handlers as fields grow</li>
+            <li>Validation rules scattered across JSX and helpers</li>
+        </ul>
+        <p><strong>Verify:</strong> empty submit shows errors; valid submit logs a clean payload.</p>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1B</p>
+        <h1>react-hook-form</h1>
+        <p>You just built registration, validation, and submit by hand — RHF automates that workflow.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>What RHF gives you</h2>
+        <ul>
+            <li><code>register</code> wires inputs without manual <code>value</code>/<code>onChange</code> per field</li>
+            <li><code>handleSubmit</code> runs validation before your handler</li>
+            <li><code>formState.errors</code> maps field names to messages</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Install react-hook-form</h2>
+        <pre># from your Vite + React project root
+npm install react-hook-form</pre>
+        <p>No provider required — call <code>useForm()</code> inside your form component.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>useForm basics</h2>
+        <pre>import { useForm } from "react-hook-form";
+
+export default function ScheduleMeetingForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    defaultValues: { title: "", date: "", participants: "" },
+  });
+
+  const onSubmit = data =&gt; console.log("valid payload", data);
+
+  return (
+    &lt;form onSubmit={handleSubmit(onSubmit)}&gt;
+      …
+    &lt;/form&gt;
+  );
+}</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>register fields</h2>
+        <pre>&lt;label&gt;Meeting title&lt;/label&gt;
+&lt;input {...register("title", { required: "Title is required" })} /&gt;
+{errors.title &amp;&amp; &lt;p&gt;{errors.title.message}&lt;/p&gt;}
+
+&lt;label&gt;Date&lt;/label&gt;
+&lt;input type="date" {...register("date", { required: true })} /&gt;</pre>
+        <p><code>register</code> connects inputs to form state and validation rules.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Inline validation rules (first pass)</h2>
+        <pre>register("title", {
+  required: "Title is required",
+  minLength: { value: 3, message: "Min 3 characters" },
+});
+
+register("participants", {
+  validate: value =&gt;
+    value.split(",").filter(Boolean).length &gt;= 1
+      || "Add at least one participant",
+});</pre>
+        <p>Works well for small forms — next we move rules into a Zod schema.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>defaultValues, watch, reset</h2>
+        <pre>useForm({
+  defaultValues: { title: meeting?.title ?? "", date: "", participants: "" },
+});
+
+const titlePreview = watch("title");
+reset(); // after successful submit</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Verify react-hook-form (inline rules)</h2>
+        <ul>
+            <li>Submit empty form → validation messages appear</li>
+            <li>Submit valid form → handler runs once with clean object</li>
+            <li>Compare code size to your classical version from Part 1A</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1C</p>
+        <h1>Schema Validation with Zod</h1>
+        <p>Define shape + rules once; plug into RHF with <code>zodResolver</code>.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Why Zod?</h2>
+        <ul>
+            <li>Single schema describes allowed shape and constraints</li>
+            <li>Readable validation rules outside JSX</li>
+            <li>Same schema can be reused on the server later</li>
+            <li><code>z.infer</code> gives TypeScript types (Session 3 preview)</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Install Zod + resolver</h2>
+        <pre>npm install zod @hookform/resolvers</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Define meetingSchema</h2>
+        <pre>import { z } from "zod";
+
+export const meetingSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  date: z.string().min(1, "Date is required"),
+  participants: z.string().min(1, "Add at least one participant"),
+});
+
+export type MeetingInput = z.infer&lt;typeof meetingSchema&gt;;</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Wire zodResolver into useForm</h2>
+        <pre>import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const form = useForm&lt;MeetingInput&gt;({
+  resolver: zodResolver(meetingSchema),
+  defaultValues: { title: "", date: "", participants: "" },
+});</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Simpler register calls</h2>
+        <pre>&lt;input {...register("title")} /&gt;
+&lt;input type="date" {...register("date")} /&gt;
+&lt;input {...register("participants")} /&gt;
+
+{errors.title &amp;&amp; &lt;p&gt;{errors.title.message}&lt;/p&gt;}</pre>
+        <p>Rules live in <code>meetingSchema</code>, not on each <code>register</code> call.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Refactor task</h2>
+        <ol>
+            <li>Remove inline <code>required</code> / <code>validate</code> from <code>register</code></li>
+            <li>Move all rules into <code>meetingSchema</code></li>
+            <li>Keep the same UI and error display</li>
+        </ol>
+        <p><strong>Verify:</strong> change one rule in the schema and the form behavior updates everywhere.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Apply to Meeting Basum — Schedule Meeting</h2>
+        <ul>
+            <li>Route: <code>/new-meeting</code> or <code>/schedule-meeting</code></li>
+            <li>Final form uses RHF + Zod (recommended for assignment)</li>
+            <li>On valid submit: append to meetings list (state/Zustand) or log payload</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>TanStack Table</h1>
+        <p>The modern package is <code>@tanstack/react-table</code> (formerly react-table v7). Docs: tanstack.com/table</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Install TanStack Table</h2>
+        <pre>npm install @tanstack/react-table</pre>
+        <p>Headless UI — you control markup and styles (Tailwind/Chakra friendly).</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Define columns and data</h2>
+        <pre>const columns = [
+  { accessorKey: "title", header: "Meeting" },
+  { accessorKey: "host", header: "Host" },
+  { accessorKey: "time", header: "Time" },
+  {
+    id: "actions",
+    header: "Action",
+    cell: ({ row }) =&gt; (
+      &lt;button onClick={() =&gt; joinMeeting(row.original.id)}&gt;Join&lt;/button&gt;
+    ),
+  },
+];
+
+const data = [
+  { id: "m1", title: "Project Planning", host: "Risan", time: "Today 10:00" },
+];</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>useReactTable + core row model</h2>
+        <pre>import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+
+const table = useReactTable({
+  data,
+  columns,
+  getCoreRowModel: getCoreRowModel(),
+});</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Render table markup</h2>
+        <pre>&lt;table&gt;
+  &lt;thead&gt;
+    {table.getHeaderGroups().map(hg =&gt; (
+      &lt;tr key={hg.id}&gt;
+        {hg.headers.map(header =&gt; (
+          &lt;th key={header.id}&gt;
+            {flexRender(header.column.columnDef.header, header.getContext())}
+          &lt;/th&gt;
+        ))}
+      &lt;/tr&gt;
+    ))}
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    {table.getRowModel().rows.map(row =&gt; (
+      &lt;tr key={row.id}&gt;
+        {row.getVisibleCells().map(cell =&gt; (
+          &lt;td key={cell.id}&gt;
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          &lt;/td&gt;
+        ))}
+      &lt;/tr&gt;
+    ))}
+  &lt;/tbody&gt;
+&lt;/table&gt;</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Enable sorting</h2>
+        <pre>import { getSortedRowModel } from "@tanstack/react-table";
+
+const table = useReactTable({
+  data,
+  columns,
+  getCoreRowModel: getCoreRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+});
+
+// header click
+&lt;th onClick={header.column.getToggleSortingHandler()}&gt;
+  {flexRender(...)} {header.column.getIsSorted() === "asc" ? "↑" : "↓"}
+&lt;/th&gt;</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Optional pagination</h2>
+        <pre>import { getPaginationRowModel } from "@tanstack/react-table";
+
+getPaginationRowModel: getPaginationRowModel(),
+// table.previousPage(), table.nextPage(), table.getPageCount()</pre>
+        <p>Use when lists grow beyond one screen of meetings.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Apply to Meeting Basum — Upcoming Meetings</h2>
+        <ul>
+            <li>Dashboard route shows sortable table instead of only static cards</li>
+            <li>Columns: title, host, time, Join action</li>
+            <li>Join navigates to <code>/meetings/:meetingId</code> or opens detail</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Verify TanStack Table</h2>
+        <ul>
+            <li>All rows render from data array</li>
+            <li>Click column header toggles sort</li>
+            <li>Join/action cell works per row</li>
+        </ul>
+        <p><strong>Done when:</strong> upcoming meetings are interactive and sortable.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Summary</h2>
+        <ul>
+            <li>Classical: controlled inputs, <code>useState</code>, manual <code>validate()</code></li>
+            <li>react-hook-form: <code>register</code>, <code>handleSubmit</code>, <code>formState.errors</code></li>
+            <li>Zod: <code>meetingSchema</code> + <code>zodResolver</code> centralizes rules</li>
+            <li>TanStack Table: columns, <code>useReactTable</code>, sorting</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 4 Session 2 Quiz</h1>
+        <p class="quiz-hint">10 questions on forms and tables.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 10</h2>
+        <p class="question">In a classical controlled input, what keeps React state in sync with the field?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="value reads state; onChange writes state — controlled pattern.">value tied to state and onChange updates that state</button>
+            <button type="button" data-correct="false" data-explanation="defaultValue is uncontrolled initial value only.">defaultValue only, no onChange</button>
+            <button type="button" data-correct="false" data-explanation="ref does not replace controlled value flow for form state.">useRef without state</button>
+            <button type="button" data-correct="false" data-explanation="document.getElementById bypasses React state.">Reading input.value from DOM on every render</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 10</h2>
+        <p class="question">Why call <code>e.preventDefault()</code> in a React form submit handler?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Prevents full page reload so the SPA stays mounted.">Stop the browser from reloading the page</button>
+            <button type="button" data-correct="false" data-explanation="preventDefault does not clear validation errors.">Automatically clear all field errors</button>
+            <button type="button" data-correct="false" data-explanation="Zod resolver is separate from preventDefault.">Enable Zod parsing</button>
+            <button type="button" data-correct="false" data-explanation="Sorting uses TanStack Table APIs.">Sort table columns</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 10</h2>
+        <p class="question">What does <code>handleSubmit(onSubmit)</code> do in react-hook-form?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="handleSubmit runs validation first, then calls onSubmit only when valid.">Runs validation, then calls onSubmit only if the form is valid</button>
+            <button type="button" data-correct="false" data-explanation="register connects fields; handleSubmit wraps submit.">Registers each input automatically</button>
+            <button type="button" data-correct="false" data-explanation="RHF does not replace React Router.">Navigates to the next route</button>
+            <button type="button" data-correct="false" data-explanation="Errors are in formState.errors, not thrown as exceptions by default.">Throws an error on every keystroke</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 10</h2>
+        <p class="question">With Zod + react-hook-form, where should validation rules live?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Schema centralizes rules; zodResolver connects schema to RHF.">In a Zod schema passed via zodResolver</button>
+            <button type="button" data-correct="false" data-explanation="Inline register rules are the pre-Zod approach.">Only inside each register() call forever</button>
+            <button type="button" data-correct="false" data-explanation="nginx.conf is unrelated to form validation.">In nginx.conf</button>
+            <button type="button" data-correct="false" data-explanation="localStorage stores tokens, not validation schemas.">In localStorage only</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 10</h2>
+        <p class="question">Which API connects an input to react-hook-form?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="register wires name, ref, and validation to native inputs.">{`{...register("fieldName")}`}</button>
+            <button type="button" data-correct="false" data-explanation="useRef alone does not integrate validation/submit with RHF.">useRef only, no spread</button>
+            <button type="button" data-correct="false" data-explanation="getRowModel is TanStack Table, not RHF.">getRowModel()</button>
+            <button type="button" data-correct="false" data-explanation="BrowserRouter is unrelated to form registration.">BrowserRouter</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 10</h2>
+        <p class="question">Modern react-table package name for React apps is:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="TanStack Table v8 ships as @tanstack/react-table.">@tanstack/react-table</button>
+            <button type="button" data-correct="false" data-explanation="Legacy v7 used react-table; v8 moved to TanStack scope.">react-table only (no scope)</button>
+            <button type="button" data-correct="false" data-explanation="react-hook-form is for forms, not tables.">react-hook-form-table</button>
+            <button type="button" data-correct="false" data-explanation="TanStack Query is for server state fetching.">@tanstack/react-query-table</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 10</h2>
+        <p class="question">What does <code>getCoreRowModel()</code> provide?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Core row model transforms data into rows for rendering.">Row model used to render table body rows</button>
+            <button type="button" data-correct="false" data-explanation="Sorting uses getSortedRowModel.">Automatic API pagination to server</button>
+            <button type="button" data-correct="false" data-explanation="flexRender renders cells; getCoreRowModel builds rows.">CSS styles for table headers</button>
+            <button type="button" data-correct="false" data-explanation="JWT auth is unrelated to table row models.">JWT validation for each row</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 10</h2>
+        <p class="question">Why use <code>flexRender</code> in TanStack Table?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="flexRender supports header/cell render functions and components safely.">Render header/cell definitions that may be strings or functions</button>
+            <button type="button" data-correct="false" data-explanation="flexRender is for cell content, not flexbox layout only.">Force flexbox on every table row</button>
+            <button type="button" data-correct="false" data-explanation="Sorting uses getSortedRowModel and column handlers.">Replace sorting logic entirely</button>
+            <button type="button" data-correct="false" data-explanation="Forms use register/handleSubmit, not flexRender.">Register form fields to table cells</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 9 of 10</h2>
+        <p class="question">Adding sortable headers requires which row model?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="getSortedRowModel enables column sorting behavior.">getSortedRowModel()</button>
+            <button type="button" data-correct="false" data-explanation="getCoreRowModel is baseline rows without sort.">getCoreRowModel() only</button>
+            <button type="button" data-correct="false" data-explanation="handleSubmit is react-hook-form.">handleSubmit()</button>
+            <button type="button" data-correct="false" data-explanation="useNavigate is React Router.">useNavigate()</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 10 of 10</h2>
+        <p class="question">Meeting form submit should add a row to the table. Good first step?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Shared meetings state (context/Zustand/local) can feed both form and table.">On valid submit, update shared meetings array in app state</button>
+            <button type="button" data-correct="false" data-explanation="DOM queries bypass React state and break predictability.">Use document.querySelector to append a tr manually</button>
+            <button type="button" data-correct="false" data-explanation="Skipping validation allows bad data into the list.">Call onSubmit even when errors exist</button>
+            <button type="button" data-correct="false" data-explanation="Tables need data updates, not only route changes.">Only change URL without updating data</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 4 Session 2</h1>
+        <p>Next: <a href="../handson/class-2-handson.html">Class 2 hands-on</a> and Session 3 — auth, protected routes, TypeScript, and Next.js teaser.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

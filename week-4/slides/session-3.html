@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 4 - Session 3 - Auth, TypeScript, and Next.js</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 4 - Session 3</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 3: Protected Routes, JWT Auth, and TypeScript</h1>
+        <p>Secure Meeting Basum routes, store tokens safely for demos, type your React code, and preview Next.js.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Auth mental model + JWT in localStorage (tradeoffs)</li>
+            <li>Auth context, login/logout, Bearer requests</li>
+            <li>Protected routes with React Router</li>
+            <li>Auth best practices for real products</li>
+            <li>TypeScript in React (deeper than Week 2 touchpoint)</li>
+            <li>Next.js teaser + quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Authentication Mental Model</h1>
+        <p>Authentication answers: <strong>who is this user?</strong> Authorization answers: <strong>what can they do?</strong></p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Typical SPA login flow</h2>
+        <ol>
+            <li>User submits email/password on <code>/login</code></li>
+            <li>Backend validates credentials</li>
+            <li>Backend returns JWT + user profile</li>
+            <li>Client stores token and attaches it to API requests</li>
+            <li>Protected pages read auth state before rendering</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <h2>What is a JWT?</h2>
+        <ul>
+            <li>Compact signed string: header.payload.signature</li>
+            <li>Payload often includes <code>sub</code>, <code>exp</code>, roles</li>
+            <li>Server verifies signature — client cannot trust payload alone</li>
+        </ul>
+        <p>Decode for display only; security decisions belong on the server.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>localStorage for teaching demos</h2>
+        <div class="comparison">
+            <article>
+                <h3>Pros</h3>
+                <ul>
+                    <li>Simple to implement in SPA labs</li>
+                    <li>Survives page refresh</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Cons</h3>
+                <ul>
+                    <li>Readable by any XSS script</li>
+                    <li>Not httpOnly — production often prefers secure cookies</li>
+                </ul>
+            </article>
+        </div>
+        <p>Never store passwords in localStorage — only token + minimal user info.</p>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>JWT + Auth Context</h1>
+        <p>Reuse Week 4 Session 1 patterns: provider near root, custom hook for consumers.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Mock login API (demo)</h2>
+        <pre>async function loginRequest(email, password) {
+  await new Promise(r =&gt; setTimeout(r, 500));
+  if (email === "demo@basum.com" &amp;&amp; password === "demo123") {
+    return {
+      token: "demo.jwt.token",
+      user: { id: "u1", name: "Your Name Here" },
+    };
+  }
+  throw new Error("Invalid credentials");
+}</pre>
+        <p>Replace with real <code>POST /login</code> when backend is available.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Save and read token</h2>
+        <pre>const TOKEN_KEY = "access_token";
+const USER_KEY = "auth_user";
+
+localStorage.setItem(TOKEN_KEY, response.token);
+localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+
+const token = localStorage.getItem(TOKEN_KEY);
+const user = JSON.parse(localStorage.getItem(USER_KEY) ?? "null");</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>AuthProvider sketch</h2>
+        <pre>export function AuthProvider({ children }) {
+  const [token, setToken] = useState(() =&gt; localStorage.getItem("access_token"));
+  const [user, setUser] = useState(() =&gt; readStoredUser());
+
+  const login = async (email, password) =&gt; {
+    const res = await loginRequest(email, password);
+    localStorage.setItem("access_token", res.token);
+    localStorage.setItem("auth_user", JSON.stringify(res.user));
+    setToken(res.token);
+    setUser(res.user);
+  };
+
+  const logout = () =&gt; {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("auth_user");
+    setToken(null);
+    setUser(null);
+  };
+
+  return (
+    &lt;AuthContext.Provider value={{ user, token, login, logout }}&gt;
+      {children}
+    &lt;/AuthContext.Provider&gt;
+  );
+}</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>useAuth hook</h2>
+        <pre>export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+}</pre>
+        <p>Wrap <code>AuthProvider</code> around <code>BrowserRouter</code> or inside it so routes can consume auth.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Login page</h2>
+        <pre>const { login } = useAuth();
+const navigate = useNavigate();
+const location = useLocation();
+
+const onSubmit = async data =&gt; {
+  await login(data.email, data.password);
+  const redirectTo = location.state?.from?.pathname ?? "/";
+  navigate(redirectTo, { replace: true });
+};</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Attach Bearer token to fetch</h2>
+        <pre>const { token } = useAuth();
+
+const res = await fetch(`${import.meta.env.VITE_API_URL}/meetings`, {
+  headers: {
+    Authorization: token ? `Bearer ${token}` : "",
+    "Content-Type": "application/json",
+  },
+});</pre>
+        <p>If API returns 401, call <code>logout()</code> and send user to <code>/login</code>.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Handle token expiry</h2>
+        <ul>
+            <li>Backend should return 401 when token is invalid/expired</li>
+            <li>Client clears storage and redirects to login</li>
+            <li>Optional: decode JWT <code>exp</code> client-side for early logout warning</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Verify auth flow</h2>
+        <ul>
+            <li>Login with demo credentials → dashboard visible</li>
+            <li>Refresh page → still logged in (token restored from localStorage)</li>
+            <li>Logout → token removed, protected pages blocked</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Private Routes</h1>
+        <p>Client-side guards improve UX; backend must still enforce authorization.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>ProtectedRoute component</h2>
+        <pre>import { Navigate, useLocation } from "react-router";
+
+export default function ProtectedRoute({ children }) {
+  const { token } = useAuth();
+  const location = useLocation();
+
+  if (!token) {
+    return &lt;Navigate to="/login" replace state={{ from: location }} /&gt;;
+  }
+
+  return children;
+}</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Wire into route table</h2>
+        <pre>&lt;Route path="/login" element={&lt;LoginPage /&gt;} /&gt;
+
+&lt;Route element={&lt;ProtectedRoute&gt;&lt;AppShell /&gt;&lt;/ProtectedRoute&gt;}&gt;
+  &lt;Route path="/" element={&lt;Dashboard /&gt;} /&gt;
+  &lt;Route path="/new-meeting" element={&lt;NewMeeting /&gt;} /&gt;
+  &lt;Route path="/calendar" element={&lt;Calendar /&gt;} /&gt;
+&lt;/Route&gt;</pre>
+        <p>Public: login. Protected: dashboard and app pages inside shell.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Redirect after login</h2>
+        <pre>// ProtectedRoute saved location.state.from
+// Login success:
+navigate(location.state?.from?.pathname ?? "/", { replace: true });</pre>
+        <p>User who bookmarked <code>/new-meeting</code> returns there after authenticating.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Header logout control</h2>
+        <pre>const { user, logout } = useAuth();
+const navigate = useNavigate();
+
+const onLogout = () =&gt; {
+  logout();
+  navigate("/login", { replace: true });
+};</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Verify protected routes</h2>
+        <ul>
+            <li>While logged out, visit <code>/</code> → redirected to <code>/login</code></li>
+            <li>After login, sidebar routes work without full reload</li>
+            <li>Logout blocks direct URL access again</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 4</p>
+        <h1>Auth Best Practices</h1>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Do and do not</h2>
+        <ul>
+            <li><strong>Do</strong> validate JWT on every protected API route (server)</li>
+            <li><strong>Do</strong> use HTTPS in production</li>
+            <li><strong>Do</strong> keep tokens out of URLs and git</li>
+            <li><strong>Do not</strong> trust client-only checks for sensitive actions</li>
+            <li><strong>Do not</strong> store passwords in localStorage</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Production patterns (overview)</h2>
+        <ul>
+            <li>Short-lived access token + refresh token rotation</li>
+            <li>httpOnly, Secure, SameSite cookies for session tokens</li>
+            <li>CSRF protection when using cookies</li>
+            <li>Role-based access checks on server, not only hidden buttons</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Environment config</h2>
+        <pre># .env.local
+VITE_API_URL=https://api.example.com</pre>
+        <pre>fetch(`${import.meta.env.VITE_API_URL}/login`, …)</pre>
+        <p>Set the same keys in Netlify before production builds.</p>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 5</p>
+        <h1>TypeScript in React</h1>
+        <p>Build on Week 2 touchpoint — now apply types to forms, tables, and auth in Meeting Basum.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Why TypeScript here?</h2>
+        <ul>
+            <li>Catch wrong prop shapes before runtime</li>
+            <li>Autocomplete for API responses and form data</li>
+            <li>Safer refactors as app grows</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Add TypeScript to Vite project</h2>
+        <pre># new project
+npm create vite@latest my-app -- --template react-ts
+
+# existing JS project: rename gradually
+mv src/App.jsx src/App.tsx</pre>
+        <p>Install types if prompted: <code>npm install -D typescript @types/react @types/react-dom</code></p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Typing component props</h2>
+        <pre>type MeetingCardProps = {
+  title: string;
+  host: string;
+  onJoin: (id: string) =&gt; void;
+};
+
+export function MeetingCard({ title, host, onJoin }: MeetingCardProps) {
+  return &lt;button onClick={() =&gt; onJoin("m1")}&gt;Join {title}&lt;/button&gt;;
+}</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Typing state and API</h2>
+        <pre>type User = { id: string; name: string };
+type LoginResponse = { token: string; user: User };
+
+const [meetings, setMeetings] = useState&lt;Meeting[]&gt;([]);</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Typing react-hook-form</h2>
+        <pre>type MeetingInput = {
+  title: string;
+  date: string;
+  participants: string;
+};
+
+const form = useForm&lt;MeetingInput&gt;({
+  defaultValues: { title: "", date: "", participants: "" },
+});</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Typing TanStack Table</h2>
+        <pre>import type { ColumnDef } from "@tanstack/react-table";
+
+type Meeting = { id: string; title: string; host: string; time: string };
+
+const columns: ColumnDef&lt;Meeting&gt;[] = [
+  { accessorKey: "title", header: "Meeting" },
+];</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Verify TypeScript</h2>
+        <ul>
+            <li>Convert at least 2 files to <code>.tsx</code> / <code>.ts</code></li>
+            <li>Fix red squiggles for props and API types</li>
+            <li><code>npm run build</code> passes without type errors</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 6</p>
+        <h1>Next.js Teaser</h1>
+        <p>Same React components — different framework responsibilities.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Vite SPA vs Next.js</h2>
+        <div class="comparison">
+            <article>
+                <h3>Vite + React SPA</h3>
+                <ul>
+                    <li>Client-side routing (React Router)</li>
+                    <li>Static deploy (Netlify)</li>
+                    <li>Great for dashboards and internal tools</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Next.js</h3>
+                <ul>
+                    <li>File-based routing in <code>app/</code> or <code>pages/</code></li>
+                    <li>SSR, SSG, and API routes built-in</li>
+                    <li>Strong for SEO and full-stack React</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Rendering modes (one line each)</h2>
+        <ul>
+            <li><strong>CSR:</strong> render in browser after JS loads (typical SPA)</li>
+            <li><strong>SSR:</strong> HTML generated per request on server</li>
+            <li><strong>SSG:</strong> HTML generated at build time</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>When teams pick Next.js</h2>
+        <ul>
+            <li>Marketing pages need SEO</li>
+            <li>Auth/session logic on server</li>
+            <li>Colocate API endpoints with UI</li>
+        </ul>
+        <p>Your Meeting Basum skills transfer — routing and data patterns feel familiar.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Summary</h2>
+        <ul>
+            <li>JWT demo with localStorage + AuthProvider + logout</li>
+            <li>ProtectedRoute guards UX; server still enforces security</li>
+            <li>TypeScript types props, forms, tables, and API contracts</li>
+            <li>Next.js is the natural next step after SPA mastery</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 4 Session 3 Quiz</h1>
+        <p class="quiz-hint">8 questions on auth, TypeScript, and Next.js.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">Main security risk of storing JWT in localStorage?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="XSS can read localStorage and exfiltrate tokens.">Any XSS script can read the token</button>
+            <button type="button" data-correct="false" data-explanation="localStorage persists across refresh; that is a feature, not the main risk.">Token disappears on page refresh</button>
+            <button type="button" data-correct="false" data-explanation="JWTs are often base64-encoded JSON, not encrypted secrets.">JWT is encrypted and unreadable in DevTools</button>
+            <button type="button" data-correct="false" data-explanation="CORS is separate from token storage location.">It blocks all CORS requests automatically</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">What should ProtectedRoute do when token is missing?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Navigate to login and optionally save attempted location.">Redirect to /login (e.g. Navigate)</button>
+            <button type="button" data-correct="false" data-explanation="Rendering children without auth defeats the guard.">Render dashboard anyway</button>
+            <button type="button" data-correct="false" data-explanation="Tokens belong in headers/storage, not URL paths.">Append token to every URL path</button>
+            <button type="button" data-correct="false" data-explanation="Deleting node_modules does not implement auth.">Delete node_modules</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">Correct Authorization header for JWT APIs?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Bearer scheme is standard for access tokens.">Authorization: Bearer &lt;token&gt;</button>
+            <button type="button" data-correct="false" data-explanation="Basic auth uses username:password encoding, not JWT.">Authorization: Basic &lt;token&gt;</button>
+            <button type="button" data-correct="false" data-explanation="JWT is not typically sent as Content-Type.">Content-Type: JWT</button>
+            <button type="button" data-correct="false" data-explanation="Token header is non-standard for JWT.">Token: localStorage</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">Client-side route guard is NOT enough because:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Attackers can call APIs directly; server must validate JWT.">APIs can be called directly without the UI</button>
+            <button type="button" data-correct="false" data-explanation="React Router guards do affect what components render in the SPA.">It always prevents rendering protected components</button>
+            <button type="button" data-correct="false" data-explanation="Guards are useful for UX even if not sufficient alone.">It only affects CSS styling</button>
+            <button type="button" data-correct="false" data-explanation="localStorage can persist tokens across refresh.">localStorage cannot persist tokens</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">Best TypeScript typing for react-hook-form meeting form?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Generic on useForm ties fields to a MeetingInput type.">useForm&lt;MeetingInput&gt;()</button>
+            <button type="button" data-correct="false" data-explanation="any disables type checking benefits.">useForm&lt;any&gt;() only</button>
+            <button type="button" data-correct="false" data-explanation="ColumnDef is for tables, not forms.">ColumnDef&lt;Meeting&gt;()</button>
+            <button type="button" data-correct="false" data-explanation="Navigate is routing, unrelated to form generics.">useNavigate&lt;Meeting&gt;()</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">Column definitions for TanStack Table should be typed as:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="ColumnDef generic matches row data shape.">ColumnDef&lt;Meeting&gt;[]</button>
+            <button type="button" data-correct="false" data-explanation="string[] does not describe column structure.">string[] only</button>
+            <button type="button" data-correct="false" data-explanation="JWT types are unrelated to table columns.">JWT&lt;Meeting&gt;</button>
+            <button type="button" data-correct="false" data-explanation="ProtectedRoute is a component, not a column type.">ProtectedRoute&lt;Meeting&gt;</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">Key difference between Vite SPA and Next.js?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Next.js adds file-based routing and server rendering options.">Next.js provides file-based routing and SSR/SSG options</button>
+            <button type="button" data-correct="false" data-explanation="Both can use React components.">Next.js cannot use React components</button>
+            <button type="button" data-correct="false" data-explanation="Vite SPAs are commonly deployed to Netlify/CDN.">Vite SPA cannot be deployed</button>
+            <button type="button" data-correct="false" data-explanation="TypeScript works in both ecosystems.">TypeScript only works in Next.js</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">After logout, what must happen on the client?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Remove persisted token and clear in-memory auth state.">Clear localStorage token and auth context state</button>
+            <button type="button" data-correct="false" data-explanation="Leaving token in storage keeps user authenticated.">Keep token for faster re-login only</button>
+            <button type="button" data-correct="false" data-explanation="Passwords should never be stored client-side.">Store password in sessionStorage</button>
+            <button type="button" data-correct="false" data-explanation="Disabling React Router breaks the app.">Disable React Router permanently</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 4 Session 3</h1>
+        <p>Complete <a href="../handson/class-3-handson.html">Class 3 hands-on</a> and the <a href="../assignment/week-4-assignment.html">Week 4 assignment</a> — all three sessions.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

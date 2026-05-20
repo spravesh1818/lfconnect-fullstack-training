@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 4 Class 3 hands-on - Auth and TypeScript</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 56rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 4 - Class 3 Lab</strong> -
+        <a href="../slides/session-3.html">Open session deck</a>
+        - JWT auth, protected routes, TypeScript
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Login with JWT in localStorage</h2>
+        <ol>
+            <li>Create <code>AuthProvider</code> with <code>login</code>, <code>logout</code>, <code>user</code>, <code>token</code>.</li>
+            <li>Implement mock login (or real API) returning <code>{ token, user }</code>.</li>
+            <li>Persist token with <code>localStorage.setItem("access_token", …)</code>.</li>
+            <li>Logout removes token and clears auth state.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> refresh keeps you logged in; logout clears access.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Protected Routes</h2>
+        <ol>
+            <li>Build <code>ProtectedRoute</code> that redirects to <code>/login</code> when token is missing.</li>
+            <li>Wrap dashboard/app routes; keep <code>/login</code> public.</li>
+            <li>After login, redirect to intended page using <code>location.state.from</code>.</li>
+            <li>Attach <code>Authorization: Bearer …</code> on at least one API fetch.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> direct URL to protected route while logged out sends you to login.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - TypeScript Migration</h2>
+        <ol>
+            <li>Convert at least 2 files to <code>.tsx</code> / <code>.ts</code> (e.g. form component + table component).</li>
+            <li>Add prop types and typed form data (<code>useForm&lt;MeetingInput&gt;</code>).</li>
+            <li>Type table columns with <code>ColumnDef&lt;Meeting&gt;[]</code>.</li>
+            <li>Write 3–5 lines on localStorage vs httpOnly cookies for JWT storage.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> <code>npm run build</code> passes and auth tradeoffs note is in README or submission.</div>
+    </div>
+
+    <section class="practice-shell" aria-labelledby="practice-title">
+        <h1 id="practice-title">Class 3 Lab Checklist</h1>
+        <ul>
+            <li>[ ] Mock login + JWT in localStorage + logout</li>
+            <li>[ ] ProtectedRoute on app shell routes</li>
+            <li>[ ] Bearer header on API call</li>
+            <li>[ ] At least 2 TypeScript files with meaningful types</li>
+            <li>[ ] Auth tradeoffs note (localStorage vs httpOnly cookies)</li>
+        </ul>
+        <p style="margin-top: 1rem; color: #475569; font-size: 0.95rem;">Submit via <a href="../assignment/week-4-assignment.html">Week 4 assignment sheet</a>.</p>
+    </section>
+</body>
+
+</html>
