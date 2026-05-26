@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 5 Class 1 hands-on - Express + TypeScript + Zod</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 5 - Class 1 Lab</strong> -
+        <a href="../slides/session-1.html">Open session deck</a>
+        - TypeScript + Express + Zod (Basum API)
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Setup</h2>
+        <ol>
+            <li>Create a working folder for the lab: <code>mkdir basum-api-lab &amp;&amp; cd basum-api-lab</code>.</li>
+            <li>Use Node 18+ (check with <code>node -v</code>).</li>
+            <li>Open the folder in VS Code or Cursor.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> you have an empty folder open and a terminal ready.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - TypeScript + Express project setup</h2>
+        <ol>
+            <li>Initialize the project: <code>npm init -y</code>. Edit <code>package.json</code> and add <code>"type": "module"</code>.</li>
+            <li>Install runtime deps: <code>npm install express</code>.</li>
+            <li>Install dev deps: <code>npm install -D typescript tsx @types/node @types/express</code>.</li>
+            <li>Add a <code>tsconfig.json</code>:</li>
+        </ol>
+        <pre>{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}</pre>
+        <ol start="5">
+            <li>Create <code>src/server.ts</code> with a hello-world endpoint and a <code>/health</code> endpoint.</li>
+            <li>Add a script to <code>package.json</code>: <code>"dev": "tsx watch src/server.ts"</code>.</li>
+            <li>Run <code>npm run dev</code> and verify both endpoints in the browser or with <code>curl</code>.</li>
+        </ol>
+        <pre>// src/server.ts
+import express from "express";
+
+const app = express();
+app.use(express.json());
+
+app.get("/", (_req, res) =&gt; res.json({ message: "hello world" }));
+app.get("/health", (_req, res) =&gt; res.json({ status: "ok" }));
+
+app.listen(3000, () =&gt; console.log("listening on http://localhost:3000"));</pre>
+        <div class="done-when"><strong>Done when:</strong> <code>GET /</code> returns the hello-world JSON and <code>GET /health</code> returns <code>{ status: "ok" }</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Meetings endpoints (in-memory)</h2>
+        <ol>
+            <li>Add a <code>Meeting</code> type and an in-memory <code>meetings</code> array.</li>
+            <li>Implement <code>GET /meetings</code> to return the array.</li>
+            <li>Implement <code>POST /meetings</code> to create a new meeting from <code>req.body</code>.</li>
+            <li>Use <code>crypto.randomUUID()</code> for the id.</li>
+            <li>Test with curl:
+                <pre>curl -X POST http://localhost:3000/meetings \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Sprint","date":"2026-06-01T10:00:00Z","host":"alice"}'</pre>
+            </li>
+        </ol>
+        <pre>type Meeting = {
+  id: string;
+  title: string;
+  date: string;
+  host: string;
+};
+
+const meetings: Meeting[] = [];
+
+app.get("/meetings", (_req, res) =&gt; res.json(meetings));
+
+app.post("/meetings", (req, res) =&gt; {
+  const meeting: Meeting = { id: crypto.randomUUID(), ...req.body };
+  meetings.push(meeting);
+  res.status(201).json(meeting);
+});</pre>
+        <div class="done-when"><strong>Done when:</strong> POST adds a meeting and a subsequent GET returns it in the array.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Zod validation middleware</h2>
+        <ol>
+            <li>Install Zod: <code>npm install zod</code>.</li>
+            <li>Create <code>src/schemas/meeting.ts</code> with a <code>createMeetingSchema</code>.</li>
+            <li>Create <code>src/middleware/validate.ts</code> with a reusable <code>validate</code> middleware that uses <code>safeParse</code>.</li>
+            <li>Apply <code>validate(createMeetingSchema)</code> on <code>POST /meetings</code>.</li>
+            <li>Send an invalid POST (e.g. missing <code>title</code>) and confirm a <code>400</code> response with a readable error.</li>
+        </ol>
+        <pre>// src/schemas/meeting.ts
+import { z } from "zod";
+
+export const createMeetingSchema = z.object({
+  title: z.string().min(3),
+  date: z.string().datetime(),
+  host: z.string().min(1),
+  participants: z.array(z.string().email()).default([]),
+});</pre>
+        <pre>// src/middleware/validate.ts
+import { ZodSchema } from "zod";
+import { Request, Response, NextFunction } from "express";
+
+export const validate =
+  (schema: ZodSchema) =&gt;
+  (req: Request, res: Response, next: NextFunction) =&gt; {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.flatten() });
+    }
+    req.body = result.data;
+    next();
+  };</pre>
+        <div class="done-when"><strong>Done when:</strong> valid payloads create meetings; invalid payloads return a 400 with a Zod error shape.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - DTO + custom logger + error middleware</h2>
+        <ol>
+            <li>Export a DTO type from the schema: <code>export type CreateMeetingDto = z.infer&lt;typeof createMeetingSchema&gt;</code>.</li>
+            <li>Use <code>CreateMeetingDto</code> in the route handler instead of <code>req.body: any</code>.</li>
+            <li>Add a custom request logger middleware that prints <code>method url status durationMs</code>.</li>
+            <li>Add a final error-handling middleware with the 4-arg signature.</li>
+            <li>Throw a sample error from a route (e.g. <code>GET /boom</code>) and confirm the error middleware returns a JSON 500.</li>
+        </ol>
+        <pre>// src/middleware/logger.ts
+import { Request, Response, NextFunction } from "express";
+
+export function requestLogger(req: Request, res: Response, next: NextFunction) {
+  const start = Date.now();
+  res.on("finish", () =&gt; {
+    console.log(`${req.method} ${req.url} ${res.statusCode} ${Date.now() - start}ms`);
+  });
+  next();
+}</pre>
+        <pre>// src/middleware/error.ts
+import { Request, Response, NextFunction } from "express";
+
+export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
+  console.error(err);
+  res.status(500).json({ error: "Internal Server Error" });
+}</pre>
+        <pre>// src/server.ts (order matters)
+app.use(express.json());
+app.use(requestLogger);
+
+app.get("/boom", () =&gt; { throw new Error("kaboom"); });
+
+app.post("/meetings", validate(createMeetingSchema), (req, res) =&gt; {
+  const dto = req.body as CreateMeetingDto;
+  const meeting: Meeting = { id: crypto.randomUUID(), ...dto };
+  meetings.push(meeting);
+  res.status(201).json(meeting);
+});
+
+app.use(errorHandler); // last</pre>
+        <div class="done-when"><strong>Done when:</strong> the logger prints one line per request, <code>GET /boom</code> returns a 500 JSON from the error handler, and the handler uses the DTO type.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Lab checklist</h2>
+        <ul>
+            <li>Server boots with <code>npm run dev</code> and logs the listen URL.</li>
+            <li><code>GET /</code> and <code>GET /health</code> respond with JSON.</li>
+            <li><code>GET /meetings</code> and <code>POST /meetings</code> work end-to-end.</li>
+            <li>Invalid <code>POST /meetings</code> returns a 400 with a Zod error.</li>
+            <li>Request logger prints a line for every request.</li>
+            <li>Error middleware turns thrown errors into JSON 500s.</li>
+            <li>DTO type is reused in the handler (no <code>any</code>).</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Stretch goals (optional):</strong>
+        <ul>
+            <li>Add <code>GET /meetings/:id</code> using <code>req.params.id</code> with a 404 when not found.</li>
+            <li>Add <code>DELETE /meetings/:id</code> and return <code>204 No Content</code> on success.</li>
+            <li>Add <code>cors</code>, <code>helmet</code>, and <code>morgan</code> middleware.</li>
+            <li>Split the server into <code>routes/meetings.ts</code> using <code>express.Router()</code>.</li>
+        </ul>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 5 - Session 1 - Backend Foundations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 5 - Session 1</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 1: Backend Foundations</h1>
+        <p>TypeScript fundamentals, backend lifecycle, REST vs GraphQL, Express, Zod validation, DTOs, databases, ORMs, and a hello-world server demo.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Part 1 — TypeScript fundamentals</li>
+            <li>Part 2 — Backend foundations and REST vs GraphQL</li>
+            <li>Part 3 — Express and middleware</li>
+            <li>Part 4 — Validation with Zod and Data Transfer Objects</li>
+            <li>Part 5 — Databases and ORMs</li>
+            <li>Part 6 — Hello-world Express + TS demo</li>
+            <li>Challenge quiz (10 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>TypeScript Fundamentals</h1>
+        <p>The language we will use across the rest of Week 5 — typed contracts between client, server, and database.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Why TypeScript for the backend?</h2>
+        <ul>
+            <li>Types describe the API contract at the boundary</li>
+            <li>Catch shape mismatches before they reach production</li>
+            <li>Confident refactors as the codebase grows</li>
+            <li>Same tooling and types as our React client</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Install and run</h2>
+        <pre># dev dependencies
+npm install -D typescript tsx @types/node
+
+# generate tsconfig.json (optional)
+npx tsc --init
+
+# run a single TS file fast
+npx tsx src/server.ts</pre>
+        <p><code>tsx</code> executes TypeScript directly during development; <code>tsc</code> compiles for production.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>tsconfig.json essentials</h2>
+        <pre>{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}</pre>
+        <p>Start with <code>strict: true</code> — it forces you to handle <code>null</code>, <code>undefined</code>, and untyped inputs.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Primitives, arrays, and literal types</h2>
+        <pre>const name: string = "Basum";
+const port: number = 3000;
+const isLive: boolean = true;
+
+const tags: string[] = ["api", "node"];
+
+type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+const method: HttpMethod = "GET";</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2><code>type</code> vs <code>interface</code></h2>
+        <pre>type Meeting = {
+  id: string;
+  title: string;
+  host: string;
+};
+
+interface User {
+  id: string;
+  email: string;
+}
+
+// both can extend
+interface Admin extends User {
+  role: "admin";
+}</pre>
+        <p>Prefer <code>type</code> for unions and computed types; <code>interface</code> shines when extending or merging.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Unions and narrowing</h2>
+        <pre>type ApiResult&lt;T&gt; =
+  | { ok: true; data: T }
+  | { ok: false; error: string };
+
+function show(result: ApiResult&lt;Meeting&gt;) {
+  if (result.ok) {
+    console.log(result.data.title);   // narrowed
+  } else {
+    console.log(result.error);
+  }
+}</pre>
+        <p>Discriminated unions let TypeScript narrow types based on a tag like <code>ok</code>.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Generics</h2>
+        <pre>function ok&lt;T&gt;(data: T) {
+  return { ok: true as const, data };
+}
+
+const meeting = ok({ id: "m1", title: "Sprint" });
+// inferred: { ok: true; data: { id: string; title: string } }</pre>
+        <p>Generics keep helpers reusable while preserving the caller's type.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Utility types</h2>
+        <pre>type Meeting = { id: string; title: string; host: string };
+
+type NewMeeting   = Omit&lt;Meeting, "id"&gt;;
+type MeetingPatch = Partial&lt;Meeting&gt;;
+type MeetingSlim  = Pick&lt;Meeting, "id" | "title"&gt;;
+type MeetingMap   = Record&lt;string, Meeting&gt;;</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Inference, <code>unknown</code>, and <code>any</code></h2>
+        <ul>
+            <li>Prefer letting TypeScript infer return types and locals</li>
+            <li>Use <code>unknown</code> for I/O (req body, JSON parse) and narrow before use</li>
+            <li>Avoid <code>any</code> — it silently disables type checking</li>
+        </ul>
+        <pre>const body: unknown = JSON.parse(input);
+if (typeof body === "object" &amp;&amp; body !== null) { /* narrow */ }</pre>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Backend Foundations</h1>
+        <p>What lives on the server, how a request travels, and which API style fits the job.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>What is a backend?</h2>
+        <ul>
+            <li>Server-side code that owns business logic, persistence, and auth</li>
+            <li>Exposes APIs the frontend (and other services) call over the network</li>
+            <li>Holds secrets the client should never see (DB credentials, signing keys)</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Frontend vs backend responsibilities</h2>
+        <div class="comparison">
+            <article>
+                <h3>Frontend</h3>
+                <ul>
+                    <li>Rendering and UX</li>
+                    <li>Local UI state</li>
+                    <li>Calls APIs</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Backend</h3>
+                <ul>
+                    <li>Business rules</li>
+                    <li>Database and integrations</li>
+                    <li>Auth, validation, security</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Lifecycle of an HTTP request</h2>
+        <ol>
+            <li>Browser resolves DNS for the host</li>
+            <li>TCP + TLS handshake to the server</li>
+            <li>Client sends HTTP request (method, URL, headers, body)</li>
+            <li>Server routes to a handler and runs middleware</li>
+            <li>Handler may read/write the database</li>
+            <li>Server sends HTTP response (status, headers, body)</li>
+            <li>Connection closed or kept alive for the next request</li>
+        </ol>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Anatomy of an HTTP request</h2>
+        <pre>POST /meetings HTTP/1.1
+Host: api.basum.com
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOi...
+
+{ "title": "Sprint Review", "date": "2026-06-01T10:00:00Z" }</pre>
+        <p>Every request has a <strong>method</strong>, <strong>URL</strong>, <strong>headers</strong>, and optionally a <strong>body</strong>.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>REST verbs</h2>
+        <ul>
+            <li><code>GET</code> — read a resource (safe, idempotent)</li>
+            <li><code>POST</code> — create a new resource (not idempotent)</li>
+            <li><code>PUT</code> — replace a resource (idempotent)</li>
+            <li><code>PATCH</code> — partially update a resource</li>
+            <li><code>DELETE</code> — remove a resource (idempotent)</li>
+        </ul>
+        <p><strong>Idempotent</strong> = same request repeated yields the same end state.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>HTTP status codes you will use</h2>
+        <ul>
+            <li><strong>2xx</strong> — success: <code>200 OK</code>, <code>201 Created</code>, <code>204 No Content</code></li>
+            <li><strong>4xx</strong> — client errors: <code>400 Bad Request</code>, <code>401 Unauthorized</code>, <code>403 Forbidden</code>, <code>404 Not Found</code>, <code>409 Conflict</code></li>
+            <li><strong>5xx</strong> — server errors: <code>500 Internal Server Error</code>, <code>503 Service Unavailable</code></li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Types of APIs</h2>
+        <ul>
+            <li><strong>REST</strong> — resource URLs, HTTP verbs, JSON bodies</li>
+            <li><strong>GraphQL</strong> — single endpoint, client-specified query</li>
+            <li>Others (mention only): gRPC, WebSocket, tRPC, SOAP</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>REST in one slide</h2>
+        <pre>GET    /meetings           list
+GET    /meetings/:id       fetch one
+POST   /meetings           create
+PUT    /meetings/:id       replace
+PATCH  /meetings/:id       update fields
+DELETE /meetings/:id       remove</pre>
+        <p>Each resource has a URL; verbs describe what to do with it.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>GraphQL in one slide</h2>
+        <pre># single endpoint: POST /graphql
+query {
+  meeting(id: "m1") {
+    title
+    host { name }
+    participants { name email }
+  }
+}</pre>
+        <p>The client lists exactly which fields it wants — server returns only those.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>REST vs GraphQL — tradeoffs</h2>
+        <div class="comparison">
+            <article>
+                <h3>REST</h3>
+                <ul>
+                    <li>Simple, HTTP caching by URL + method</li>
+                    <li>Mature tooling and conventions</li>
+                    <li>Risk of over/under-fetching, more round trips</li>
+                </ul>
+            </article>
+            <article>
+                <h3>GraphQL</h3>
+                <ul>
+                    <li>Client picks the exact fields</li>
+                    <li>One round trip, typed schema</li>
+                    <li>Caching is harder, N+1 query traps</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg3">
+        <h2>When to choose which</h2>
+        <ul>
+            <li><strong>REST</strong> for straightforward CRUD, public APIs, cacheable reads</li>
+            <li><strong>GraphQL</strong> when clients need nested or aggregated views and field-level flexibility</li>
+            <li>Don't ship both unless there is a real reason</li>
+        </ul>
+        <p>This week we build with REST + Express.</p>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Express and Middleware</h1>
+        <p>The most popular Node.js web framework — small surface, big ecosystem.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>What is Express?</h2>
+        <ul>
+            <li>Thin framework on top of Node's <code>http</code> module</li>
+            <li>Provides routing, middleware, and request/response helpers</li>
+            <li>Stays unopinionated about validation, ORM, and project structure</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Install Express</h2>
+        <pre>npm install express
+npm install -D @types/express</pre>
+        <p>The types package gives autocomplete for <code>Request</code>, <code>Response</code>, and middleware signatures.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Minimal server</h2>
+        <pre>import express from "express";
+
+const app = express();
+const PORT = 3000;
+
+app.listen(PORT, () =&gt; {
+  console.log(`Listening on http://localhost:${PORT}`);
+});</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Routes and handlers</h2>
+        <pre>app.get("/meetings", (req, res) =&gt; {
+  res.json([{ id: "m1", title: "Sprint" }]);
+});
+
+app.post("/meetings", (req, res) =&gt; {
+  res.status(201).json({ id: "m2", ...req.body });
+});</pre>
+        <p>Each route maps a <strong>method + path</strong> to a handler function.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Working with <code>req</code> and <code>res</code></h2>
+        <pre>// URL path params       /meetings/:id
+req.params.id
+
+// query string          /meetings?host=alice
+req.query.host
+
+// parsed JSON body
+req.body
+
+// send a response
+res.status(201).json({ ok: true });</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Middleware mental model</h2>
+        <ul>
+            <li>A middleware is a function: <code>(req, res, next) =&gt; void</code></li>
+            <li>It can read/modify <code>req</code>/<code>res</code>, then call <code>next()</code> to continue</li>
+            <li>Requests flow through middleware <strong>in order</strong> until a handler responds</li>
+        </ul>
+        <pre>app.use((req, _res, next) =&gt; {
+  console.log(req.method, req.url);
+  next();
+});</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Built-in middleware</h2>
+        <pre>app.use(express.json());          // parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // form bodies</pre>
+        <p>Without <code>express.json()</code>, <code>req.body</code> is <code>undefined</code>.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Third-party middleware</h2>
+        <pre>npm install cors morgan helmet</pre>
+        <pre>app.use(cors());          // allow cross-origin requests from the frontend
+app.use(helmet());        // sensible security headers
+app.use(morgan("dev"));   // pretty request logs</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Custom middleware: request logger</h2>
+        <pre>function requestLogger(req, res, next) {
+  const start = Date.now();
+  res.on("finish", () =&gt; {
+    console.log(`${req.method} ${req.url} ${res.statusCode} ${Date.now() - start}ms`);
+  });
+  next();
+}
+
+app.use(requestLogger);</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Error-handling middleware</h2>
+        <pre>// 4 arguments mark this as an error handler
+app.use((err, _req, res, _next) =&gt; {
+  console.error(err);
+  res.status(500).json({ error: "Internal Server Error" });
+});</pre>
+        <p>Register error middleware <strong>last</strong>, after all routes.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Why middleware order matters</h2>
+        <ul>
+            <li><code>express.json()</code> must run before any route that reads <code>req.body</code></li>
+            <li>Auth middleware runs before protected routes</li>
+            <li>Validation middleware runs after body parsing, before the handler</li>
+            <li>Error middleware sits at the very end of the pipeline</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 4</p>
+        <h1>Validation and DTOs</h1>
+        <p>Never trust input. Validate at the boundary, then pass clean, typed data inward.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Why validate at the boundary?</h2>
+        <ul>
+            <li>HTTP bodies are <code>unknown</code> — anything can arrive</li>
+            <li>Reject bad input fast with a clear <code>400</code> response</li>
+            <li>Keep validation rules in one place, reusable across routes</li>
+            <li>Same Zod library you used in Week 4 with react-hook-form</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Install Zod on the server</h2>
+        <pre>npm install zod</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Define a request schema</h2>
+        <pre>import { z } from "zod";
+
+export const createMeetingSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  date: z.string().datetime(),
+  host: z.string().min(1),
+  participants: z.array(z.string().email()).default([]),
+});</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Reusable <code>validate</code> middleware</h2>
+        <pre>import { ZodSchema } from "zod";
+import { Request, Response, NextFunction } from "express";
+
+export const validate =
+  (schema: ZodSchema) =&gt;
+  (req: Request, res: Response, next: NextFunction) =&gt; {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.flatten() });
+    }
+    req.body = result.data;  // typed and clean
+    next();
+  };
+
+app.post("/meetings", validate(createMeetingSchema), handler);</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Data Transfer Objects (DTOs)</h2>
+        <ul>
+            <li>A DTO is the shape carried between layers (HTTP &lt;-&gt; service &lt;-&gt; DB)</li>
+            <li>Keeps the wire format separate from internal domain types</li>
+            <li>Lets you evolve internals without breaking clients</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>DTO from a Zod schema</h2>
+        <pre>export type CreateMeetingDto = z.infer&lt;typeof createMeetingSchema&gt;;
+
+function createMeeting(dto: CreateMeetingDto): Meeting {
+  return {
+    id: crypto.randomUUID(),
+    title: dto.title,
+    date: dto.date,
+    host: dto.host,
+  };
+}</pre>
+        <p>One schema gives you runtime validation <strong>and</strong> the compile-time type — no duplication.</p>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 5</p>
+        <h1>Databases and ORMs</h1>
+        <p>Where the data lives after the request ends.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>What is a database?</h2>
+        <ul>
+            <li>Durable structured storage with a query API</li>
+            <li>Survives server restarts and scales beyond in-memory state</li>
+            <li>Models concurrency: many requests reading/writing safely</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Relational (SQL) databases</h2>
+        <ul>
+            <li>Examples: PostgreSQL, MySQL, SQLite</li>
+            <li>Strict schemas with tables, columns, and types</li>
+            <li>Joins across related tables, ACID transactions</li>
+            <li>Great default for most business apps</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Document (NoSQL) databases</h2>
+        <ul>
+            <li>Example: MongoDB</li>
+            <li>Documents are flexible JSON-like blobs</li>
+            <li>Easy to evolve shape; weaker cross-document joins</li>
+            <li>Fits content/catalog data and prototypes</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Key-value stores</h2>
+        <ul>
+            <li>Example: Redis</li>
+            <li>Very fast lookups by key</li>
+            <li>Used for caching, sessions, rate limiting, queues</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Other shapes (briefly)</h2>
+        <ul>
+            <li><strong>Graph</strong> (Neo4j) — relationship-heavy data like social graphs</li>
+            <li><strong>Search</strong> (Elasticsearch, OpenSearch) — full-text and faceted search</li>
+            <li><strong>Time-series</strong> (InfluxDB) — metrics, IoT</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>How to pick a database</h2>
+        <ul>
+            <li>Shape of data: rows + relations? documents? key-value?</li>
+            <li>Read vs write patterns and scale targets</li>
+            <li>Consistency needs (transactional vs eventual)</li>
+            <li>Team familiarity and hosting options</li>
+        </ul>
+        <p>For Basum we will use a relational DB (PostgreSQL) later.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>What is an ORM?</h2>
+        <ul>
+            <li><strong>Object-Relational Mapper</strong> — maps DB rows to typed objects</li>
+            <li>Generates queries, manages connections, supports migrations</li>
+            <li>Lets you stay in TypeScript instead of writing raw SQL strings</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>ORM landscape (Node)</h2>
+        <ul>
+            <li><strong>Prisma</strong> — schema file, generated client, great DX (recommended starter)</li>
+            <li><strong>Drizzle</strong> — TypeScript-first, close to SQL, lightweight</li>
+            <li><strong>TypeORM / Sequelize</strong> — older, decorator/active-record style</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>ORM vs raw SQL</h2>
+        <div class="comparison">
+            <article>
+                <h3>ORM</h3>
+                <ul>
+                    <li>Faster CRUD, typed results</li>
+                    <li>Migrations and tooling</li>
+                    <li>Abstracts SQL — can hide perf issues</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Raw SQL</h3>
+                <ul>
+                    <li>Full control and tuning</li>
+                    <li>No mapping layer</li>
+                    <li>More boilerplate and manual types</li>
+                </ul>
+            </article>
+        </div>
+        <p>Most teams start with an ORM and drop to raw SQL for the hot 5%.</p>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 6</p>
+        <h1>Hello-World Demo</h1>
+        <p>Build a tiny Express + TypeScript server from zero. Same steps as Class 1 hands-on.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 1 — Project init</h2>
+        <pre>mkdir basum-api
+cd basum-api
+npm init -y</pre>
+        <p>Add <code>"type": "module"</code> in <code>package.json</code> to use ESM imports.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 2 — Install dependencies</h2>
+        <pre>npm install express zod
+npm install -D typescript tsx @types/node @types/express</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 3 — tsconfig.json</h2>
+        <pre>{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 4 — src/server.ts</h2>
+        <pre>import express from "express";
+
+const app = express();
+app.use(express.json());
+
+app.get("/", (_req, res) =&gt; {
+  res.json({ message: "hello world" });
+});
+
+app.listen(3000, () =&gt; {
+  console.log("listening on http://localhost:3000");
+});</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 5 — Run with tsx</h2>
+        <pre>npx tsx watch src/server.ts</pre>
+        <p>Then open <code>http://localhost:3000</code> in the browser.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 6 — Add a <code>/health</code> endpoint</h2>
+        <pre>app.get("/health", (_req, res) =&gt; {
+  res.json({ status: "ok", uptime: process.uptime() });
+});</pre>
+        <p>Health endpoints are the simplest way to verify the server is alive.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 7 — Try it with curl</h2>
+        <pre>curl http://localhost:3000/
+# { "message": "hello world" }
+
+curl -i http://localhost:3000/health
+# HTTP/1.1 200 OK
+# { "status": "ok", "uptime": 4.21 }</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Verify the demo</h2>
+        <ul>
+            <li>Server logs "listening on http://localhost:3000"</li>
+            <li><code>/</code> returns the hello-world JSON</li>
+            <li><code>/health</code> returns <code>{ status: "ok" }</code></li>
+            <li>Unknown path returns Express default 404</li>
+        </ul>
+        <p><strong>Done when:</strong> both endpoints respond with valid JSON.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Summary</h2>
+        <ul>
+            <li>TypeScript: strict mode, types, unions, generics, utility types</li>
+            <li>Backend: request lifecycle, HTTP verbs, status codes</li>
+            <li>REST vs GraphQL: tradeoffs and when to choose</li>
+            <li>Express: routes, <code>req</code>/<code>res</code>, middleware pipeline, error handler</li>
+            <li>Zod + DTOs: validate at the boundary, infer types from schema</li>
+            <li>Databases &amp; ORMs: SQL vs NoSQL vs KV, Prisma/Drizzle</li>
+            <li>Demo: a tiny Express + TS server with hello-world and health</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 5 Session 1 Quiz</h1>
+        <p class="quiz-hint">10 questions on TypeScript, REST, Express, validation, and databases.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 10</h2>
+        <p class="question">Which TypeScript construct best models "either success data or an error string"?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Discriminated unions let TypeScript narrow each branch by a tag.">A discriminated union like <code>{ ok: true; data: T } | { ok: false; error: string }</code></button>
+            <button type="button" data-correct="false" data-explanation="any disables type checking; the union is preferred.">A single <code>any</code> type for the result</button>
+            <button type="button" data-correct="false" data-explanation="An intersection forces both shapes to coexist, which doesn't model either/or.">An intersection of success and error shapes</button>
+            <button type="button" data-correct="false" data-explanation="A class is unnecessary for a result shape; types are enough.">A class with a try/catch constructor</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 10</h2>
+        <p class="question">A REST verb that is <strong>idempotent</strong> for the same payload is:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="PUT replaces the resource; repeating it leaves the same end state.">PUT</button>
+            <button type="button" data-correct="false" data-explanation="POST creates a new resource each call; not idempotent.">POST</button>
+            <button type="button" data-correct="false" data-explanation="CONNECT establishes tunnels; not part of typical CRUD.">CONNECT</button>
+            <button type="button" data-correct="false" data-explanation="TRACE is diagnostic and rarely used in REST APIs.">TRACE</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 10</h2>
+        <p class="question">A team needs precise nested reads with minimal round trips. Which API style fits best?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="GraphQL lets clients pick exact fields and resolve nested data in one request.">GraphQL</button>
+            <button type="button" data-correct="false" data-explanation="REST often needs multiple endpoints for nested aggregations.">Plain REST with many endpoints</button>
+            <button type="button" data-correct="false" data-explanation="WebSocket suits realtime, not request-shaped reads.">Raw WebSocket</button>
+            <button type="button" data-correct="false" data-explanation="SMTP is for email, not APIs.">SMTP</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 10</h2>
+        <p class="question">Without <code>app.use(express.json())</code>, what is <code>req.body</code> on a JSON POST?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="JSON bodies are unparsed until the body parser middleware runs.">Undefined (the body is not parsed)</button>
+            <button type="button" data-correct="false" data-explanation="Express does not auto-parse JSON; you opt in with the middleware.">Always an object parsed by Express by default</button>
+            <button type="button" data-correct="false" data-explanation="It is not the raw Buffer either; it is undefined.">Always a Buffer of bytes</button>
+            <button type="button" data-correct="false" data-explanation="The framework does not throw; it just leaves the body untouched.">Express throws a 500 automatically</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 10</h2>
+        <p class="question">Which signature marks a function as Express <strong>error</strong> middleware?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Four parameters with err first tell Express this is the error handler.">(err, req, res, next)</button>
+            <button type="button" data-correct="false" data-explanation="This is the regular middleware shape.">(req, res, next)</button>
+            <button type="button" data-correct="false" data-explanation="A route handler only has req/res.">(req, res)</button>
+            <button type="button" data-correct="false" data-explanation="Not a valid Express middleware signature.">(next, err)</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 10</h2>
+        <p class="question">With Zod on the server, what does <code>schema.safeParse(req.body)</code> return?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="safeParse returns a discriminated result with success and data or error.">A result object: <code>{ success: true, data }</code> or <code>{ success: false, error }</code></button>
+            <button type="button" data-correct="false" data-explanation="parse throws; safeParse never throws.">Throws an exception on invalid input</button>
+            <button type="button" data-correct="false" data-explanation="It does not mutate req.body unless you assign result.data back.">Mutates <code>req.body</code> directly to a typed shape</button>
+            <button type="button" data-correct="false" data-explanation="Validation is synchronous in Zod by default.">A promise that never resolves on failure</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 10</h2>
+        <p class="question">Best one-line definition of a <strong>DTO</strong>:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="A DTO is the shape carried between layers, isolating HTTP from internal types.">An object shape used to transfer data between layers (HTTP ↔ service ↔ DB)</button>
+            <button type="button" data-correct="false" data-explanation="Database rows are entities, not DTOs by default.">A raw database row</button>
+            <button type="button" data-correct="false" data-explanation="React UI components are unrelated to DTOs.">A React component prop type only</button>
+            <button type="button" data-correct="false" data-explanation="Tokens are auth artifacts, not DTOs.">A JWT access token</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 10</h2>
+        <p class="question">Which database fits high-volume caching and session storage?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Redis is the standard key-value store for cache and sessions.">Redis (key-value)</button>
+            <button type="button" data-correct="false" data-explanation="Neo4j targets graph relationships, not hot caching.">Neo4j (graph)</button>
+            <button type="button" data-correct="false" data-explanation="Postgres works but is heavier than a KV store for pure cache.">PostgreSQL (relational)</button>
+            <button type="button" data-correct="false" data-explanation="Elasticsearch is for full-text search, not session caches.">Elasticsearch (search)</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 9 of 10</h2>
+        <p class="question">Main purpose of an ORM is to:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="ORMs map DB rows to typed objects and generate queries from code.">Map database rows to typed objects and generate queries</button>
+            <button type="button" data-correct="false" data-explanation="ORMs do not deploy infrastructure.">Deploy the database to Netlify</button>
+            <button type="button" data-correct="false" data-explanation="ORMs are not validators; use Zod or similar at the boundary.">Replace input validation</button>
+            <button type="button" data-correct="false" data-explanation="ORMs do not manage HTTP routing.">Define HTTP routes for you</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 10 of 10</h2>
+        <p class="question">Given <code>app.use(express.json()); app.post("/m", handler);</code> — what runs first on a POST?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Express runs middleware in registration order before the route handler.">The JSON body parser runs before the handler</button>
+            <button type="button" data-correct="false" data-explanation="The handler runs only after middleware finishes calling next().">The handler runs first, then the parser</button>
+            <button type="button" data-correct="false" data-explanation="Both run in a defined order; not in parallel.">Both run in parallel</button>
+            <button type="button" data-correct="false" data-explanation="Express does not skip body parsers for POST.">Express skips JSON parsing on POST</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 5 Session 1</h1>
+        <p>Next: complete <a href="../handson/class-1-handson.html">Class 1 hands-on</a> and the <a href="../assignment/week-5-assignment.html">Week 5 assignment</a> — build a typed, validated Basum API.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

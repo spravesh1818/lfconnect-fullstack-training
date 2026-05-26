@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 5 Assignments</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            padding: 24px;
+            line-height: 1.6;
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        h1 {
+            max-width: 56rem;
+            margin: 0 auto 1.5rem;
+            padding: 1rem 1.25rem;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 8px;
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+        }
+
+        section {
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1.25rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.6rem;
+            color: #0f172a;
+        }
+
+        a {
+            color: #0369a1;
+        }
+
+        code {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 0.05rem 0.35rem;
+        }
+
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .deadline {
+            border-left: 5px solid #ef4444;
+            background: #fff1f2;
+        }
+
+        ul.checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul.checklist li::before {
+            content: "☐ ";
+            color: #475569;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Week 5 Assignments - Backend Foundations</h1>
+
+    <section class="deadline">
+        <h2>Submission</h2>
+        <p>Deadline: <strong>Sunday evening, 11:59 PM</strong>. Push your work to your Week 5 repo (or a folder inside the course repo) and share the link.</p>
+        <p>Suggested folder layout:</p>
+        <pre>basum-api/
+├─ package.json
+├─ tsconfig.json
+├─ README.md         <-- includes REST vs GraphQL note + ORM exploration
+└─ src/
+   ├─ server.ts
+   ├─ routes/
+   ├─ middleware/
+   └─ schemas/</pre>
+    </section>
+
+    <section>
+        <h2>Assignment 1 - Basum API (Express + TypeScript + Zod)</h2>
+        <p>Build a small but real REST API for Basum meetings. Use Express, TypeScript, and Zod from the session.</p>
+
+        <h3>Endpoints</h3>
+        <ul>
+            <li><code>GET /meetings</code> - return all meetings (in-memory store is fine for this week)</li>
+            <li><code>GET /meetings/:id</code> - return one meeting, <code>404</code> when missing</li>
+            <li><code>POST /meetings</code> - create a meeting; validate body with Zod</li>
+            <li><code>PATCH /meetings/:id</code> - partial update; validate body with a separate schema</li>
+            <li><code>DELETE /meetings/:id</code> - delete; respond <code>204 No Content</code></li>
+        </ul>
+
+        <h3>Requirements</h3>
+        <ul>
+            <li>Use <code>strict: true</code> in <code>tsconfig.json</code>; no <code>any</code> in your code.</li>
+            <li>Define <code>createMeetingSchema</code> and <code>updateMeetingSchema</code> in Zod.</li>
+            <li>Export DTO types using <code>z.infer&lt;typeof ...&gt;</code> and use them in handlers.</li>
+            <li>Implement a reusable <code>validate(schema)</code> middleware (one for body, optionally one for params).</li>
+            <li>Add a request-logger middleware (<code>method url status durationMs</code>).</li>
+            <li>Add a final error-handling middleware with the 4-arg signature.</li>
+            <li>Use <code>express.json()</code> before any route that reads <code>req.body</code>.</li>
+        </ul>
+
+        <h3>Checklist</h3>
+        <ul class="checklist">
+            <li>Server starts with <code>npm run dev</code> and prints a listen URL.</li>
+            <li>All five endpoints work via <code>curl</code> or Postman.</li>
+            <li>Invalid <code>POST</code>/<code>PATCH</code> bodies return <code>400</code> with the Zod error shape.</li>
+            <li>Missing meeting on <code>GET</code>/<code>PATCH</code>/<code>DELETE</code> returns <code>404</code>.</li>
+            <li>Logger prints exactly one line per request.</li>
+            <li>Throwing in a route is caught by the error middleware and returns a JSON <code>500</code>.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Assignment 2 - REST vs GraphQL note</h2>
+        <p>Add a <strong>README section</strong> (8-12 lines) named "REST vs GraphQL for Basum".</p>
+        <ul>
+            <li>Summarize 2 pros and 2 cons of each style in your own words.</li>
+            <li>Choose either REST or GraphQL for Basum and justify the choice in 2-3 sentences (think about the client, caching, and team).</li>
+            <li>Optional: name one situation where you would switch styles in the future.</li>
+        </ul>
+
+        <h3>Checklist</h3>
+        <ul class="checklist">
+            <li>README contains a clearly labeled "REST vs GraphQL" section.</li>
+            <li>Both pros and cons are listed for each style.</li>
+            <li>A clear decision is stated with reasoning.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Assignment 3 - Database + ORM exploration</h2>
+        <p>No real database connection is required this week. Pick <strong>one</strong> ORM (Prisma or Drizzle) and answer in a README section called "Basum data model".</p>
+        <ul>
+            <li>In 6-10 lines, describe how you would model the <code>meetings</code> table (columns, types, primary key).</li>
+            <li>Include at least <strong>one column with a constraint</strong> (for example: <code>title</code> NOT NULL, <code>email</code> UNIQUE, or <code>date</code> with a CHECK).</li>
+            <li>Write one sentence on which database engine you would use (PostgreSQL, MySQL, SQLite, MongoDB, …) and why.</li>
+            <li>Optional: paste a sketch of the Prisma <code>schema.prisma</code> or Drizzle table definition.</li>
+        </ul>
+
+        <h3>Checklist</h3>
+        <ul class="checklist">
+            <li>README contains a "Basum data model" section.</li>
+            <li>Columns, types, and primary key are described.</li>
+            <li>At least one column has an explicit constraint.</li>
+            <li>A database engine is named with a one-sentence reason.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Reference materials</h2>
+        <ul>
+            <li><a href="../slides/session-1.html">Week 5 Session 1 slides</a></li>
+            <li><a href="../handson/class-1-handson.html">Week 5 Class 1 hands-on</a></li>
+            <li><a href="https://expressjs.com/en/starter/installing.html" target="_blank" rel="noopener">Express - Getting Started</a></li>
+            <li><a href="https://zod.dev" target="_blank" rel="noopener">Zod documentation</a></li>
+            <li><a href="https://www.prisma.io/docs/getting-started" target="_blank" rel="noopener">Prisma - Getting Started</a></li>
+            <li><a href="https://orm.drizzle.team" target="_blank" rel="noopener">Drizzle ORM</a></li>
+        </ul>
+    </section>
+</body>
+
+</html>
