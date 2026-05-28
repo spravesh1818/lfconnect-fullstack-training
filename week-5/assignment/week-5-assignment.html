@@ -80,91 +80,137 @@
 </head>
 
 <body>
-    <h1>Week 5 Assignments - Backend Foundations</h1>
+    <h1>Week 5 Assignments - Full Stack Consolidation</h1>
 
     <section class="deadline">
         <h2>Submission</h2>
-        <p>Deadline: <strong>Sunday evening, 11:59 PM</strong>. Push your work to your Week 5 repo (or a folder inside the course repo) and share the link.</p>
-        <p>Suggested folder layout:</p>
-        <pre>basum-api/
-├─ package.json
-├─ tsconfig.json
-├─ README.md         <-- includes REST vs GraphQL note + ORM exploration
-└─ src/
-   ├─ server.ts
-   ├─ routes/
-   ├─ middleware/
-   └─ schemas/</pre>
+        <p>Deadline: <strong>Sunday evening, 11:59 PM</strong>. Week 4 assignment is removed; this Week 5 sheet now covers all required topics from recent sessions.</p>
+        <p>Push your work to your Week 5 repo (or a folder inside the course repo) and share:</p>
+        <ul>
+            <li>Repository link</li>
+            <li>Netlify URL</li>
+            <li>Docker run command output snippet</li>
+            <li>Short architecture notes (state design + server design)</li>
+        </ul>
+        <p>Suggested layout:</p>
+        <pre>meeting-basum/
+├─ client/
+│  ├─ src/
+│  ├─ Dockerfile
+│  └─ netlify.toml (or documented UI settings)
+├─ server/
+│  ├─ src/
+│  ├─ package.json
+│  └─ tsconfig.json
+└─ README.md</pre>
     </section>
 
     <section>
-        <h2>Assignment 1 - Basum API (Express + TypeScript + Zod)</h2>
-        <p>Build a small but real REST API for Basum meetings. Use Express, TypeScript, and Zod from the session.</p>
-
-        <h3>Endpoints</h3>
-        <ul>
-            <li><code>GET /meetings</code> - return all meetings (in-memory store is fine for this week)</li>
-            <li><code>GET /meetings/:id</code> - return one meeting, <code>404</code> when missing</li>
-            <li><code>POST /meetings</code> - create a meeting; validate body with Zod</li>
-            <li><code>PATCH /meetings/:id</code> - partial update; validate body with a separate schema</li>
-            <li><code>DELETE /meetings/:id</code> - delete; respond <code>204 No Content</code></li>
-        </ul>
-
+        <h2>Core Assignment A - Frontend state architecture (Context API + Global State)</h2>
+        <p>Implement state architecture in your Meeting Basum app using both Context API and a global store pattern (for example Zustand style).</p>
         <h3>Requirements</h3>
         <ul>
-            <li>Use <code>strict: true</code> in <code>tsconfig.json</code>; no <code>any</code> in your code.</li>
-            <li>Define <code>createMeetingSchema</code> and <code>updateMeetingSchema</code> in Zod.</li>
-            <li>Export DTO types using <code>z.infer&lt;typeof ...&gt;</code> and use them in handlers.</li>
-            <li>Implement a reusable <code>validate(schema)</code> middleware (one for body, optionally one for params).</li>
-            <li>Add a request-logger middleware (<code>method url status durationMs</code>).</li>
-            <li>Add a final error-handling middleware with the 4-arg signature.</li>
-            <li>Use <code>express.json()</code> before any route that reads <code>req.body</code>.</li>
+            <li>Use <strong>Context API</strong> for user/session-level state (for example current user, theme, or workspace settings).</li>
+            <li>Use a <strong>global store</strong> for meetings data and shared actions (list/add/update/remove).</li>
+            <li>Keep local UI-only state out of global state (modals, temporary filters, single-input text).</li>
+            <li>Add a short README note comparing why each state location was chosen.</li>
         </ul>
-
         <h3>Checklist</h3>
         <ul class="checklist">
-            <li>Server starts with <code>npm run dev</code> and prints a listen URL.</li>
-            <li>All five endpoints work via <code>curl</code> or Postman.</li>
-            <li>Invalid <code>POST</code>/<code>PATCH</code> bodies return <code>400</code> with the Zod error shape.</li>
-            <li>Missing meeting on <code>GET</code>/<code>PATCH</code>/<code>DELETE</code> returns <code>404</code>.</li>
-            <li>Logger prints exactly one line per request.</li>
-            <li>Throwing in a route is caught by the error middleware and returns a JSON <code>500</code>.</li>
+            <li>Context provider exists and is used by at least 2 components.</li>
+            <li>Global store exists and is used by at least 3 components/routes.</li>
+            <li>At least one derived state value is computed (for example upcoming meetings count).</li>
+            <li>README includes a Context-vs-global-store decision note.</li>
         </ul>
     </section>
 
     <section>
-        <h2>Assignment 2 - REST vs GraphQL note</h2>
-        <p>Add a <strong>README section</strong> (8-12 lines) named "REST vs GraphQL for Basum".</p>
+        <h2>Core Assignment B - Docker + Netlify delivery</h2>
+        <p>Package and ship your frontend app like a production team.</p>
+        <h3>Requirements</h3>
         <ul>
-            <li>Summarize 2 pros and 2 cons of each style in your own words.</li>
-            <li>Choose either REST or GraphQL for Basum and justify the choice in 2-3 sentences (think about the client, caching, and team).</li>
-            <li>Optional: name one situation where you would switch styles in the future.</li>
+            <li>Create a Dockerfile for the client app and ensure it runs locally.</li>
+            <li>Add a <code>.dockerignore</code> and document how to build and run the image.</li>
+            <li>Deploy the app to Netlify and share the live URL.</li>
+            <li>Document build command, publish directory, and SPA fallback setup in README.</li>
         </ul>
-
         <h3>Checklist</h3>
         <ul class="checklist">
-            <li>README contains a clearly labeled "REST vs GraphQL" section.</li>
-            <li>Both pros and cons are listed for each style.</li>
-            <li>A clear decision is stated with reasoning.</li>
+            <li><code>docker build</code> succeeds and image runs without local source mounts.</li>
+            <li>App is reachable at the shared Netlify URL.</li>
+            <li>Refresh on a deep route does not 404 on Netlify.</li>
+            <li>README includes exact commands used for Docker build/run and deployment settings.</li>
         </ul>
     </section>
 
     <section>
-        <h2>Assignment 3 - Database + ORM exploration</h2>
-        <p>No real database connection is required this week. Pick <strong>one</strong> ORM (Prisma or Drizzle) and answer in a README section called "Basum data model".</p>
+        <h2>Core Assignment C - TypeScript basics + server concepts</h2>
+        <p>Build a small TypeScript server that demonstrates request lifecycle fundamentals and REST basics.</p>
+        <h3>Requirements</h3>
         <ul>
-            <li>In 6-10 lines, describe how you would model the <code>meetings</code> table (columns, types, primary key).</li>
-            <li>Include at least <strong>one column with a constraint</strong> (for example: <code>title</code> NOT NULL, <code>email</code> UNIQUE, or <code>date</code> with a CHECK).</li>
-            <li>Write one sentence on which database engine you would use (PostgreSQL, MySQL, SQLite, MongoDB, …) and why.</li>
-            <li>Optional: paste a sketch of the Prisma <code>schema.prisma</code> or Drizzle table definition.</li>
+            <li>Use Express + TypeScript with <code>strict: true</code>.</li>
+            <li>Implement these endpoints: <code>GET /health</code>, <code>GET /meetings</code>, <code>POST /meetings</code>.</li>
+            <li>Return appropriate status codes (<code>200</code>, <code>201</code>, <code>400</code>, <code>404</code> where relevant).</li>
+            <li>Add middleware that logs method, route, status, and duration.</li>
+            <li>Use at least one TypeScript <code>type</code> and one <code>interface</code> meaningfully.</li>
+            <li>Add one short README section explaining the lifecycle of one request in your app.</li>
         </ul>
-
         <h3>Checklist</h3>
         <ul class="checklist">
-            <li>README contains a "Basum data model" section.</li>
-            <li>Columns, types, and primary key are described.</li>
-            <li>At least one column has an explicit constraint.</li>
-            <li>A database engine is named with a one-sentence reason.</li>
+            <li>Server boots with a single command and responds on documented port.</li>
+            <li>Endpoints return valid JSON and expected status codes.</li>
+            <li>Logger middleware output is visible in terminal logs.</li>
+            <li>README contains the request lifecycle explanation.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Challenge 1 (Hard) - State architecture optimization</h2>
+        <p>Push your state system beyond basic CRUD. This challenge is designed to be difficult.</p>
+        <h3>Task</h3>
+        <ul>
+            <li>Split your state into clear boundaries (Context responsibilities vs store responsibilities).</li>
+            <li>Add derived selectors (for example today's meetings, meetings by host, overdue count).</li>
+            <li>Prevent unnecessary re-renders in at least one hot UI area (list/table/filter panel).</li>
+            <li>Add a short performance note with before/after evidence (React DevTools screenshot or explained measurement).</li>
+        </ul>
+        <h3>Checklist</h3>
+        <ul class="checklist">
+            <li>Selectors are reusable and not duplicated in multiple components.</li>
+            <li>At least one optimization is clearly implemented and evidenced.</li>
+            <li>README includes optimization rationale and tradeoff discussion.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Challenge 2 (Hard) - Delivery hardening (Docker + Netlify parity)</h2>
+        <p>Harden your deployment workflow to mimic real project delivery conditions.</p>
+        <h3>Task</h3>
+        <ul>
+            <li>Create a <strong>multi-stage Docker build</strong> for the frontend app.</li>
+            <li>Ensure local Docker output behavior matches Netlify deployment behavior.</li>
+            <li>Introduce one environment variable and document safe handling across local and Netlify.</li>
+            <li>Add a failure-recovery note: what to check first if deployment succeeds but app fails at runtime.</li>
+        </ul>
+        <h3>Checklist</h3>
+        <ul class="checklist">
+            <li>Multi-stage Dockerfile builds successfully.</li>
+            <li>Netlify deployment still works after Dockerization changes.</li>
+            <li>Environment variable usage is documented with no secrets committed.</li>
+            <li>README includes a concise deployment troubleshooting runbook.</li>
+        </ul>
+    </section>
+
+    <section class="deadline">
+        <h2>Final consolidated grading checklist</h2>
+        <ul class="checklist">
+            <li>Context API and global state are both implemented with clear responsibility split.</li>
+            <li>Frontend app is dockerized and reproducible with documented commands.</li>
+            <li>Netlify live URL is submitted and route refresh works.</li>
+            <li>TypeScript basics are applied in frontend and server code (no unchecked <code>any</code> usage).</li>
+            <li>Server concepts are demonstrated via endpoints, middleware, and status code handling.</li>
+            <li>Challenge 1 and Challenge 2 are each completed with evidence artifacts.</li>
+            <li>Submission includes repo link, Netlify URL, Docker output proof, and architecture notes.</li>
         </ul>
     </section>
 
@@ -173,10 +219,11 @@
         <ul>
             <li><a href="../slides/session-1.html">Week 5 Session 1 slides</a></li>
             <li><a href="../handson/class-1-handson.html">Week 5 Class 1 hands-on</a></li>
+            <li><a href="../../week-4/slides/session-1.html">Week 4 Session 1 slides (Context, Zustand, Docker, Netlify)</a></li>
             <li><a href="https://expressjs.com/en/starter/installing.html" target="_blank" rel="noopener">Express - Getting Started</a></li>
-            <li><a href="https://zod.dev" target="_blank" rel="noopener">Zod documentation</a></li>
-            <li><a href="https://www.prisma.io/docs/getting-started" target="_blank" rel="noopener">Prisma - Getting Started</a></li>
-            <li><a href="https://orm.drizzle.team" target="_blank" rel="noopener">Drizzle ORM</a></li>
+            <li><a href="https://www.typescriptlang.org/docs/" target="_blank" rel="noopener">TypeScript documentation</a></li>
+            <li><a href="https://docs.docker.com/get-started/" target="_blank" rel="noopener">Docker - Get Started</a></li>
+            <li><a href="https://docs.netlify.com/" target="_blank" rel="noopener">Netlify documentation</a></li>
         </ul>
     </section>
 </body>
