@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 6 - Session 1 - Node + TypeScript + MongoDB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 6 - Session 1</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 1: Node + TypeScript + MongoDB</h1>
+        <p>Build your first persisted MERN backend — a small Todo API: project setup, MongoDB, and GET + POST routes.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Bridge from Week 5 — in-memory vs persistent storage</li>
+            <li>MERN stack and MongoDB basics</li>
+            <li>Node + TypeScript project setup</li>
+            <li>MongoDB Atlas + Mongoose connection</li>
+            <li>GET and POST <code>/todos</code></li>
+            <li>Test, verify persistence, common mistakes</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>From Week 5 to Week 6</h1>
+        <p>Week 5 taught backend concepts with an <strong>in-memory</strong> array. Restart the server — data gone.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Why we need a database</h2>
+        <ul>
+            <li>Data survives server restarts</li>
+            <li>Multiple users share the same source of truth</li>
+            <li>You can query, sort, and filter at scale</li>
+        </ul>
+        <p>Week 5 mentioned PostgreSQL and Prisma. This week we use <strong>MongoDB</strong> because our course is <strong>MERN</strong> — the concepts transfer.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>What is MERN?</h2>
+        <ul>
+            <li><strong>M</strong>ongoDB — database</li>
+            <li><strong>E</strong>xpress — Node web framework</li>
+            <li><strong>R</strong>eact — frontend (Weeks 2–4)</li>
+            <li><strong>N</strong>ode.js — JavaScript runtime on the server</li>
+        </ul>
+        <p>Today we build the <strong>E + N + M</strong> part — a small todo API before bigger apps later.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>What you build today</h2>
+        <ul>
+            <li><code>GET /</code> — hello message</li>
+            <li><code>GET /health</code> — server alive check</li>
+            <li><code>GET /todos</code> — list todos from MongoDB</li>
+            <li><code>POST /todos</code> — create a todo in MongoDB</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>MongoDB Basics</h1>
+        <p>Think: database → collection → document (like a JSON object).</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Key terms</h2>
+        <ul>
+            <li><strong>Database</strong> — container (e.g. <code>todo</code>)</li>
+            <li><strong>Collection</strong> — group of documents (e.g. <code>todos</code>)</li>
+            <li><strong>Document</strong> — one record, e.g. <code>{ title, completed }</code></li>
+            <li><strong>_id</strong> — unique id MongoDB adds automatically</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>MongoDB Atlas (recommended for class)</h2>
+        <ol>
+            <li>Create a free cluster at mongodb.com/atlas</li>
+            <li>Create a database user with password</li>
+            <li>Allow your IP (or <code>0.0.0.0/0</code> for demos)</li>
+            <li>Copy the connection string into <code>.env</code></li>
+        </ol>
+        <pre>DATABASE_URL=mongodb+srv://USER:PASS@cluster.mongodb.net/todo</pre>
+        <p>Never commit <code>.env</code> — add it to <code>.gitignore</code>.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>What is Mongoose?</h2>
+        <ul>
+            <li>ODM — Object Document Mapper (like an ORM for MongoDB)</li>
+            <li><strong>Schema</strong> — defines allowed fields and types</li>
+            <li><strong>Model</strong> — the API you call: <code>find()</code>, <code>create()</code>, <code>findById()</code></li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Project Setup</h1>
+        <p>Same TypeScript + Express stack as Week 5 — ESM, strict mode, <code>tsx watch</code>.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 1 — Initialize</h2>
+        <pre>mkdir todo-api &amp;&amp; cd todo-api
+npm init -y</pre>
+        <p>Add <code>"type": "module"</code> in <code>package.json</code>.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 2 — Install packages</h2>
+        <pre>npm install express dotenv mongoose
+npm install -D typescript tsx @types/node @types/express</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 3 — tsconfig.json</h2>
+        <pre>{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 4 — Minimal server</h2>
+        <pre>import "dotenv/config";
+import express from "express";
+
+const app = express();
+app.use(express.json());
+
+app.get("/", (_req, res) =&gt; res.json({ message: "hello from todo-api" }));
+app.get("/health", (_req, res) =&gt; res.json({ status: "ok" }));
+
+app.listen(3000, () =&gt; console.log("listening on http://localhost:3000"));</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 5 — Connect MongoDB</h2>
+        <pre>// src/config/db.ts
+import mongoose from "mongoose";
+
+export async function connectDB() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL missing");
+  await mongoose.connect(url);
+  console.log("MongoDB connected");
+}</pre>
+        <p>Call <code>await connectDB()</code> once before <code>app.listen</code>.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 6 — Todo model</h2>
+        <pre>import { Schema, model } from "mongoose";
+
+const todoSchema = new Schema(
+  { title: String, completed: { type: Boolean, default: false } },
+  { timestamps: true }
+);
+
+export const TodoModel = model("Todo", todoSchema);</pre>
+        <p><code>timestamps: true</code> adds <code>createdAt</code> and <code>updatedAt</code> automatically.</p>
+    </div>
+
+    <div class="slide bg5">
+        <p class="part-kicker">Part 4</p>
+        <h1>GET and POST Routes</h1>
+        <p>Read list with GET. Create with POST. Use <code>async/await</code> because database calls return Promises.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>GET /todos</h2>
+        <pre>app.get("/todos", async (_req, res) =&gt; {
+  try {
+    const todos = await TodoModel.find().sort({ createdAt: -1 });
+    res.json(todos);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch todos" });
+  }
+});</pre>
+        <p>Status <code>200</code> — success, body is JSON array.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>POST /todos</h2>
+        <pre>app.post("/todos", async (req, res) =&gt; {
+  const { title } = req.body ?? {};
+  if (!title || !title.trim()) {
+    return res.status(400).json({ error: "title is required" });
+  }
+  const todo = await TodoModel.create({ title: title.trim() });
+  res.status(201).json(todo);
+});</pre>
+        <p>Status <code>201 Created</code> — new resource. Status <code>400</code> — client sent bad data.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Test with curl</h2>
+        <pre>curl http://localhost:3000/todos
+
+curl -X POST http://localhost:3000/todos \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Learn MongoDB"}'</pre>
+        <p><strong>Proof of persistence:</strong> POST a todo, restart the server, GET again — data still there.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Request flow (today's version)</h2>
+        <pre>Client → Express → Route handler → Mongoose → MongoDB
+                     ↑
+              express.json() parses body on POST</pre>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Common beginner mistakes</h2>
+        <ul>
+            <li>Forgot <code>app.use(express.json())</code> → <code>req.body</code> is undefined</li>
+            <li>Wrong or missing <code>DATABASE_URL</code> → connection timeout</li>
+            <li>Not using <code>async/await</code> → unhandled promise errors</li>
+            <li>Committed <code>.env</code> to Git → leaked credentials</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Summary</h2>
+        <ul>
+            <li>MERN uses MongoDB on the backend</li>
+            <li>Mongoose: schema + model for typed DB access</li>
+            <li>Express + TypeScript + ESM project setup</li>
+            <li><code>GET /todos</code> reads; <code>POST /todos</code> writes</li>
+            <li>Use status codes: 200, 201, 400, 500</li>
+            <li>Tomorrow: Zod validation, PUT/PATCH/DELETE, folder structure</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 6 Session 1 Quiz</h1>
+        <p class="quiz-hint">8 questions on MongoDB, Express, and async handlers.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">In MongoDB, a group of JSON-like records is called a:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Collections hold documents, like tables hold rows in SQL.">Collection</button>
+            <button type="button" data-correct="false" data-explanation="A table is SQL terminology, not MongoDB.">Table</button>
+            <button type="button" data-correct="false" data-explanation="A middleware is Express code, not a DB structure.">Middleware</button>
+            <button type="button" data-correct="false" data-explanation="A schema in Mongoose defines shape; the group is a collection.">Schema only</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">Which letter in MERN stands for the database?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="M = MongoDB.">M</button>
+            <button type="button" data-correct="false" data-explanation="E = Express.">E</button>
+            <button type="button" data-correct="false" data-explanation="R = React.">R</button>
+            <button type="button" data-correct="false" data-explanation="N = Node.js.">N</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">Correct HTTP status when you successfully create a new todo?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="201 Created is the standard for POST that creates a resource.">201 Created</button>
+            <button type="button" data-correct="false" data-explanation="200 is success but usually for GET/updates, not creation.">200 OK</button>
+            <button type="button" data-correct="false" data-explanation="204 means success with no body, common for DELETE.">204 No Content</button>
+            <button type="button" data-correct="false" data-explanation="404 means not found.">404 Not Found</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">Why must route handlers that call Mongoose use <code>async</code>?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Database calls return Promises; async/await waits for the result.">Mongoose methods return Promises</button>
+            <button type="button" data-correct="false" data-explanation="Express does not require async for all routes.">Express throws if you omit async</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB works without async keyword but you still need to handle Promises.">MongoDB is synchronous only</button>
+            <button type="button" data-correct="false" data-explanation="TypeScript does not force async for DB calls.">TypeScript strict mode requires it</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">Where should you store <code>DATABASE_URL</code>?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation=".env keeps secrets out of source control; load with dotenv.">In a .env file (not committed)</button>
+            <button type="button" data-correct="false" data-explanation="Hardcoding secrets in server.ts is unsafe.">Hard-coded in server.ts</button>
+            <button type="button" data-correct="false" data-explanation="package.json is committed; never put secrets there.">In package.json scripts</button>
+            <button type="button" data-correct="false" data-explanation="Client-side code must not contain DB URLs.">In the React frontend</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">Without <code>app.use(express.json())</code>, what happens to <code>req.body</code> on a JSON POST?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Body parser middleware must run first to populate req.body.">It stays undefined</button>
+            <button type="button" data-correct="false" data-explanation="Express does not auto-parse JSON.">Express parses it automatically</button>
+            <button type="button" data-correct="false" data-explanation="Mongoose does not parse HTTP bodies.">Mongoose fills it from the schema</button>
+            <button type="button" data-correct="false" data-explanation="It is not a string unless you use a text parser.">It is always a raw string</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">Mongoose is best described as:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="ODM maps documents to JavaScript objects with schemas and models.">An ODM for MongoDB</button>
+            <button type="button" data-correct="false" data-explanation="React is the frontend library in MERN.">A React state library</button>
+            <button type="button" data-correct="false" data-explanation="Zod validates input; Mongoose talks to MongoDB.">A validation library like Zod</button>
+            <button type="button" data-correct="false" data-explanation="JWT is for auth tokens.">A JWT signing tool</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">How do you prove data is really in the database (not just in memory)?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Restart clears in-memory data; MongoDB data survives.">POST data, restart server, GET again — data still there</button>
+            <button type="button" data-correct="false" data-explanation="Console.log only shows runtime memory, not persistence.">console.log the array variable</button>
+            <button type="button" data-correct="false" data-explanation="Health check does not verify DB contents.">Only check GET /health</button>
+            <button type="button" data-correct="false" data-explanation="Deleting node_modules does not test persistence.">Delete node_modules</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 6 Session 1</h1>
+        <p>Next: complete <a href="../handson/class-1-handson.html">Class 1 hands-on</a>. Tomorrow — validation, full CRUD, and domain-driven folders.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 6 Class 1 hands-on - Node + TypeScript + MongoDB</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .troubleshooting {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff1f2;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 6 - Class 1 Lab</strong> -
+        <a href="../slides/session-1.html">Open session deck</a>
+        - Node + TypeScript + MongoDB (Todo API)
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 0 - Setup</h2>
+        <ol>
+            <li>Create a working folder: <code>mkdir todo-api &amp;&amp; cd todo-api</code>.</li>
+            <li>Use Node 18+ (check with <code>node -v</code>).</li>
+            <li>Open the folder in VS Code or Cursor.</li>
+            <li>Create a free <strong>MongoDB Atlas</strong> cluster (or run MongoDB locally).</li>
+            <li>Copy your connection string into a <code>.env</code> file (never commit this file):</li>
+        </ol>
+        <pre>DATABASE_URL=mongodb+srv://USER:PASSWORD@cluster0.example.mongodb.net/todo?retryWrites=true&amp;w=majority</pre>
+        <ol start="6">
+            <li>Add <code>.env</code> to <code>.gitignore</code>.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> you have an empty project folder, a terminal ready, and a working <code>DATABASE_URL</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - TypeScript + Express skeleton</h2>
+        <ol>
+            <li>Initialize the project: <code>npm init -y</code>. Edit <code>package.json</code> and add <code>"type": "module"</code>.</li>
+            <li>Install runtime deps: <code>npm install express dotenv mongoose</code>.</li>
+            <li>Install dev deps: <code>npm install -D typescript tsx @types/node @types/express</code>.</li>
+            <li>Add a <code>tsconfig.json</code>:</li>
+        </ol>
+        <pre>{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}</pre>
+        <ol start="5">
+            <li>Create <code>src/server.ts</code> with hello-world and health endpoints.</li>
+            <li>Add a script to <code>package.json</code>: <code>"dev": "tsx watch src/server.ts"</code>.</li>
+            <li>Run <code>npm run dev</code> and verify both endpoints.</li>
+        </ol>
+        <pre>// src/server.ts
+import "dotenv/config";
+import express from "express";
+
+const app = express();
+app.use(express.json());
+
+app.get("/", (_req, res) =&gt; res.json({ message: "hello from todo-api" }));
+app.get("/health", (_req, res) =&gt; res.json({ status: "ok" }));
+
+const PORT = process.env.PORT ?? 3000;
+app.listen(PORT, () =&gt; console.log(`listening on http://localhost:${PORT}`));</pre>
+        <div class="done-when"><strong>Done when:</strong> <code>GET /</code> and <code>GET /health</code> return JSON in the browser or with <code>curl</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Connect MongoDB with Mongoose</h2>
+        <ol>
+            <li>Create <code>src/config/db.ts</code> to connect once at startup.</li>
+            <li>Import and call <code>connectDB()</code> in <code>server.ts</code> before <code>app.listen</code>.</li>
+            <li>Restart the server and confirm you see <code>MongoDB connected</code> in the terminal.</li>
+        </ol>
+        <pre>// src/config/db.ts
+import mongoose from "mongoose";
+
+export async function connectDB() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is missing in .env");
+  await mongoose.connect(url);
+  console.log("MongoDB connected");
+}</pre>
+        <pre>// src/server.ts (add near the top of startup)
+import { connectDB } from "./config/db.js";
+
+await connectDB();</pre>
+        <p><strong>What this does:</strong> Mongoose opens one connection pool. Routes reuse it — you do not connect on every request.</p>
+        <div class="done-when"><strong>Done when:</strong> server starts without connection errors and logs <code>MongoDB connected</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Todo model</h2>
+        <ol>
+            <li>Create <code>src/models/todo.model.ts</code>.</li>
+            <li>A <strong>schema</strong> defines the shape of documents. A <strong>model</strong> is the class you call (<code>find</code>, <code>create</code>).</li>
+        </ol>
+        <pre>// src/models/todo.model.ts
+import { Schema, model } from "mongoose";
+
+const todoSchema = new Schema(
+  {
+    title: { type: String, required: true },
+    completed: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+
+export const TodoModel = model("Todo", todoSchema);</pre>
+        <div class="done-when"><strong>Done when:</strong> the file compiles with no TypeScript errors.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - GET and POST /todos (persisted)</h2>
+        <ol>
+            <li>Add routes below your health check in <code>server.ts</code> (we refactor into folders in Class 2).</li>
+            <li>Use <code>async</code> handlers and <code>try/catch</code> for database errors.</li>
+            <li>Test with curl — then restart the server and GET again to prove data survived.</li>
+        </ol>
+        <pre>import { TodoModel } from "./models/todo.model.js";
+
+app.get("/todos", async (_req, res) =&gt; {
+  try {
+    const todos = await TodoModel.find().sort({ createdAt: -1 });
+    res.json(todos);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch todos" });
+  }
+});
+
+app.post("/todos", async (req, res) =&gt; {
+  try {
+    const { title } = req.body ?? {};
+    if (!title || typeof title !== "string" || !title.trim()) {
+      return res.status(400).json({ error: "title is required" });
+    }
+    const todo = await TodoModel.create({ title: title.trim() });
+    res.status(201).json(todo);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to create todo" });
+  }
+});</pre>
+        <p>Test commands:</p>
+        <pre>curl http://localhost:3000/todos
+
+curl -X POST http://localhost:3000/todos \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Learn MongoDB"}'</pre>
+        <div class="done-when"><strong>Done when:</strong> POST returns <code>201</code>, GET returns the todo, data persists after server restart, and missing <code>title</code> returns <code>400</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Lab checklist</h2>
+        <ul>
+            <li>Server boots with <code>npm run dev</code>.</li>
+            <li><code>GET /health</code> returns <code>{ status: "ok" }</code>.</li>
+            <li>MongoDB connects successfully via Atlas (or local).</li>
+            <li><code>GET /todos</code> returns an array (empty at first).</li>
+            <li><code>POST /todos</code> creates a document in MongoDB.</li>
+            <li>Todos still exist after restarting the server.</li>
+            <li>Invalid POST (missing <code>title</code>) returns <code>400</code>.</li>
+        </ul>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li><strong><code>MongooseServerSelectionError</code> / timeout</strong> — check Atlas IP allowlist (add <code>0.0.0.0/0</code> for class demos), username/password, and cluster URL.</li>
+            <li><strong><code>DATABASE_URL is missing</code></strong> — ensure <code>.env</code> is in project root and you import <code>dotenv/config</code> at the top of <code>server.ts</code>.</li>
+            <li><strong><code>req.body</code> is undefined on POST</strong> — add <code>app.use(express.json())</code> before routes.</li>
+            <li><strong>Empty array after POST</strong> — confirm POST returned <code>201</code> and you are hitting the same database URL.</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Next class preview:</strong> Class 2 adds Zod validation, PUT/PATCH/DELETE (mark todos complete), and a domain-driven folder structure.
+        <p style="margin-top: 0.75rem;"><a href="class-2-handson.html">Open Class 2 hands-on</a></p>
+    </div>
+</body>
+
+</html>

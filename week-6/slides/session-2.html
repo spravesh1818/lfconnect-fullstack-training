@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 6 - Session 2 - Validation, CRUD, DDD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 6 - Session 2</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 2: Validation, Full CRUD, and DDD Folders</h1>
+        <p>Add Zod validation, PUT/PATCH/DELETE routes, and reorganize the Todo API by domain.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Recap Session 1 — persisted todos demo</li>
+            <li>REST verbs: PUT vs PATCH</li>
+            <li>Zod validation + DTOs (Week 5 recap)</li>
+            <li>Complete CRUD routes</li>
+            <li>Domain-Driven Design folder structure</li>
+            <li>Refactor live — routes → controller → service → model</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>REST Verbs Cheat Sheet</h1>
+        <p>Each HTTP method has a job. Use the right one so your API is predictable.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>CRUD mapping</h2>
+        <ul>
+            <li><strong>CREATE</strong> — <code>POST /todos</code></li>
+            <li><strong>READ (list)</strong> — <code>GET /todos</code></li>
+            <li><strong>READ (one)</strong> — <code>GET /todos/:id</code></li>
+            <li><strong>UPDATE (full)</strong> — <code>PUT /todos/:id</code></li>
+            <li><strong>UPDATE (partial)</strong> — <code>PATCH /todos/:id</code></li>
+            <li><strong>DELETE</strong> — <code>DELETE /todos/:id</code></li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>PUT vs PATCH</h2>
+        <div class="comparison">
+            <article>
+                <h3>PUT</h3>
+                <ul>
+                    <li>Replace the entire resource</li>
+                    <li>Send <code>title</code> and <code>completed</code></li>
+                    <li>Missing field may reset to default</li>
+                </ul>
+            </article>
+            <article>
+                <h3>PATCH</h3>
+                <ul>
+                    <li>Update only what changed</li>
+                    <li>Send <code>{ "completed": true }</code> only</li>
+                    <li>Title stays the same — mark done in one step</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Status codes for CRUD</h2>
+        <ul>
+            <li><code>200</code> — OK (GET, PUT, PATCH success)</li>
+            <li><code>201</code> — Created (POST)</li>
+            <li><code>204</code> — No Content (DELETE success, empty body)</li>
+            <li><code>400</code> — Bad Request (validation failed)</li>
+            <li><code>404</code> — Not Found (id does not exist)</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Validation with Zod</h1>
+        <p>Never trust <code>req.body</code>. Validate at the HTTP boundary before touching the database.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Why validate?</h2>
+        <ul>
+            <li>Clients can send anything — bugs, old apps, attackers</li>
+            <li>Database errors are harder to read than <code>400</code> JSON</li>
+            <li>Same Zod library you used with react-hook-form in Week 4</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Schemas + DTOs</h2>
+        <pre>export const createTodoSchema = z.object({
+  title: z.string().min(1),
+  completed: z.boolean().optional().default(false),
+});
+
+export const updateTodoSchema = createTodoSchema.partial();
+
+export type CreateTodoDto = z.infer&lt;typeof createTodoSchema&gt;;</pre>
+        <p>One schema → runtime validation + TypeScript type. No duplication.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Reusable validate middleware</h2>
+        <pre>export const validate = (schema: ZodSchema) =&gt;
+  (req, res, next) =&gt; {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.flatten() });
+    }
+    req.body = result.data;
+    next();
+  };</pre>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Implement Remaining Routes</h1>
+        <p>GET by id, PUT, PATCH, DELETE — all follow the same pattern: find, act, return status.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>GET /todos/:id</h2>
+        <pre>const todo = await TodoModel.findById(req.params.id);
+if (!todo) return res.status(404).json({ error: "Todo not found" });
+res.json(todo);</pre>
+        <p>Invalid id format → catch and return <code>400</code>.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>PATCH — mark complete</h2>
+        <pre>// Client sends only what changed
+PATCH /todos/:id
+{ "completed": true }</pre>
+        <p>This is why todos are a great PATCH teaching example.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>DELETE /todos/:id</h2>
+        <pre>const deleted = await TodoModel.findByIdAndDelete(req.params.id);
+if (!deleted) return res.status(404).json({ error: "Todo not found" });
+res.status(204).send();</pre>
+        <p><code>204</code> means success with no response body.</p>
+    </div>
+
+    <div class="slide bg5">
+        <p class="part-kicker">Part 4</p>
+        <h1>Domain-Driven Design (Beginner Version)</h1>
+        <p>Group code by <strong>business area</strong> (todos, users, auth) — not only by technical type.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Bad: everything by layer only</h2>
+        <pre>src/
+  controllers/   # all controllers mixed
+  models/        # all models mixed
+  routes/        # all routes mixed</pre>
+        <p>Works for tiny apps. Gets messy when you add users, auth, notifications…</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Better: modules by domain</h2>
+        <pre>src/
+  app.ts
+  server.ts
+  config/db.ts
+  middleware/validate.ts
+  modules/
+    todos/
+      todo.model.ts
+      todo.schema.ts
+      todo.service.ts
+      todo.controller.ts
+      todo.routes.ts</pre>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Layer responsibilities</h2>
+        <ul>
+            <li><strong>routes</strong> — URL + HTTP method → controller</li>
+            <li><strong>controller</strong> — read request, call service, send response</li>
+            <li><strong>service</strong> — business rules + database calls</li>
+            <li><strong>model</strong> — Mongoose schema</li>
+            <li><strong>schema</strong> — Zod + DTO types</li>
+        </ul>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Request flow after refactor</h2>
+        <pre>Client
+  → Express (app.ts)
+  → todo.routes.ts
+  → validate middleware
+  → todo.controller.ts
+  → todo.service.ts
+  → TodoModel → MongoDB</pre>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Wire routes in app.ts</h2>
+        <pre>import { todoRoutes } from "./modules/todos/todo.routes.js";
+
+app.use("/todos", todoRoutes);</pre>
+        <p>Each domain gets its own router. Tomorrow we add <code>modules/auth/</code>.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Summary</h2>
+        <ul>
+            <li>PUT replaces; PATCH updates partially (e.g. mark complete)</li>
+            <li>Zod validates at the boundary; DTOs infer types</li>
+            <li>Full CRUD with correct status codes</li>
+            <li>DDD folders: one module per business area</li>
+            <li>routes → controller → service → model</li>
+            <li>Tomorrow: revision + backend JWT auth</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 6 Session 2 Quiz</h1>
+        <p class="quiz-hint">8 questions on REST, Zod, and folder structure.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">You only want to mark a todo as <code>completed: true</code>. Which method?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="PATCH is for partial updates like toggling completed.">PATCH</button>
+            <button type="button" data-correct="false" data-explanation="PUT expects a full resource replacement.">PUT</button>
+            <button type="button" data-correct="false" data-explanation="POST creates new resources.">POST</button>
+            <button type="button" data-correct="false" data-explanation="GET is read-only.">GET</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">Best status code after successful DELETE with no response body?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="204 No Content is standard for successful DELETE.">204 No Content</button>
+            <button type="button" data-correct="false" data-explanation="201 is for creation.">201 Created</button>
+            <button type="button" data-correct="false" data-explanation="404 means the resource was not found.">404 Not Found</button>
+            <button type="button" data-correct="false" data-explanation="500 is a server error.">500 Internal Server Error</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">Where should Zod validation run?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Validate at the HTTP boundary before service/DB logic.">Before the controller/service uses req.body</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB does not validate your API contract.">Inside MongoDB only</button>
+            <button type="button" data-correct="false" data-explanation="React validates client-side; server must validate too.">Only in the React frontend</button>
+            <button type="button" data-correct="false" data-explanation="After DB write is too late for clean 400 errors.">After saving to the database</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">In DDD-style folders, where do Mongoose queries belong?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Service layer owns data access and business rules.">service.ts</button>
+            <button type="button" data-correct="false" data-explanation="Routes should stay thin — no DB calls.">routes.ts directly</button>
+            <button type="button" data-correct="false" data-explanation="Zod schemas validate input, not query MongoDB.">schema.ts</button>
+            <button type="button" data-correct="false" data-explanation="db.ts connects; domain services query.">config/db.ts only</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question"><code>updateTodoSchema = createTodoSchema.partial()</code> means:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation=".partial() makes every field optional for PATCH.">All fields become optional</button>
+            <button type="button" data-correct="false" data-explanation="partial() does not remove validation.">Validation is disabled</button>
+            <button type="button" data-correct="false" data-explanation="It is for updates, not deletes.">The schema deletes fields</button>
+            <button type="button" data-correct="false" data-explanation="Types are still inferred from the schema.">TypeScript types are lost</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">Todo id not found in database — return:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="404 tells the client the resource does not exist.">404 Not Found</button>
+            <button type="button" data-correct="false" data-explanation="400 is for malformed requests, not missing resources.">400 Bad Request</button>
+            <button type="button" data-correct="false" data-explanation="401 is for missing/invalid auth.">401 Unauthorized</button>
+            <button type="button" data-correct="false" data-explanation="200 would lie about success.">200 with empty array</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">Why split controller vs service?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Controller handles HTTP; service handles business/DB — easier to test and grow.">Separation of HTTP from business logic</button>
+            <button type="button" data-correct="false" data-explanation="Extra files have a purpose — organization.">To create more files for no reason</button>
+            <button type="button" data-correct="false" data-explanation="TypeScript works with any structure.">TypeScript requires exactly 5 files</button>
+            <button type="button" data-correct="false" data-explanation="Express supports any structure you choose.">Express forces this pattern</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">After refactor, <code>app.use("/todos", todoRoutes)</code> means:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Router paths are relative; GET / in router becomes GET /todos.">Routes in the router are prefixed with /todos</button>
+            <button type="button" data-correct="false" data-explanation="Todos module is one domain among others.">All requests go only to todos</button>
+            <button type="button" data-correct="false" data-explanation="Middleware order matters but this mount is correct.">Express skips JSON parsing</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB connection is separate from route mounting.">MongoDB auto-connects in the router</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 6 Session 2</h1>
+        <p>Next: complete <a href="../handson/class-2-handson.html">Class 2 hands-on</a>. Tomorrow — revision and backend authentication.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

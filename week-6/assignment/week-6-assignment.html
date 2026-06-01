@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 6 Assignments</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            padding: 24px;
+            line-height: 1.6;
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        h1 {
+            max-width: 56rem;
+            margin: 0 auto 1.5rem;
+            padding: 1rem 1.25rem;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 8px;
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+        }
+
+        section {
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1.25rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.6rem;
+            color: #0f172a;
+        }
+
+        a {
+            color: #0369a1;
+        }
+
+        code {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 0.05rem 0.35rem;
+        }
+
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .deadline {
+            border-left: 5px solid #ef4444;
+            background: #fff1f2;
+        }
+
+        ul.checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul.checklist li::before {
+            content: "☐ ";
+            color: #475569;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Week 6 Assignments — MERN Todo API</h1>
+
+    <section class="deadline">
+        <h2>Submission</h2>
+        <p>Deadline: <strong>Sunday evening, 11:59 PM</strong>.</p>
+        <p>Push your <code>todo-api</code> server to GitHub and share:</p>
+        <ul>
+            <li>Repository link</li>
+            <li>Terminal log or short screen recording of the auth + CRUD curl flow below</li>
+            <li>README with setup steps (Atlas, env vars, how to run)</li>
+        </ul>
+        <p>Suggested layout:</p>
+        <pre>todo-api/
+├─ src/
+│  ├─ app.ts
+│  ├─ server.ts
+│  ├─ config/db.ts
+│  ├─ middleware/
+│  ├─ modules/
+│  │  ├─ todos/
+│  │  └─ auth/
+├─ .env.example
+├─ .gitignore
+├─ package.json
+├─ tsconfig.json
+└─ README.md</pre>
+    </section>
+
+    <section>
+        <h2>Core Assignment — Todo API with MongoDB and Auth</h2>
+        <p>Build a small todo backend using Node.js, TypeScript, Express, MongoDB (Mongoose), Zod, and JWT authentication.</p>
+
+        <h3>Requirements</h3>
+        <ul>
+            <li>Express + TypeScript with <code>strict: true</code> and ESM (<code>"type": "module"</code>).</li>
+            <li>MongoDB connection via Mongoose and <code>DATABASE_URL</code> in <code>.env</code>.</li>
+            <li>Domain-driven folders: at least <code>modules/todos/</code> and <code>modules/auth/</code>.</li>
+            <li>Todos CRUD: <code>GET</code> list, <code>GET</code> by id, <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, <code>DELETE</code>.</li>
+            <li>Todo model: <code>title</code> (string), <code>completed</code> (boolean, default false).</li>
+            <li>Zod validation on create/update bodies; return <code>400</code> with readable errors.</li>
+            <li>Auth: <code>POST /auth/register</code>, <code>POST /auth/login</code> with bcrypt password hashing.</li>
+            <li>JWT middleware protecting mutation routes (POST/PUT/PATCH/DELETE on todos).</li>
+            <li><code>GET /health</code> endpoint.</li>
+            <li>README documents env vars, install, run command, and folder structure (3–5 sentences).</li>
+        </ul>
+
+        <h3>Checklist</h3>
+        <ul class="checklist">
+            <li>Server starts with one documented command (e.g. <code>npm run dev</code>).</li>
+            <li>Todos persist after server restart.</li>
+            <li>Invalid todo body returns 400 (Zod).</li>
+            <li>Missing todo id returns 404.</li>
+            <li>PATCH can set <code>completed: true</code>.</li>
+            <li>DELETE returns 204.</li>
+            <li>Register + login work; passwords are hashed in DB.</li>
+            <li>POST /todos without token returns 401.</li>
+            <li>POST /todos with valid Bearer token returns 201.</li>
+            <li><code>.env</code> is gitignored; <code>.env.example</code> lists keys without secrets.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Curl test script (include in README or submission log)</h2>
+        <p>Run these in order and capture output:</p>
+        <pre># Health
+curl http://localhost:3000/health
+
+# Register
+curl -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Demo User","email":"demo@example.com","password":"demo123456"}'
+
+# Login — save token
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@example.com","password":"demo123456"}'
+
+# Create todo (authenticated)
+curl -X POST http://localhost:3000/todos \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"title":"Week 6 Demo"}'
+
+# List todos (public)
+curl http://localhost:3000/todos
+
+# Mark complete
+curl -X PATCH http://localhost:3000/todos/TODO_ID \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"completed": true}'
+
+# Unauthenticated create (should 401)
+curl -X POST http://localhost:3000/todos \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Fail"}'</pre>
+    </section>
+
+    <section>
+        <h2>Stretch goals (optional)</h2>
+        <ul>
+            <li>Add <code>GET /todos?completed=false</code> query filter.</li>
+            <li>Add optional <code>description</code> field to todos.</li>
+            <li>Seed script that inserts sample todos.</li>
+            <li>Build a simple React todo client that calls this API.</li>
+            <li>Add <code>errorHandler</code> middleware for consistent 500 JSON.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Resources</h2>
+        <ul>
+            <li><a href="../handson/class-1-handson.html">Class 1 hands-on</a></li>
+            <li><a href="../handson/class-2-handson.html">Class 2 hands-on</a></li>
+            <li><a href="../handson/class-3-handson.html">Class 3 hands-on</a></li>
+            <li><a href="../slides/session-1.html">Session 1 slides</a></li>
+            <li><a href="../slides/session-2.html">Session 2 slides</a></li>
+            <li><a href="../slides/session-3.html">Session 3 slides</a></li>
+            <li><a href="https://mongoosejs.com/docs/" target="_blank" rel="noopener">Mongoose documentation</a></li>
+            <li><a href="https://expressjs.com/" target="_blank" rel="noopener">Express documentation</a></li>
+        </ul>
+    </section>
+</body>
+
+</html>
