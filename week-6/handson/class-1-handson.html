@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 6 Class 1 hands-on - Node + TypeScript + MongoDB</title>
+    <title>Week 6 Class 1 hands-on - Node + Express + MongoDB</title>
     <style>
         .lab-banner {
             font-family: system-ui, sans-serif;
@@ -77,7 +77,7 @@
     <div class="lab-banner">
         <strong>Week 6 - Class 1 Lab</strong> -
         <a href="../slides/session-1.html">Open session deck</a>
-        - Node + TypeScript + MongoDB (Todo API)
+        - JavaScript Express + MongoDB (Todo API)
     </div>
 
     <div class="exercise-instructions">
@@ -97,31 +97,15 @@
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 1 - TypeScript + Express skeleton</h2>
+        <h2>Exercise 1 - JavaScript Express skeleton</h2>
         <ol>
             <li>Initialize the project: <code>npm init -y</code>. Edit <code>package.json</code> and add <code>"type": "module"</code>.</li>
             <li>Install runtime deps: <code>npm install express dotenv mongoose</code>.</li>
-            <li>Install dev deps: <code>npm install -D typescript tsx @types/node @types/express</code>.</li>
-            <li>Add a <code>tsconfig.json</code>:</li>
-        </ol>
-        <pre>{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "outDir": "dist",
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  },
-  "include": ["src"]
-}</pre>
-        <ol start="5">
-            <li>Create <code>src/server.ts</code> with hello-world and health endpoints.</li>
-            <li>Add a script to <code>package.json</code>: <code>"dev": "tsx watch src/server.ts"</code>.</li>
+            <li>Create <code>src/server.js</code> with hello-world and health endpoints.</li>
+            <li>Add a script to <code>package.json</code>: <code>"dev": "node --watch src/server.js"</code> (Node 18+).</li>
             <li>Run <code>npm run dev</code> and verify both endpoints.</li>
         </ol>
-        <pre>// src/server.ts
+        <pre>// src/server.js
 import "dotenv/config";
 import express from "express";
 
@@ -133,17 +117,18 @@ app.get("/health", (_req, res) =&gt; res.json({ status: "ok" }));
 
 const PORT = process.env.PORT ?? 3000;
 app.listen(PORT, () =&gt; console.log(`listening on http://localhost:${PORT}`));</pre>
+        <p><strong>Note:</strong> We use plain JavaScript today. Class 2 converts this project to TypeScript.</p>
         <div class="done-when"><strong>Done when:</strong> <code>GET /</code> and <code>GET /health</code> return JSON in the browser or with <code>curl</code>.</div>
     </div>
 
     <div class="exercise-instructions">
         <h2>Exercise 2 - Connect MongoDB with Mongoose</h2>
         <ol>
-            <li>Create <code>src/config/db.ts</code> to connect once at startup.</li>
-            <li>Import and call <code>connectDB()</code> in <code>server.ts</code> before <code>app.listen</code>.</li>
+            <li>Create <code>src/config/db.js</code> to connect once at startup.</li>
+            <li>Import and call <code>connectDB()</code> in <code>server.js</code> before <code>app.listen</code>.</li>
             <li>Restart the server and confirm you see <code>MongoDB connected</code> in the terminal.</li>
         </ol>
-        <pre>// src/config/db.ts
+        <pre>// src/config/db.js
 import mongoose from "mongoose";
 
 export async function connectDB() {
@@ -152,10 +137,11 @@ export async function connectDB() {
   await mongoose.connect(url);
   console.log("MongoDB connected");
 }</pre>
-        <pre>// src/server.ts (add near the top of startup)
+        <pre>// src/server.js (add near the top of startup)
 import { connectDB } from "./config/db.js";
 
 await connectDB();</pre>
+        <p><strong>Why <code>.js</code> in the import?</strong> The file on disk is <code>db.js</code>, so the import matches it. In Class 2 you rename to <code>db.ts</code> and import <code>from "./config/db.ts"</code>.</p>
         <p><strong>What this does:</strong> Mongoose opens one connection pool. Routes reuse it — you do not connect on every request.</p>
         <div class="done-when"><strong>Done when:</strong> server starts without connection errors and logs <code>MongoDB connected</code>.</div>
     </div>
@@ -163,10 +149,10 @@ await connectDB();</pre>
     <div class="exercise-instructions">
         <h2>Exercise 3 - Todo model</h2>
         <ol>
-            <li>Create <code>src/models/todo.model.ts</code>.</li>
+            <li>Create <code>src/models/todo.model.js</code>.</li>
             <li>A <strong>schema</strong> defines the shape of documents. A <strong>model</strong> is the class you call (<code>find</code>, <code>create</code>).</li>
         </ol>
-        <pre>// src/models/todo.model.ts
+        <pre>// src/models/todo.model.js
 import { Schema, model } from "mongoose";
 
 const todoSchema = new Schema(
@@ -178,14 +164,15 @@ const todoSchema = new Schema(
 );
 
 export const TodoModel = model("Todo", todoSchema);</pre>
-        <div class="done-when"><strong>Done when:</strong> the file compiles with no TypeScript errors.</div>
+        <div class="done-when"><strong>Done when:</strong> the server starts with no import errors.</div>
     </div>
 
     <div class="exercise-instructions">
         <h2>Exercise 4 - GET and POST /todos (persisted)</h2>
         <ol>
-            <li>Add routes below your health check in <code>server.ts</code> (we refactor into folders in Class 2).</li>
+            <li>Add routes below your health check in <code>server.js</code> (we refactor into folders in Class 2).</li>
             <li>Use <code>async</code> handlers and <code>try/catch</code> for database errors.</li>
+            <li>Validate <code>title</code> manually with an <code>if</code> check (Zod comes in Class 2).</li>
             <li>Test with curl — then restart the server and GET again to prove data survived.</li>
         </ol>
         <pre>import { TodoModel } from "./models/todo.model.js";
@@ -232,6 +219,7 @@ curl -X POST http://localhost:3000/todos \
             <li><code>POST /todos</code> creates a document in MongoDB.</li>
             <li>Todos still exist after restarting the server.</li>
             <li>Invalid POST (missing <code>title</code>) returns <code>400</code>.</li>
+            <li>All code is plain <code>.js</code> files under <code>src/</code>.</li>
         </ul>
     </div>
 
@@ -239,14 +227,15 @@ curl -X POST http://localhost:3000/todos \
         <h2>Troubleshooting</h2>
         <ul>
             <li><strong><code>MongooseServerSelectionError</code> / timeout</strong> — check Atlas IP allowlist (add <code>0.0.0.0/0</code> for class demos), username/password, and cluster URL.</li>
-            <li><strong><code>DATABASE_URL is missing</code></strong> — ensure <code>.env</code> is in project root and you import <code>dotenv/config</code> at the top of <code>server.ts</code>.</li>
+            <li><strong><code>DATABASE_URL is missing</code></strong> — ensure <code>.env</code> is in project root and you import <code>dotenv/config</code> at the top of <code>server.js</code>.</li>
             <li><strong><code>req.body</code> is undefined on POST</strong> — add <code>app.use(express.json())</code> before routes.</li>
             <li><strong>Empty array after POST</strong> — confirm POST returned <code>201</code> and you are hitting the same database URL.</li>
+            <li><strong><code>node --watch</code> not found</strong> — upgrade to Node 18+, or use <code>npm install -D nodemon</code> and <code>"dev": "nodemon src/server.js"</code>.</li>
         </ul>
     </div>
 
     <div class="practice-shell">
-        <strong>Next class preview:</strong> Class 2 adds Zod validation, PUT/PATCH/DELETE (mark todos complete), and a domain-driven folder structure.
+        <strong>Next class preview:</strong> Class 2 converts the project to TypeScript, adds Zod validation middleware, completes CRUD (PUT/PATCH/DELETE), and organizes code under <code>src/todo/controller/</code>.
         <p style="margin-top: 0.75rem;"><a href="class-2-handson.html">Open Class 2 hands-on</a></p>
     </div>
 </body>

@@ -98,9 +98,18 @@
 │  ├─ server.ts
 │  ├─ config/db.ts
 │  ├─ middleware/
-│  ├─ modules/
-│  │  ├─ todos/
-│  │  └─ auth/
+│  ├─ todo/
+│  │  ├─ controller/
+│  │  ├─ routes/
+│  │  ├─ service/
+│  │  ├─ model/
+│  │  └─ schema/
+│  └─ auth/
+│     ├─ controller/
+│     ├─ routes/
+│     ├─ service/
+│     ├─ model/
+│     └─ schema/
 ├─ .env.example
 ├─ .gitignore
 ├─ package.json
@@ -114,9 +123,9 @@
 
         <h3>Requirements</h3>
         <ul>
-            <li>Express + TypeScript with <code>strict: true</code> and ESM (<code>"type": "module"</code>).</li>
+            <li>Express + TypeScript with <code>strict: true</code> and ESM (<code>"type": "module"</code>). Relative imports between <code>src/</code> files use <code>.ts</code> extensions with <code>noEmit</code> and <code>allowImportingTsExtensions</code> in <code>tsconfig.json</code>.</li>
             <li>MongoDB connection via Mongoose and <code>DATABASE_URL</code> in <code>.env</code>.</li>
-            <li>Domain-driven folders: at least <code>modules/todos/</code> and <code>modules/auth/</code>.</li>
+            <li>Domain-driven folders: at least <code>todo/</code> and <code>auth/</code>, each with controller, routes, service, model, and schema subfolders.</li>
             <li>Todos CRUD: <code>GET</code> list, <code>GET</code> by id, <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, <code>DELETE</code>.</li>
             <li>Todo model: <code>title</code> (string), <code>completed</code> (boolean, default false).</li>
             <li>Zod validation on create/update bodies; return <code>400</code> with readable errors.</li>

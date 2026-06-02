@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 6 - Session 2 - Validation, CRUD, DDD</title>
+    <title>Week 6 - Session 2 - TypeScript, Validation, CRUD, DDD</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="session-deck-theme.css" />
@@ -19,30 +19,186 @@
     </header>
 
     <div class="slide active bg1">
-        <h1>Class 2: Validation, Full CRUD, and DDD Folders</h1>
-        <p>Add Zod validation, PUT/PATCH/DELETE routes, and reorganize the Todo API by domain.</p>
+        <h1>Class 2: TypeScript, Middleware Validation, and Todo Domain Structure</h1>
+        <p>Convert your JavaScript API to TypeScript, add Zod validation middleware, complete CRUD, and organize code under <code>src/todo/</code>.</p>
     </div>
 
     <div class="slide bg1">
         <h2>Session Agenda</h2>
         <ol>
-            <li>Recap Session 1 — persisted todos demo</li>
-            <li>REST verbs: PUT vs PATCH</li>
-            <li>Zod validation + DTOs (Week 5 recap)</li>
-            <li>Complete CRUD routes</li>
-            <li>Domain-Driven Design folder structure</li>
-            <li>Refactor live — routes → controller → service → model</li>
+            <li>Recap Session 1 — <code>server.js</code> + MongoDB</li>
+            <li>Migrate JavaScript → TypeScript</li>
+            <li>Middleware + Zod validation (Week 5 recap)</li>
+            <li>Complete CRUD routes (PUT vs PATCH)</li>
+            <li>Domain folders: <code>todo/controller/</code>, routes, service, model</li>
             <li>Quiz (8 questions)</li>
         </ol>
     </div>
 
     <div class="slide bg2">
         <p class="part-kicker">Part 1</p>
-        <h1>REST Verbs Cheat Sheet</h1>
-        <p>Each HTTP method has a job. Use the right one so your API is predictable.</p>
+        <h1>Recap Session 1</h1>
+        <p>You built a plain JavaScript Express API with GET/POST <code>/todos</code>, manual <code>if (!title)</code> checks, and Mongoose persistence.</p>
     </div>
 
     <div class="slide bg2">
+        <h2>Bridge from Week 5</h2>
+        <ul>
+            <li>Week 5 — TypeScript, Express middleware, Zod <code>validate</code></li>
+            <li>Today — apply those patterns to the todo API you built in JS</li>
+            <li>End state — typed, validated, organized by domain</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>JavaScript → TypeScript</h1>
+        <p>Same runtime (Node + Express). TypeScript catches typos before you run the server and pairs with Zod for shared DTO types.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Install tooling</h2>
+        <pre>npm install -D typescript tsx @types/node @types/express</pre>
+        <p><code>tsx</code> runs <code>.ts</code> files directly — no manual compile step in class.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>tsconfig.json (class standard)</h2>
+        <pre>{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}</pre>
+        <p><code>noEmit</code> + <code>allowImportingTsExtensions</code> let you write <code>import "./file.ts"</code>.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Import rules</h2>
+        <ul>
+            <li><strong>Your files</strong> — use the <code>.ts</code> extension: <code>from "./config/db.ts"</code></li>
+            <li><strong>npm packages</strong> — no extension: <code>from "express"</code></li>
+        </ul>
+        <p>You edit <code>db.ts</code> on disk → you import <code>db.ts</code> in code. Same name, no guessing.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Migrate one file at a time</h2>
+        <ol>
+            <li><code>config/db.js</code> → <code>db.ts</code></li>
+            <li><code>models/todo.model.js</code> → <code>todo.model.ts</code></li>
+            <li><code>server.js</code> → <code>server.ts</code></li>
+            <li>Fix imports after each rename; run <code>npm run dev</code> often</li>
+        </ol>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Types to add today</h2>
+        <ul>
+            <li><code>Request</code>, <code>Response</code> from Express on route handlers</li>
+            <li><code>Promise&lt;void&gt;</code> on <code>connectDB()</code></li>
+            <li><code>CreateTodoBody</code> interface for <code>req.body</code> (replaced by Zod later)</li>
+            <li><code>Todo</code> interface on the Mongoose model file</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Typed server.ts (GET + POST)</h2>
+        <pre>import { Request, Response } from "express";
+import { connectDB } from "./config/db.ts";
+import { TodoModel } from "./models/todo.model.ts";
+
+interface CreateTodoBody {
+  title?: string;
+}
+
+app.get("/todos", async (_req: Request, res: Response) =&gt; {
+  const todos = await TodoModel.find().sort({ createdAt: -1 });
+  res.json(todos);
+});
+
+app.post("/todos", async (req: Request, res: Response) =&gt; {
+  const { title } = (req.body ?? {}) as CreateTodoBody;
+  if (!title || !title.trim()) {
+    return res.status(400).json({ error: "title is required" });
+  }
+  const todo = await TodoModel.create({ title: title.trim() });
+  res.status(201).json(todo);
+});</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Run with tsx</h2>
+        <pre>// package.json
+"dev": "tsx watch src/server.ts"</pre>
+        <p>Verify with curl — behavior should match Class 1. IDE should show types on <code>req</code> and <code>res</code>.</p>
+        <p><em>Other codebases:</em> some teams compile to <code>dist/</code> and use <code>.js</code> in import strings. We use <code>.ts</code> imports in class for clarity.</p>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Middleware &amp; Zod Validation</h1>
+        <p>Never trust <code>req.body</code>. Validate at the HTTP boundary before touching the database.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Middleware pipeline</h2>
+        <pre>Request
+  → express.json()     // parse body
+  → validate(schema)   // Zod check
+  → route handler      // controller / logic</pre>
+        <p>Same pattern as Week 5 meetings API.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Why validate?</h2>
+        <ul>
+            <li>Clients can send anything — bugs, old apps, attackers</li>
+            <li>Replace manual <code>if (!title)</code> with reusable middleware</li>
+            <li>Same Zod library from Week 4 forms and Week 5 backend</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Schemas + DTOs</h2>
+        <pre>export const createTodoSchema = z.object({
+  title: z.string().min(1),
+  completed: z.boolean().optional().default(false),
+});
+
+export const updateTodoSchema = createTodoSchema.partial();
+
+export type CreateTodoDto = z.infer&lt;typeof createTodoSchema&gt;;</pre>
+        <p>One schema → runtime validation + TypeScript type. No duplication.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Reusable validate middleware</h2>
+        <pre>export const validate = (schema: ZodSchema) =&gt;
+  (req, res, next) =&gt; {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.flatten() });
+    }
+    req.body = result.data;
+    next();
+  };</pre>
+    </div>
+
+    <div class="slide bg5">
+        <p class="part-kicker">Part 4</p>
+        <h1>REST Verbs &amp; Full CRUD</h1>
+        <p>Each HTTP method has a job. Use the right one so your API is predictable.</p>
+    </div>
+
+    <div class="slide bg5">
         <h2>CRUD mapping</h2>
         <ul>
             <li><strong>CREATE</strong> — <code>POST /todos</code></li>
@@ -54,7 +210,7 @@
         </ul>
     </div>
 
-    <div class="slide bg2">
+    <div class="slide bg5">
         <h2>PUT vs PATCH</h2>
         <div class="comparison">
             <article>
@@ -76,7 +232,7 @@
         </div>
     </div>
 
-    <div class="slide bg2">
+    <div class="slide bg5">
         <h2>Status codes for CRUD</h2>
         <ul>
             <li><code>200</code> — OK (GET, PUT, PATCH success)</li>
@@ -87,54 +243,7 @@
         </ul>
     </div>
 
-    <div class="slide bg3">
-        <p class="part-kicker">Part 2</p>
-        <h1>Validation with Zod</h1>
-        <p>Never trust <code>req.body</code>. Validate at the HTTP boundary before touching the database.</p>
-    </div>
-
-    <div class="slide bg3">
-        <h2>Why validate?</h2>
-        <ul>
-            <li>Clients can send anything — bugs, old apps, attackers</li>
-            <li>Database errors are harder to read than <code>400</code> JSON</li>
-            <li>Same Zod library you used with react-hook-form in Week 4</li>
-        </ul>
-    </div>
-
-    <div class="slide bg3">
-        <h2>Schemas + DTOs</h2>
-        <pre>export const createTodoSchema = z.object({
-  title: z.string().min(1),
-  completed: z.boolean().optional().default(false),
-});
-
-export const updateTodoSchema = createTodoSchema.partial();
-
-export type CreateTodoDto = z.infer&lt;typeof createTodoSchema&gt;;</pre>
-        <p>One schema → runtime validation + TypeScript type. No duplication.</p>
-    </div>
-
-    <div class="slide bg3">
-        <h2>Reusable validate middleware</h2>
-        <pre>export const validate = (schema: ZodSchema) =&gt;
-  (req, res, next) =&gt; {
-    const result = schema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ error: result.error.flatten() });
-    }
-    req.body = result.data;
-    next();
-  };</pre>
-    </div>
-
-    <div class="slide bg4">
-        <p class="part-kicker">Part 3</p>
-        <h1>Implement Remaining Routes</h1>
-        <p>GET by id, PUT, PATCH, DELETE — all follow the same pattern: find, act, return status.</p>
-    </div>
-
-    <div class="slide bg4">
+    <div class="slide bg5">
         <h2>GET /todos/:id</h2>
         <pre>const todo = await TodoModel.findById(req.params.id);
 if (!todo) return res.status(404).json({ error: "Todo not found" });
@@ -142,7 +251,7 @@ res.json(todo);</pre>
         <p>Invalid id format → catch and return <code>400</code>.</p>
     </div>
 
-    <div class="slide bg4">
+    <div class="slide bg5">
         <h2>PATCH — mark complete</h2>
         <pre>// Client sends only what changed
 PATCH /todos/:id
@@ -150,7 +259,7 @@ PATCH /todos/:id
         <p>This is why todos are a great PATCH teaching example.</p>
     </div>
 
-    <div class="slide bg4">
+    <div class="slide bg5">
         <h2>DELETE /todos/:id</h2>
         <pre>const deleted = await TodoModel.findByIdAndDelete(req.params.id);
 if (!deleted) return res.status(404).json({ error: "Todo not found" });
@@ -158,8 +267,8 @@ res.status(204).send();</pre>
         <p><code>204</code> means success with no response body.</p>
     </div>
 
-    <div class="slide bg5">
-        <p class="part-kicker">Part 4</p>
+    <div class="slide bg2">
+        <p class="part-kicker">Part 5</p>
         <h1>Domain-Driven Design (Beginner Version)</h1>
         <p>Group code by <strong>business area</strong> (todos, users, auth) — not only by technical type.</p>
     </div>
@@ -174,19 +283,18 @@ res.status(204).send();</pre>
     </div>
 
     <div class="slide bg5">
-        <h2>Better: modules by domain</h2>
+        <h2>Better: folders by domain</h2>
         <pre>src/
   app.ts
   server.ts
   config/db.ts
   middleware/validate.ts
-  modules/
-    todos/
-      todo.model.ts
-      todo.schema.ts
-      todo.service.ts
-      todo.controller.ts
-      todo.routes.ts</pre>
+  todo/
+    controller/todo.controller.ts
+    routes/todo.routes.ts
+    service/todo.service.ts
+    model/todo.model.ts
+    schema/todo.schema.ts</pre>
     </div>
 
     <div class="slide bg5">
@@ -213,20 +321,20 @@ res.status(204).send();</pre>
 
     <div class="slide bg5">
         <h2>Wire routes in app.ts</h2>
-        <pre>import { todoRoutes } from "./modules/todos/todo.routes.js";
+        <pre>import { todoRoutes } from "./todo/routes/todo.routes.ts";
 
 app.use("/todos", todoRoutes);</pre>
-        <p>Each domain gets its own router. Tomorrow we add <code>modules/auth/</code>.</p>
+        <p>Each domain gets its own router. Tomorrow we add <code>auth/</code> the same way.</p>
     </div>
 
     <div class="slide bg1">
         <h2>Session Summary</h2>
         <ul>
+            <li>Migrated JS project to TypeScript with <code>tsx</code></li>
+            <li>Zod <code>validate</code> middleware replaces manual checks</li>
             <li>PUT replaces; PATCH updates partially (e.g. mark complete)</li>
-            <li>Zod validates at the boundary; DTOs infer types</li>
             <li>Full CRUD with correct status codes</li>
-            <li>DDD folders: one module per business area</li>
-            <li>routes → controller → service → model</li>
+            <li>Code organized under <code>src/todo/</code> by domain</li>
             <li>Tomorrow: revision + backend JWT auth</li>
         </ul>
     </div>
@@ -234,7 +342,7 @@ app.use("/todos", todoRoutes);</pre>
     <div class="slide bg-quiz quiz-segment">
         <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
         <h1 class="quiz-round-title">Week 6 Session 2 Quiz</h1>
-        <p class="quiz-hint">8 questions on REST, Zod, and folder structure.</p>
+        <p class="quiz-hint">8 questions on TypeScript, REST, Zod, and folder structure.</p>
     </div>
 
     <div class="slide bg-quiz quiz">
@@ -275,12 +383,12 @@ app.use("/todos", todoRoutes);</pre>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 4 of 8</h2>
-        <p class="question">In DDD-style folders, where do Mongoose queries belong?</p>
+        <p class="question">You write <code>import { connectDB } from "./config/db.ts"</code>. Which <code>tsconfig</code> flags make that legal?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="Service layer owns data access and business rules.">service.ts</button>
-            <button type="button" data-correct="false" data-explanation="Routes should stay thin — no DB calls.">routes.ts directly</button>
-            <button type="button" data-correct="false" data-explanation="Zod schemas validate input, not query MongoDB.">schema.ts</button>
-            <button type="button" data-correct="false" data-explanation="db.ts connects; domain services query.">config/db.ts only</button>
+            <button type="button" data-correct="true" data-explanation="Both are required together: noEmit plus allowImportingTsExtensions.">noEmit and allowImportingTsExtensions</button>
+            <button type="button" data-correct="false" data-explanation="outDir is for compiled output; we use noEmit in class.">outDir and strict only</button>
+            <button type="button" data-correct="false" data-explanation="jsx is for React, not Node imports.">jsx and moduleResolution</button>
+            <button type="button" data-correct="false" data-explanation="TypeScript does not require deleting .js files to import .ts.">You must delete all .js files first</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>

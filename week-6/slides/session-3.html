@@ -30,7 +30,7 @@
             <li>Authentication vs authorization</li>
             <li>Password hashing with bcrypt</li>
             <li>JWT sign on login, verify on protected routes</li>
-            <li>New <code>modules/auth/</code> domain</li>
+            <li>New <code>auth/</code> domain (same layout as <code>todo/</code>)</li>
             <li>Protect POST /todos (and mutations)</li>
             <li>Quiz (8 questions)</li>
         </ol>
@@ -49,7 +49,7 @@
             <li>Full CRUD on <code>/todos</code></li>
             <li>Zod returns 400 on bad input</li>
             <li>404 on missing id; 204 on delete</li>
-            <li>Code under <code>modules/todos/</code></li>
+            <li>Code under <code>src/todo/</code> (controller, routes, service, model, schema)</li>
         </ul>
         <p>Fix gaps now — auth builds on top of this foundation.</p>
     </div>
@@ -162,12 +162,12 @@ POST /todos (no token)     → 401</pre>
 
     <div class="slide bg5">
         <h2>Updated folder tree</h2>
-        <pre>src/modules/
-  todos/      ← CRUD
-  auth/       ← register, login
-src/middleware/
-  validate.ts
-  requireAuth.ts</pre>
+        <pre>src/
+  todo/       ← CRUD (controller, routes, service, model, schema)
+  auth/       ← register, login (same nested layout)
+  middleware/
+    validate.ts
+    requireAuth.ts</pre>
     </div>
 
     <div class="slide bg1">
@@ -175,7 +175,7 @@ src/middleware/
         <ul>
             <li>Revised CRUD + DDD before adding features</li>
             <li>bcrypt for passwords; JWT for session tokens</li>
-            <li><code>modules/auth/</code> mirrors todos structure</li>
+            <li><code>auth/</code> mirrors <code>todo/</code> structure (controller, routes, service, model, schema)</li>
             <li><code>requireAuth</code> enforces Bearer JWT on server</li>
             <li>Client-side auth from Week 4 + this server = full stack auth</li>
         </ul>

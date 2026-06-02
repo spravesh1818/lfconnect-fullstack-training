@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 6 - Session 1 - Node + TypeScript + MongoDB</title>
+    <title>Week 6 - Session 1 - Node + Express + MongoDB</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="session-deck-theme.css" />
@@ -19,8 +19,8 @@
     </header>
 
     <div class="slide active bg1">
-        <h1>Class 1: Node + TypeScript + MongoDB</h1>
-        <p>Build your first persisted MERN backend — a small Todo API: project setup, MongoDB, and GET + POST routes.</p>
+        <h1>Class 1: Node + Express + MongoDB</h1>
+        <p>Build your first persisted MERN backend — a plain JavaScript Todo API: project setup, MongoDB, and GET + POST routes.</p>
     </div>
 
     <div class="slide bg1">
@@ -28,7 +28,7 @@
         <ol>
             <li>Bridge from Week 5 — in-memory vs persistent storage</li>
             <li>MERN stack and MongoDB basics</li>
-            <li>Node + TypeScript project setup</li>
+            <li>Node + JavaScript Express project setup</li>
             <li>MongoDB Atlas + Mongoose connection</li>
             <li>GET and POST <code>/todos</code></li>
             <li>Test, verify persistence, common mistakes</li>
@@ -113,7 +113,7 @@
     <div class="slide bg4">
         <p class="part-kicker">Part 3</p>
         <h1>Project Setup</h1>
-        <p>Same TypeScript + Express stack as Week 5 — ESM, strict mode, <code>tsx watch</code>.</p>
+        <p>Plain <strong>JavaScript</strong> + Express with ESM (<code>"type": "module"</code>). TypeScript comes in Session 2.</p>
     </div>
 
     <div class="slide bg4">
@@ -125,29 +125,23 @@ npm init -y</pre>
 
     <div class="slide bg4">
         <h2>Step 2 — Install packages</h2>
-        <pre>npm install express dotenv mongoose
-npm install -D typescript tsx @types/node @types/express</pre>
+        <pre>npm install express dotenv mongoose</pre>
+        <p>No TypeScript yet — we add it in Class 2.</p>
     </div>
 
     <div class="slide bg4">
-        <h2>Step 3 — tsconfig.json</h2>
-        <pre>{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "outDir": "dist",
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  },
-  "include": ["src"]
+        <h2>Step 3 — Dev script</h2>
+        <pre>// package.json
+"scripts": {
+  "dev": "node --watch src/server.js"
 }</pre>
+        <p>Node 18+ includes <code>--watch</code> for auto-restart. Alternative: <code>nodemon</code>.</p>
     </div>
 
     <div class="slide bg4">
         <h2>Step 4 — Minimal server</h2>
-        <pre>import "dotenv/config";
+        <pre>// src/server.js
+import "dotenv/config";
 import express from "express";
 
 const app = express();
@@ -161,7 +155,7 @@ app.listen(3000, () =&gt; console.log("listening on http://localhost:3000"));</p
 
     <div class="slide bg4">
         <h2>Step 5 — Connect MongoDB</h2>
-        <pre>// src/config/db.ts
+        <pre>// src/config/db.js
 import mongoose from "mongoose";
 
 export async function connectDB() {
@@ -170,7 +164,7 @@ export async function connectDB() {
   await mongoose.connect(url);
   console.log("MongoDB connected");
 }</pre>
-        <p>Call <code>await connectDB()</code> once before <code>app.listen</code>.</p>
+        <p>Call <code>await connectDB()</code> once before <code>app.listen</code> in <code>server.js</code>.</p>
     </div>
 
     <div class="slide bg4">
@@ -249,11 +243,12 @@ curl -X POST http://localhost:3000/todos \
         <h2>Session Summary</h2>
         <ul>
             <li>MERN uses MongoDB on the backend</li>
-            <li>Mongoose: schema + model for typed DB access</li>
-            <li>Express + TypeScript + ESM project setup</li>
+            <li>Mongoose: schema + model for database access</li>
+            <li>Express + JavaScript + ESM project setup</li>
             <li><code>GET /todos</code> reads; <code>POST /todos</code> writes</li>
+            <li>Manual validation with <code>if</code> checks on POST</li>
             <li>Use status codes: 200, 201, 400, 500</li>
-            <li>Tomorrow: Zod validation, PUT/PATCH/DELETE, folder structure</li>
+            <li>Tomorrow: TypeScript, Zod middleware, full CRUD, <code>todo/</code> folders</li>
         </ul>
     </div>
 
@@ -306,7 +301,7 @@ curl -X POST http://localhost:3000/todos \
             <button type="button" data-correct="true" data-explanation="Database calls return Promises; async/await waits for the result.">Mongoose methods return Promises</button>
             <button type="button" data-correct="false" data-explanation="Express does not require async for all routes.">Express throws if you omit async</button>
             <button type="button" data-correct="false" data-explanation="MongoDB works without async keyword but you still need to handle Promises.">MongoDB is synchronous only</button>
-            <button type="button" data-correct="false" data-explanation="TypeScript does not force async for DB calls.">TypeScript strict mode requires it</button>
+            <button type="button" data-correct="false" data-explanation="JavaScript does not force async for DB calls.">JavaScript requires the async keyword for all routes</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
@@ -316,7 +311,7 @@ curl -X POST http://localhost:3000/todos \
         <p class="question">Where should you store <code>DATABASE_URL</code>?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="true" data-explanation=".env keeps secrets out of source control; load with dotenv.">In a .env file (not committed)</button>
-            <button type="button" data-correct="false" data-explanation="Hardcoding secrets in server.ts is unsafe.">Hard-coded in server.ts</button>
+            <button type="button" data-correct="false" data-explanation="Hardcoding secrets in server.js is unsafe.">Hard-coded in server.js</button>
             <button type="button" data-correct="false" data-explanation="package.json is committed; never put secrets there.">In package.json scripts</button>
             <button type="button" data-correct="false" data-explanation="Client-side code must not contain DB URLs.">In the React frontend</button>
         </div>
@@ -361,7 +356,7 @@ curl -X POST http://localhost:3000/todos \
 
     <div class="slide bg1">
         <h1>End of Week 6 Session 1</h1>
-        <p>Next: complete <a href="../handson/class-1-handson.html">Class 1 hands-on</a>. Tomorrow — validation, full CRUD, and domain-driven folders.</p>
+        <p>Next: complete <a href="../handson/class-1-handson.html">Class 1 hands-on</a>. Tomorrow — TypeScript migration, Zod validation, full CRUD, and <code>todo/</code> domain folders.</p>
     </div>
 
     <div class="progress-wrap" aria-hidden="true">
