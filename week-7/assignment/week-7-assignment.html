@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 7 Assignments</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            padding: 24px;
+            line-height: 1.6;
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        h1 {
+            max-width: 56rem;
+            margin: 0 auto 1.5rem;
+            padding: 1rem 1.25rem;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 8px;
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+        }
+
+        section {
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1.25rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.6rem;
+            color: #0f172a;
+        }
+
+        a {
+            color: #0369a1;
+        }
+
+        code {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 0.05rem 0.35rem;
+        }
+
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .deadline {
+            border-left: 5px solid #ef4444;
+            background: #fff1f2;
+        }
+
+        ul.checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul.checklist li::before {
+            content: "☐ ";
+            color: #475569;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Week 7 Assignments — Todo API + Backend Auth</h1>
+
+    <section class="deadline">
+        <h2>Submission</h2>
+        <p>Deadline: <strong>Sunday evening, 11:59 PM</strong>.</p>
+        <p>Extend your Week 6 <code>todo-api</code> repo (or submit the same repo with new commits). Share:</p>
+        <ul>
+            <li>Repository link</li>
+            <li>Terminal log or short screen recording of the auth + CRUD curl flow below</li>
+            <li>Updated README mentioning auth env vars and protected routes</li>
+        </ul>
+        <p><strong>Prerequisite:</strong> Week 6 assignment requirements must still pass (CRUD + <code>todo/</code> structure).</p>
+        <p>Suggested layout (additions in bold):</p>
+        <pre>todo-api/
+├─ src/
+│  ├─ app.ts
+│  ├─ server.ts
+│  ├─ config/db.ts
+│  ├─ middleware/
+│  │  ├─ validate.ts
+│  │  └─ requireAuth.ts
+│  ├─ todo/
+│  │  ├─ controller/
+│  │  ├─ routes/
+│  │  ├─ service/
+│  │  ├─ model/
+│  │  └─ schema/
+│  └─ auth/
+│     ├─ controller/
+│     ├─ routes/
+│     ├─ service/
+│     ├─ model/
+│     └─ schema/
+├─ .env.example
+└─ README.md</pre>
+    </section>
+
+    <section>
+        <h2>Core Assignment — Add backend authentication</h2>
+        <p>Add register/login and JWT-protected mutation routes to your Week 6 Todo API.</p>
+
+        <h3>Requirements</h3>
+        <ul>
+            <li>All Week 6 requirements still met (CRUD, Zod, <code>todo/</code> domain folders).</li>
+            <li>New <code>auth/</code> domain with controller, routes, service, model, and schema subfolders.</li>
+            <li><code>POST /auth/register</code> and <code>POST /auth/login</code> with Zod validation.</li>
+            <li>Passwords hashed with bcrypt — store <code>passwordHash</code> only.</li>
+            <li>JWT signed on login; <code>JWT_SECRET</code> in <code>.env</code>.</li>
+            <li><code>requireAuth</code> middleware on POST/PUT/PATCH/DELETE for todos.</li>
+            <li>Public: <code>GET /todos</code> and <code>GET /todos/:id</code>.</li>
+            <li>Never return <code>passwordHash</code> in JSON responses.</li>
+        </ul>
+
+        <h3>Checklist</h3>
+        <ul class="checklist">
+            <li>Register + login work; duplicate email returns 409.</li>
+            <li>Passwords are hashed in the database.</li>
+            <li>POST /todos without token returns 401.</li>
+            <li>POST /todos with valid Bearer token returns 201.</li>
+            <li>GET /todos works without token.</li>
+            <li><code>JWT_SECRET</code> in <code>.env.example</code> (no real secret).</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Curl test script (include in README or submission log)</h2>
+        <pre># Health
+curl http://localhost:3000/health
+
+# Register
+curl -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Demo User","email":"demo@example.com","password":"demo123456"}'
+
+# Login — save token
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@example.com","password":"demo123456"}'
+
+# Create todo (authenticated)
+curl -X POST http://localhost:3000/todos \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"title":"Week 7 Demo"}'
+
+# List todos (public)
+curl http://localhost:3000/todos
+
+# Mark complete (authenticated)
+curl -X PATCH http://localhost:3000/todos/TODO_ID \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"completed": true}'
+
+# Unauthenticated create (should 401)
+curl -X POST http://localhost:3000/todos \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Fail"}'</pre>
+    </section>
+
+    <section>
+        <h2>Resources</h2>
+        <ul>
+            <li><a href="../../week-6/assignment/week-6-assignment.html">Week 6 assignment</a> (prerequisite)</li>
+            <li><a href="../handson/class-1-handson.html">Class 1 hands-on</a></li>
+            <li><a href="../slides/session-1.html">Session 1 slides</a></li>
+        </ul>
+    </section>
+</body>
+
+</html>

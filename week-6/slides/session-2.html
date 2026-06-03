@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 6 - Session 2 - TypeScript, Validation, CRUD, DDD</title>
+    <title>Week 6 - Session 2 - TypeScript + Zod Validation</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="session-deck-theme.css" />
@@ -19,8 +19,8 @@
     </header>
 
     <div class="slide active bg1">
-        <h1>Class 2: TypeScript, Middleware Validation, and Todo Domain Structure</h1>
-        <p>Convert your JavaScript API to TypeScript, add Zod validation middleware, complete CRUD, and organize code under <code>src/todo/</code>.</p>
+        <h1>Class 2: TypeScript + Zod Validation</h1>
+        <p>Convert your JavaScript API to TypeScript and add Zod validation middleware on POST <code>/todos</code>.</p>
     </div>
 
     <div class="slide bg1">
@@ -29,8 +29,6 @@
             <li>Recap Session 1 — <code>server.js</code> + MongoDB</li>
             <li>Migrate JavaScript → TypeScript</li>
             <li>Middleware + Zod validation (Week 5 recap)</li>
-            <li>Complete CRUD routes (PUT vs PATCH)</li>
-            <li>Domain folders: <code>todo/controller/</code>, routes, service, model</li>
             <li>Quiz (8 questions)</li>
         </ol>
     </div>
@@ -46,7 +44,7 @@
         <ul>
             <li>Week 5 — TypeScript, Express middleware, Zod <code>validate</code></li>
             <li>Today — apply those patterns to the todo API you built in JS</li>
-            <li>End state — typed, validated, organized by domain</li>
+            <li>End state — typed server with Zod on POST</li>
         </ul>
     </div>
 
@@ -192,179 +190,55 @@ export type CreateTodoDto = z.infer&lt;typeof createTodoSchema&gt;;</pre>
   };</pre>
     </div>
 
-    <div class="slide bg5">
-        <p class="part-kicker">Part 4</p>
-        <h1>REST Verbs &amp; Full CRUD</h1>
-        <p>Each HTTP method has a job. Use the right one so your API is predictable.</p>
-    </div>
+    <div class="slide bg4">
+        <h2>Wire validate on POST</h2>
+        <pre>import { validate } from "./middleware/validate.ts";
+import { createTodoSchema } from "./schemas/todo.schema.ts";
 
-    <div class="slide bg5">
-        <h2>CRUD mapping</h2>
-        <ul>
-            <li><strong>CREATE</strong> — <code>POST /todos</code></li>
-            <li><strong>READ (list)</strong> — <code>GET /todos</code></li>
-            <li><strong>READ (one)</strong> — <code>GET /todos/:id</code></li>
-            <li><strong>UPDATE (full)</strong> — <code>PUT /todos/:id</code></li>
-            <li><strong>UPDATE (partial)</strong> — <code>PATCH /todos/:id</code></li>
-            <li><strong>DELETE</strong> — <code>DELETE /todos/:id</code></li>
-        </ul>
-    </div>
-
-    <div class="slide bg5">
-        <h2>PUT vs PATCH</h2>
-        <div class="comparison">
-            <article>
-                <h3>PUT</h3>
-                <ul>
-                    <li>Replace the entire resource</li>
-                    <li>Send <code>title</code> and <code>completed</code></li>
-                    <li>Missing field may reset to default</li>
-                </ul>
-            </article>
-            <article>
-                <h3>PATCH</h3>
-                <ul>
-                    <li>Update only what changed</li>
-                    <li>Send <code>{ "completed": true }</code> only</li>
-                    <li>Title stays the same — mark done in one step</li>
-                </ul>
-            </article>
-        </div>
-    </div>
-
-    <div class="slide bg5">
-        <h2>Status codes for CRUD</h2>
-        <ul>
-            <li><code>200</code> — OK (GET, PUT, PATCH success)</li>
-            <li><code>201</code> — Created (POST)</li>
-            <li><code>204</code> — No Content (DELETE success, empty body)</li>
-            <li><code>400</code> — Bad Request (validation failed)</li>
-            <li><code>404</code> — Not Found (id does not exist)</li>
-        </ul>
-    </div>
-
-    <div class="slide bg5">
-        <h2>GET /todos/:id</h2>
-        <pre>const todo = await TodoModel.findById(req.params.id);
-if (!todo) return res.status(404).json({ error: "Todo not found" });
-res.json(todo);</pre>
-        <p>Invalid id format → catch and return <code>400</code>.</p>
-    </div>
-
-    <div class="slide bg5">
-        <h2>PATCH — mark complete</h2>
-        <pre>// Client sends only what changed
-PATCH /todos/:id
-{ "completed": true }</pre>
-        <p>This is why todos are a great PATCH teaching example.</p>
-    </div>
-
-    <div class="slide bg5">
-        <h2>DELETE /todos/:id</h2>
-        <pre>const deleted = await TodoModel.findByIdAndDelete(req.params.id);
-if (!deleted) return res.status(404).json({ error: "Todo not found" });
-res.status(204).send();</pre>
-        <p><code>204</code> means success with no response body.</p>
-    </div>
-
-    <div class="slide bg2">
-        <p class="part-kicker">Part 5</p>
-        <h1>Domain-Driven Design (Beginner Version)</h1>
-        <p>Group code by <strong>business area</strong> (todos, users, auth) — not only by technical type.</p>
-    </div>
-
-    <div class="slide bg5">
-        <h2>Bad: everything by layer only</h2>
-        <pre>src/
-  controllers/   # all controllers mixed
-  models/        # all models mixed
-  routes/        # all routes mixed</pre>
-        <p>Works for tiny apps. Gets messy when you add users, auth, notifications…</p>
-    </div>
-
-    <div class="slide bg5">
-        <h2>Better: folders by domain</h2>
-        <pre>src/
-  app.ts
-  server.ts
-  config/db.ts
-  middleware/validate.ts
-  todo/
-    controller/todo.controller.ts
-    routes/todo.routes.ts
-    service/todo.service.ts
-    model/todo.model.ts
-    schema/todo.schema.ts</pre>
-    </div>
-
-    <div class="slide bg5">
-        <h2>Layer responsibilities</h2>
-        <ul>
-            <li><strong>routes</strong> — URL + HTTP method → controller</li>
-            <li><strong>controller</strong> — read request, call service, send response</li>
-            <li><strong>service</strong> — business rules + database calls</li>
-            <li><strong>model</strong> — Mongoose schema</li>
-            <li><strong>schema</strong> — Zod + DTO types</li>
-        </ul>
-    </div>
-
-    <div class="slide bg5">
-        <h2>Request flow after refactor</h2>
-        <pre>Client
-  → Express (app.ts)
-  → todo.routes.ts
-  → validate middleware
-  → todo.controller.ts
-  → todo.service.ts
-  → TodoModel → MongoDB</pre>
-    </div>
-
-    <div class="slide bg5">
-        <h2>Wire routes in app.ts</h2>
-        <pre>import { todoRoutes } from "./todo/routes/todo.routes.ts";
-
-app.use("/todos", todoRoutes);</pre>
-        <p>Each domain gets its own router. Tomorrow we add <code>auth/</code> the same way.</p>
+app.post("/todos", validate(createTodoSchema), async (req, res) =&gt; {
+  const todo = await TodoModel.create(req.body);
+  res.status(201).json(todo);
+});</pre>
+        <p>Invalid body → middleware returns <code>400</code> before your handler runs.</p>
     </div>
 
     <div class="slide bg1">
         <h2>Session Summary</h2>
         <ul>
             <li>Migrated JS project to TypeScript with <code>tsx</code></li>
-            <li>Zod <code>validate</code> middleware replaces manual checks</li>
-            <li>PUT replaces; PATCH updates partially (e.g. mark complete)</li>
-            <li>Full CRUD with correct status codes</li>
-            <li>Code organized under <code>src/todo/</code> by domain</li>
-            <li>Tomorrow: revision + backend JWT auth</li>
+            <li>Typed handlers with <code>Request</code> and <code>Response</code></li>
+            <li>Zod <code>validate</code> middleware replaces manual checks on POST</li>
+            <li>Schemas + DTOs: one source of truth for validation and types</li>
+            <li>Tomorrow: split routes into files, clean architecture, full CRUD, assignment</li>
         </ul>
     </div>
 
     <div class="slide bg-quiz quiz-segment">
         <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
         <h1 class="quiz-round-title">Week 6 Session 2 Quiz</h1>
-        <p class="quiz-hint">8 questions on TypeScript, REST, Zod, and folder structure.</p>
+        <p class="quiz-hint">8 questions on TypeScript, middleware, and Zod.</p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 1 of 8</h2>
-        <p class="question">You only want to mark a todo as <code>completed: true</code>. Which method?</p>
+        <p class="question">What does <code>"strict": true</code> in <code>tsconfig.json</code> do?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="PATCH is for partial updates like toggling completed.">PATCH</button>
-            <button type="button" data-correct="false" data-explanation="PUT expects a full resource replacement.">PUT</button>
-            <button type="button" data-correct="false" data-explanation="POST creates new resources.">POST</button>
-            <button type="button" data-correct="false" data-explanation="GET is read-only.">GET</button>
+            <button type="button" data-correct="true" data-explanation="strict enables stronger type checks like noImplicitAny.">Turns on stricter TypeScript compiler checks</button>
+            <button type="button" data-correct="false" data-explanation="strict is about types, not HTTP.">Forces all routes to return 200</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB connection is separate from tsconfig.">Connects to MongoDB automatically</button>
+            <button type="button" data-correct="false" data-explanation="You still write types; strict enforces them.">Disables all type checking</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 2 of 8</h2>
-        <p class="question">Best status code after successful DELETE with no response body?</p>
+        <p class="question">Without <code>app.use(express.json())</code> before a JSON POST route, what happens?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="204 No Content is standard for successful DELETE.">204 No Content</button>
-            <button type="button" data-correct="false" data-explanation="201 is for creation.">201 Created</button>
-            <button type="button" data-correct="false" data-explanation="404 means the resource was not found.">404 Not Found</button>
-            <button type="button" data-correct="false" data-explanation="500 is a server error.">500 Internal Server Error</button>
+            <button type="button" data-correct="true" data-explanation="Body parser middleware must run first to populate req.body.">req.body stays undefined</button>
+            <button type="button" data-correct="false" data-explanation="Express does not auto-parse JSON bodies.">Express parses JSON automatically</button>
+            <button type="button" data-correct="false" data-explanation="Zod runs after body parsing; it cannot fix missing req.body.">Zod fills req.body from the schema</button>
+            <button type="button" data-correct="false" data-explanation="TypeScript types do not parse HTTP bodies at runtime.">TypeScript strict mode parses the body</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
@@ -407,43 +281,43 @@ app.use("/todos", todoRoutes);</pre>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 6 of 8</h2>
-        <p class="question">Todo id not found in database — return:</p>
+        <p class="question">Why type route handlers with <code>Request</code> and <code>Response</code> from Express?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="404 tells the client the resource does not exist.">404 Not Found</button>
-            <button type="button" data-correct="false" data-explanation="400 is for malformed requests, not missing resources.">400 Bad Request</button>
-            <button type="button" data-correct="false" data-explanation="401 is for missing/invalid auth.">401 Unauthorized</button>
-            <button type="button" data-correct="false" data-explanation="200 would lie about success.">200 with empty array</button>
+            <button type="button" data-correct="true" data-explanation="Types give autocomplete and catch mistakes on req/res at compile time.">IDE help and compile-time checks on req and res</button>
+            <button type="button" data-correct="false" data-explanation="Express works without TypeScript types.">Express refuses to start without them</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB uses Mongoose types, not Express Request/Response.">MongoDB requires Express types</button>
+            <button type="button" data-correct="false" data-explanation="Zod validates bodies; Express types describe the HTTP API.">Zod replaces the need for Request types</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 7 of 8</h2>
-        <p class="question">Why split controller vs service?</p>
+        <p class="question">What does the <code>validate</code> middleware do when Zod parsing fails?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="Controller handles HTTP; service handles business/DB — easier to test and grow.">Separation of HTTP from business logic</button>
-            <button type="button" data-correct="false" data-explanation="Extra files have a purpose — organization.">To create more files for no reason</button>
-            <button type="button" data-correct="false" data-explanation="TypeScript works with any structure.">TypeScript requires exactly 5 files</button>
-            <button type="button" data-correct="false" data-explanation="Express supports any structure you choose.">Express forces this pattern</button>
+            <button type="button" data-correct="true" data-explanation="It returns 400 with flattened Zod errors and never calls next().">Returns 400 JSON and stops the request</button>
+            <button type="button" data-correct="false" data-explanation="Failed validation should not reach the database.">Saves invalid data to MongoDB anyway</button>
+            <button type="button" data-correct="false" data-explanation="500 is for unexpected server errors, not client validation.">Returns 500 Internal Server Error always</button>
+            <button type="button" data-correct="false" data-explanation="next() is only called on success after req.body is replaced.">Calls next() and lets the handler fix the body</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 8 of 8</h2>
-        <p class="question">After refactor, <code>app.use("/todos", todoRoutes)</code> means:</p>
+        <p class="question">Correct middleware order for a validated POST route?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="Router paths are relative; GET / in router becomes GET /todos.">Routes in the router are prefixed with /todos</button>
-            <button type="button" data-correct="false" data-explanation="Todos module is one domain among others.">All requests go only to todos</button>
-            <button type="button" data-correct="false" data-explanation="Middleware order matters but this mount is correct.">Express skips JSON parsing</button>
-            <button type="button" data-correct="false" data-explanation="MongoDB connection is separate from route mounting.">MongoDB auto-connects in the router</button>
+            <button type="button" data-correct="true" data-explanation="Parse JSON first, then validate, then the route handler.">express.json() → validate(schema) → handler</button>
+            <button type="button" data-correct="false" data-explanation="Handler cannot read req.body before parsing and validation.">handler → validate → express.json()</button>
+            <button type="button" data-correct="false" data-explanation="validate needs req.body populated by express.json() first.">validate → express.json() → handler</button>
+            <button type="button" data-correct="false" data-explanation="Validation middleware is required for Zod checks on POST bodies in this pattern.">express.json() → handler only</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg1">
         <h1>End of Week 6 Session 2</h1>
-        <p>Next: complete <a href="../handson/class-2-handson.html">Class 2 hands-on</a>. Tomorrow — revision and backend authentication.</p>
+        <p>Next: complete <a href="../handson/class-2-handson.html">Class 2 hands-on</a>. Tomorrow — split routes into files, clean architecture, full CRUD, and the Week 6 assignment.</p>
     </div>
 
     <div class="progress-wrap" aria-hidden="true">

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 6 Class 2 hands-on - TypeScript, Validation, CRUD, DDD</title>
+    <title>Week 6 Class 2 hands-on - TypeScript + Zod Validation</title>
     <style>
         .lab-banner {
             font-family: system-ui, sans-serif;
@@ -77,7 +77,7 @@
     <div class="lab-banner">
         <strong>Week 6 - Class 2 Lab</strong> -
         <a href="../slides/session-2.html">Open session deck</a>
-        - TypeScript migration, Zod validation, full CRUD, <code>todo/</code> domain folders
+        - TypeScript migration and Zod validation
     </div>
 
     <div class="exercise-instructions">
@@ -223,9 +223,9 @@ app.listen(PORT, () =&gt; console.log(`listening on http://localhost:${PORT}`));
         <ol>
             <li>Install Zod: <code>npm install zod</code>.</li>
             <li>Create <code>src/middleware/validate.ts</code> (reuse the Week 5 pattern).</li>
-            <li>Create <code>src/todo/schema/todo.schema.ts</code> (we wire routes in Exercise 5).</li>
+            <li>Create <code>src/schemas/todo.schema.ts</code> (move to <code>todo/schema/</code> in Class 3).</li>
         </ol>
-        <pre>// src/todo/schema/todo.schema.ts
+        <pre>// src/schemas/todo.schema.ts
 import { z } from "zod";
 
 export const createTodoSchema = z.object({
@@ -252,193 +252,33 @@ export const validate =
     next();
   };</pre>
         <ol start="4">
+            <li>Import <code>validate</code> and <code>createTodoSchema</code> in <code>server.ts</code>.</li>
             <li>Replace manual <code>if (!title)</code> on POST with <code>validate(createTodoSchema)</code>.</li>
             <li>Send invalid JSON (empty <code>title</code>) and confirm <code>400</code>.</li>
         </ol>
-        <div class="done-when"><strong>Done when:</strong> valid POST creates a todo; invalid POST returns Zod error JSON with status 400.</div>
-    </div>
+        <pre>import { validate } from "./middleware/validate.ts";
+import { createTodoSchema } from "./schemas/todo.schema.ts";
 
-    <div class="exercise-instructions">
-        <h2>Exercise 3 - GET /todos/:id</h2>
-        <ol>
-            <li>Find one todo by MongoDB <code>_id</code>.</li>
-            <li>Return <code>404</code> if not found.</li>
-        </ol>
-        <pre>app.get("/todos/:id", async (req, res) =&gt; {
+app.post("/todos", validate(createTodoSchema), async (req: Request, res: Response) =&gt; {
   try {
-    const todo = await TodoModel.findById(req.params.id);
-    if (!todo) return res.status(404).json({ error: "Todo not found" });
-    res.json(todo);
+    const todo = await TodoModel.create(req.body);
+    res.status(201).json(todo);
   } catch (err) {
-    res.status(400).json({ error: "Invalid todo id" });
+    console.error(err);
+    res.status(500).json({ error: "Failed to create todo" });
   }
 });</pre>
-        <pre>curl http://localhost:3000/todos/PASTE_ID_HERE</pre>
-        <div class="done-when"><strong>Done when:</strong> valid id returns the todo; fake id returns 404 or 400.</div>
-    </div>
-
-    <div class="exercise-instructions">
-        <h2>Exercise 4 - PUT, PATCH, and DELETE</h2>
-        <p><strong>PUT</strong> = replace the whole resource. <strong>PATCH</strong> = update only fields you send — perfect for marking a todo complete.</p>
-        <pre>// PUT — all fields required (use createTodoSchema)
-app.put("/todos/:id", validate(createTodoSchema), async (req, res) =&gt; {
-  const todo = await TodoModel.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true, runValidators: true }
-  );
-  if (!todo) return res.status(404).json({ error: "Todo not found" });
-  res.json(todo);
-});
-
-// PATCH — partial update (use updateTodoSchema)
-app.patch("/todos/:id", validate(updateTodoSchema), async (req, res) =&gt; {
-  const todo = await TodoModel.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true, runValidators: true }
-  );
-  if (!todo) return res.status(404).json({ error: "Todo not found" });
-  res.json(todo);
-});
-
-// DELETE
-app.delete("/todos/:id", async (req, res) =&gt; {
-  const deleted = await TodoModel.findByIdAndDelete(req.params.id);
-  if (!deleted) return res.status(404).json({ error: "Todo not found" });
-  res.status(204).send();
-});</pre>
-        <pre>curl -X PUT http://localhost:3000/todos/ID \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Finish Week 6 lab","completed":false}'
-
-curl -X PATCH http://localhost:3000/todos/ID \
-  -H "Content-Type: application/json" \
-  -d '{"completed": true}'
-
-curl -i -X DELETE http://localhost:3000/todos/ID</pre>
-        <div class="done-when"><strong>Done when:</strong> PUT replaces title and completed; PATCH with <code>{"completed": true}</code> marks done without changing the title; DELETE returns 204.</div>
-    </div>
-
-    <div class="exercise-instructions">
-        <h2>Exercise 5 - Refactor to <code>todo/</code> domain folders</h2>
-        <p>Organize by <strong>business area</strong> (todo domain), not one giant <code>server.ts</code>.</p>
-        <pre>src/
-  app.ts
-  server.ts
-  config/
-    db.ts
-  middleware/
-    validate.ts
-  todo/
-    controller/todo.controller.ts
-    routes/todo.routes.ts
-    service/todo.service.ts
-    model/todo.model.ts
-    schema/todo.schema.ts</pre>
-        <p><strong>Layer jobs (one sentence each):</strong></p>
-        <ul>
-            <li><strong>routes</strong> — map URLs to controller functions</li>
-            <li><strong>controller</strong> — read <code>req</code>, call service, send <code>res</code></li>
-            <li><strong>service</strong> — business logic + database calls</li>
-            <li><strong>model</strong> — Mongoose schema</li>
-            <li><strong>schema</strong> — Zod validation + DTO types</li>
-        </ul>
-        <pre>// src/todo/service/todo.service.ts
-import { TodoModel } from "../model/todo.model.ts";
-import type { CreateTodoDto, UpdateTodoDto } from "../schema/todo.schema.ts";
-
-export async function listTodos() {
-  return TodoModel.find().sort({ createdAt: -1 });
-}
-
-export async function createTodo(dto: CreateTodoDto) {
-  return TodoModel.create(dto);
-}
-
-export async function getTodoById(id: string) {
-  return TodoModel.findById(id);
-}
-
-export async function replaceTodo(id: string, dto: CreateTodoDto) {
-  return TodoModel.findByIdAndUpdate(id, dto, { new: true, runValidators: true });
-}
-
-export async function updateTodo(id: string, dto: UpdateTodoDto) {
-  return TodoModel.findByIdAndUpdate(id, dto, { new: true, runValidators: true });
-}
-
-export async function deleteTodo(id: string) {
-  return TodoModel.findByIdAndDelete(id);
-}</pre>
-        <pre>// src/todo/routes/todo.routes.ts
-import { Router } from "express";
-import { validate } from "../../middleware/validate.ts";
-import { createTodoSchema, updateTodoSchema } from "../schema/todo.schema.ts";
-import * as controller from "../controller/todo.controller.ts";
-
-export const todoRoutes = Router();
-
-todoRoutes.get("/", controller.list);
-todoRoutes.post("/", validate(createTodoSchema), controller.create);
-todoRoutes.get("/:id", controller.getOne);
-todoRoutes.put("/:id", validate(createTodoSchema), controller.replace);
-todoRoutes.patch("/:id", validate(updateTodoSchema), controller.update);
-todoRoutes.delete("/:id", controller.remove);</pre>
-        <pre>// src/app.ts
-import express from "express";
-import { todoRoutes } from "./todo/routes/todo.routes.ts";
-
-export const app = express();
-app.use(express.json());
-
-app.get("/", (_req, res) =&gt; res.json({ message: "hello from todo-api" }));
-app.get("/health", (_req, res) =&gt; res.json({ status: "ok" }));
-app.use("/todos", todoRoutes);</pre>
-        <pre>// src/server.ts
-import "dotenv/config";
-import { connectDB } from "./config/db.ts";
-import { app } from "./app.ts";
-
-await connectDB();
-const PORT = process.env.PORT ?? 3000;
-app.listen(PORT, () =&gt; console.log(`listening on http://localhost:${PORT}`));</pre>
-        <p>Implement <code>todo.controller.ts</code> to call the service functions and map HTTP status codes (201, 404, 204, etc.). Remove the old <code>src/models/</code> folder after moving the model.</p>
-        <div class="done-when"><strong>Done when:</strong> all CRUD still works after refactor; todo code lives under <code>src/todo/</code>.</div>
-    </div>
-
-    <div class="exercise-instructions">
-        <h2>Full curl test suite</h2>
-        <pre># Create
-curl -X POST http://localhost:3000/todos \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Read MongoDB docs"}'
-
-# List
-curl http://localhost:3000/todos
-
-# Get one (use _id from create response)
-curl http://localhost:3000/todos/TODO_ID
-
-# Mark complete
-curl -X PATCH http://localhost:3000/todos/TODO_ID \
-  -H "Content-Type: application/json" \
-  -d '{"completed": true}'
-
-# Delete
-curl -i -X DELETE http://localhost:3000/todos/TODO_ID</pre>
+        <div class="done-when"><strong>Done when:</strong> valid POST creates a todo; invalid POST returns Zod error JSON with status 400.</div>
     </div>
 
     <div class="exercise-instructions">
         <h2>Lab checklist</h2>
         <ul>
             <li>Project runs with TypeScript (<code>tsx watch src/server.ts</code>).</li>
-            <li>Zod validates POST, PUT, and PATCH bodies.</li>
-            <li>All five CRUD operations work end-to-end.</li>
-            <li>404 for missing todo id; 400 for invalid body or id.</li>
-            <li>DELETE returns 204 No Content.</li>
-            <li>PATCH can set <code>completed: true</code> without changing <code>title</code>.</li>
-            <li>Code organized under <code>src/todo/</code> with routes → controller → service → model.</li>
+            <li>GET/POST <code>/todos</code> still work; data persists after restart.</li>
+            <li>Handlers use <code>Request</code> and <code>Response</code> types.</li>
+            <li>Zod validates POST body; invalid input returns 400.</li>
+            <li><code>GET /health</code> returns <code>{ status: "ok" }</code>.</li>
         </ul>
     </div>
 
@@ -446,16 +286,14 @@ curl -i -X DELETE http://localhost:3000/todos/TODO_ID</pre>
         <h2>Troubleshooting</h2>
         <ul>
             <li><strong>Cannot find module after rename to .ts</strong> — use <code>.ts</code> in import paths and enable <code>allowImportingTsExtensions</code> in <code>tsconfig.json</code>.</li>
-            <li><strong><code>CastError: Cast to ObjectId failed</code></strong> — invalid id format; return 400 with a friendly message.</li>
-            <li><strong>PUT clears fields unexpectedly</strong> — PUT must send all required fields; use PATCH for partial updates like <code>completed</code>.</li>
-            <li><strong>Routes 404 after refactor</strong> — check <code>app.use("/todos", todoRoutes)</code> and relative imports use <code>.ts</code> extensions.</li>
             <li><strong>Zod rejects empty title</strong> — use <code>min(1)</code>; whitespace-only titles should fail validation.</li>
-            <li><strong>Forgot <code>express.json()</code></strong> — must run in <code>app.ts</code> before mounted routes.</li>
+            <li><strong><code>req.body</code> is undefined on POST</strong> — add <code>app.use(express.json())</code> before routes.</li>
+            <li><strong>Validation never runs</strong> — put <code>validate(createTodoSchema)</code> before the handler, after <code>express.json()</code>.</li>
         </ul>
     </div>
 
     <div class="practice-shell">
-        <strong>Next class preview:</strong> Class 3 revises CRUD, then adds register/login and JWT-protected routes under <code>src/auth/</code>.
+        <strong>Next class preview:</strong> Class 3 splits routes into files, teaches clean architecture and DDD, completes full CRUD, and introduces the Week 6 assignment.
         <p style="margin-top: 0.75rem;"><a href="class-3-handson.html">Open Class 3 hands-on</a></p>
     </div>
 </body>

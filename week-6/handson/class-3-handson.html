@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 6 Class 3 hands-on - Revision and Auth</title>
+    <title>Week 6 Class 3 hands-on - Architecture, CRUD, and DDD</title>
     <style>
         .lab-banner {
             font-family: system-ui, sans-serif;
@@ -77,242 +77,171 @@
     <div class="lab-banner">
         <strong>Week 6 - Class 3 Lab</strong> -
         <a href="../slides/session-3.html">Open session deck</a>
-        - Revision, register/login, JWT-protected routes
+        - Router extraction, clean architecture, DDD folders, full CRUD
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 0 - Revision checklist</h2>
-        <p>Before adding auth, confirm Class 1–2 work. Fix gaps first.</p>
+        <h2>Exercise 0 - Recap from Class 2</h2>
+        <p>Before refactoring, confirm Class 2 work:</p>
         <ul>
             <li>[ ] <code>npm run dev</code> starts without errors</li>
-            <li>[ ] <code>GET /health</code> returns <code>{ status: "ok" }</code></li>
-            <li>[ ] MongoDB connects (<code>MongoDB connected</code> in terminal)</li>
-            <li>[ ] POST + GET /todos persist after restart</li>
-            <li>[ ] GET/PUT/PATCH/DELETE by id work with correct status codes</li>
-            <li>[ ] Invalid body returns 400 (Zod)</li>
-            <li>[ ] Code lives under <code>src/todo/</code> (controller, routes, service, model, schema)</li>
+            <li>[ ] TypeScript project with typed handlers</li>
+            <li>[ ] Zod validates POST; invalid body returns 400</li>
+            <li>[ ] GET/POST <code>/todos</code> persist after restart</li>
         </ul>
         <div class="done-when"><strong>Done when:</strong> every box is checked or you know what you are fixing.</div>
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 1 - Install auth packages</h2>
+        <h2>Exercise 1 - Extract router and app.ts</h2>
         <ol>
-            <li><code>npm install bcryptjs jsonwebtoken</code></li>
-            <li><code>npm install -D @types/bcryptjs @types/jsonwebtoken</code></li>
-            <li>Add to <code>.env</code>: <code>JWT_SECRET=your-long-random-secret-for-class</code></li>
+            <li>Create <code>src/app.ts</code> — move <code>express()</code>, <code>express.json()</code>, health routes here.</li>
+            <li>Create <code>src/todo/routes/todo.routes.ts</code> with <code>Router()</code>.</li>
+            <li>Move GET/POST <code>/todos</code> from <code>server.ts</code> into the router (handlers can stay inline for now).</li>
+            <li>Mount: <code>app.use("/todos", todoRoutes)</code>.</li>
+            <li>Slim down <code>server.ts</code> to dotenv + <code>connectDB()</code> + <code>app.listen</code>.</li>
         </ol>
-        <div class="done-when"><strong>Done when:</strong> packages install and <code>JWT_SECRET</code> is set (not committed).</div>
-    </div>
-
-    <div class="exercise-instructions">
-        <h2>Exercise 2 - Auth module (DDD layout)</h2>
-        <p>Create <code>src/auth/</code> with the same nested pattern as <code>todo/</code>.</p>
-        <pre>// src/auth/model/user.model.ts
-import { Schema, model } from "mongoose";
-
-const userSchema = new Schema(
-  {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true, lowercase: true },
-    passwordHash: { type: String, required: true },
-  },
-  { timestamps: true }
-);
-
-export const UserModel = model("User", userSchema);</pre>
-        <pre>// src/auth/schema/auth.schema.ts
-import { z } from "zod";
-
-export const registerSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  password: z.string().min(6),
-});
-
-export const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
-
-export type RegisterDto = z.infer&lt;typeof registerSchema&gt;;
-export type LoginDto = z.infer&lt;typeof loginSchema&gt;;</pre>
-        <pre>// src/auth/service/auth.service.ts
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { UserModel } from "../model/user.model.ts";
-import type { RegisterDto, LoginDto } from "../schema/auth.schema.ts";
-
-const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret";
-
-export async function registerUser(dto: RegisterDto) {
-  const existing = await UserModel.findOne({ email: dto.email });
-  if (existing) throw new Error("EMAIL_TAKEN");
-
-  const passwordHash = await bcrypt.hash(dto.password, 10);
-  const user = await UserModel.create({
-    name: dto.name,
-    email: dto.email,
-    passwordHash,
-  });
-
-  return { id: user.id, name: user.name, email: user.email };
-}
-
-export async function loginUser(dto: LoginDto) {
-  const user = await UserModel.findOne({ email: dto.email });
-  if (!user) throw new Error("INVALID_CREDENTIALS");
-
-  const ok = await bcrypt.compare(dto.password, user.passwordHash);
-  if (!ok) throw new Error("INVALID_CREDENTIALS");
-
-  const token = jwt.sign({ sub: user.id }, JWT_SECRET, { expiresIn: "7d" });
-  return {
-    token,
-    user: { id: user.id, name: user.name, email: user.email },
-  };
-}</pre>
-        <pre>// src/auth/controller/auth.controller.ts
-import { Request, Response } from "express";
-import * as authService from "../service/auth.service.ts";
-import type { RegisterDto, LoginDto } from "../schema/auth.schema.ts";
-
-export async function register(req: Request, res: Response) {
-  try {
-    const dto = req.body as RegisterDto;
-    const user = await authService.registerUser(dto);
-    res.status(201).json({ user });
-  } catch (err) {
-    if (err instanceof Error &amp;&amp; err.message === "EMAIL_TAKEN") {
-      return res.status(409).json({ error: "Email already registered" });
-    }
-    res.status(500).json({ error: "Registration failed" });
-  }
-}
-
-export async function login(req: Request, res: Response) {
-  try {
-    const dto = req.body as LoginDto;
-    const result = await authService.loginUser(dto);
-    res.json(result);
-  } catch (err) {
-    if (err instanceof Error &amp;&amp; err.message === "INVALID_CREDENTIALS") {
-      return res.status(401).json({ error: "Invalid email or password" });
-    }
-    res.status(500).json({ error: "Login failed" });
-  }
-}</pre>
-        <pre>// src/auth/routes/auth.routes.ts
+        <pre>// src/todo/routes/todo.routes.ts
 import { Router } from "express";
 import { validate } from "../../middleware/validate.ts";
-import { registerSchema, loginSchema } from "../schema/auth.schema.ts";
-import * as controller from "../controller/auth.controller.ts";
+import { createTodoSchema } from "../schema/todo.schema.ts";
+import { TodoModel } from "../../models/todo.model.ts";
 
-export const authRoutes = Router();
+export const todoRoutes = Router();
 
-authRoutes.post("/register", validate(registerSchema), controller.register);
-authRoutes.post("/login", validate(loginSchema), controller.login);</pre>
-        <p>Mount in <code>app.ts</code>: <code>app.use("/auth", authRoutes);</code></p>
-        <div class="done-when"><strong>Done when:</strong> register returns 201; login returns <code>{ token, user }</code>; duplicate email returns 409.</div>
+todoRoutes.get("/", async (_req, res) =&gt; {
+  const todos = await TodoModel.find().sort({ createdAt: -1 });
+  res.json(todos);
+});
+
+todoRoutes.post("/", validate(createTodoSchema), async (req, res) =&gt; {
+  const todo = await TodoModel.create(req.body);
+  res.status(201).json(todo);
+});</pre>
+        <pre>// src/app.ts
+import express from "express";
+import { todoRoutes } from "./todo/routes/todo.routes.ts";
+
+export const app = express();
+app.use(express.json());
+
+app.get("/", (_req, res) =&gt; res.json({ message: "hello from todo-api" }));
+app.get("/health", (_req, res) =&gt; res.json({ status: "ok" }));
+app.use("/todos", todoRoutes);</pre>
+        <div class="done-when"><strong>Done when:</strong> GET/POST <code>/todos</code> still work via the mounted router.</div>
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 3 - requireAuth middleware</h2>
-        <pre>// src/middleware/requireAuth.ts
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+        <h2>Exercise 2 - Controller and service layers</h2>
+        <p>Move DB logic to <code>todo.service.ts</code>. Controllers handle HTTP status codes only.</p>
+        <ol>
+            <li>Create <code>src/todo/service/todo.service.ts</code> with <code>listTodos</code> and <code>createTodo</code>.</li>
+            <li>Create <code>src/todo/controller/todo.controller.ts</code> — call service, send <code>res</code>.</li>
+            <li>Wire controller functions in <code>todo.routes.ts</code> instead of inline handlers.</li>
+            <li>Move Zod schema to <code>src/todo/schema/todo.schema.ts</code> (from <code>src/schemas/</code> if needed).</li>
+            <li>Move Mongoose model to <code>src/todo/model/todo.model.ts</code>.</li>
+        </ol>
+        <pre>// src/todo/service/todo.service.ts
+import { TodoModel } from "../model/todo.model.ts";
+import type { CreateTodoDto } from "../schema/todo.schema.ts";
 
-declare global {
-  namespace Express {
-    interface Request {
-      userId?: string;
-    }
-  }
+export async function listTodos() {
+  return TodoModel.find().sort({ createdAt: -1 });
 }
 
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const header = req.headers.authorization;
-  if (!header?.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Missing or invalid Authorization header" });
-  }
-
-  const token = header.slice("Bearer ".length);
-  try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET ?? "dev-secret") as { sub: string };
-    req.userId = payload.sub;
-    next();
-  } catch {
-    return res.status(401).json({ error: "Invalid or expired token" });
-  }
+export async function createTodo(dto: CreateTodoDto) {
+  return TodoModel.create(dto);
 }</pre>
-        <div class="done-when"><strong>Done when:</strong> middleware compiles and rejects requests without a valid Bearer token.</div>
+        <div class="done-when"><strong>Done when:</strong> routes file has no direct <code>TodoModel</code> calls; controller + service handle the flow.</div>
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 4 - Protect todo routes</h2>
-        <p>Keep <code>GET /todos</code> public. Require auth to create or modify todos.</p>
-        <pre>// src/todo/routes/todo.routes.ts (example)
-todoRoutes.get("/", controller.list);
-todoRoutes.get("/:id", controller.getOne);
+        <h2>Exercise 3 - Full CRUD routes</h2>
+        <p>Add remaining routes in <code>todo.routes.ts</code> with validation where needed.</p>
+        <pre>todoRoutes.get("/:id", controller.getOne);
+todoRoutes.put("/:id", validate(createTodoSchema), controller.replace);
+todoRoutes.patch("/:id", validate(updateTodoSchema), controller.update);
+todoRoutes.delete("/:id", controller.remove);</pre>
+        <pre>// Service additions
+export async function getTodoById(id: string) {
+  return TodoModel.findById(id);
+}
 
-todoRoutes.post("/", requireAuth, validate(createTodoSchema), controller.create);
-todoRoutes.put("/:id", requireAuth, validate(createTodoSchema), controller.replace);
-todoRoutes.patch("/:id", requireAuth, validate(updateTodoSchema), controller.update);
-todoRoutes.delete("/:id", requireAuth, controller.remove);</pre>
-        <div class="done-when"><strong>Done when:</strong> POST without token → 401; POST with Bearer token → 201.</div>
+export async function replaceTodo(id: string, dto: CreateTodoDto) {
+  return TodoModel.findByIdAndUpdate(id, dto, { new: true, runValidators: true });
+}
+
+export async function updateTodo(id: string, dto: UpdateTodoDto) {
+  return TodoModel.findByIdAndUpdate(id, dto, { new: true, runValidators: true });
+}
+
+export async function deleteTodo(id: string) {
+  return TodoModel.findByIdAndDelete(id);
+}</pre>
+        <p>Controllers should return <code>404</code> when service returns null, <code>204</code> on delete, <code>400</code> on invalid id.</p>
+        <div class="done-when"><strong>Done when:</strong> all five CRUD operations work; PATCH can set <code>completed: true</code> without changing title.</div>
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 5 - Full auth flow test</h2>
-        <pre># Register
-curl -X POST http://localhost:3000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Alice","email":"alice@example.com","password":"secret123"}'
-
-# Login (copy token from response)
-curl -X POST http://localhost:3000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"alice@example.com","password":"secret123"}'
-
-# Create todo WITH token
+        <h2>Exercise 4 - Final folder layout and curl suite</h2>
+        <pre>src/
+  app.ts
+  server.ts
+  config/db.ts
+  middleware/validate.ts
+  todo/
+    controller/todo.controller.ts
+    routes/todo.routes.ts
+    service/todo.service.ts
+    model/todo.model.ts
+    schema/todo.schema.ts</pre>
+        <pre># Create
 curl -X POST http://localhost:3000/todos \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer PASTE_TOKEN_HERE" \
-  -d '{"title":"Auth Demo"}'
+  -d '{"title":"Week 6 assignment"}'
 
-# Create todo WITHOUT token (should fail)
-curl -X POST http://localhost:3000/todos \
+# List
+curl http://localhost:3000/todos
+
+# Get one
+curl http://localhost:3000/todos/TODO_ID
+
+# Mark complete
+curl -X PATCH http://localhost:3000/todos/TODO_ID \
   -H "Content-Type: application/json" \
-  -d '{"title":"Should Fail"}'</pre>
-        <div class="done-when"><strong>Done when:</strong> authenticated POST works; unauthenticated POST returns 401.</div>
+  -d '{"completed": true}'
+
+# Delete
+curl -i -X DELETE http://localhost:3000/todos/TODO_ID</pre>
+        <p>Remove old <code>src/models/</code> and <code>src/schemas/</code> folders if empty after the move.</p>
+        <div class="done-when"><strong>Done when:</strong> structure matches above; full curl suite passes.</div>
     </div>
 
     <div class="exercise-instructions">
         <h2>Lab checklist</h2>
         <ul>
-            <li>Revision checklist complete.</li>
-            <li><code>POST /auth/register</code> and <code>POST /auth/login</code> work.</li>
-            <li>Passwords stored as hash — never plain text in MongoDB.</li>
-            <li><code>requireAuth</code> verifies JWT and sets <code>req.userId</code>.</li>
-            <li>Protected routes return 401 without token.</li>
-            <li>Public <code>GET /todos</code> still works without token.</li>
+            <li>Routes mounted with <code>app.use("/todos", todoRoutes)</code>.</li>
+            <li>Controller + service separation (no Mongoose in routes).</li>
+            <li>Zod validates POST, PUT, and PATCH bodies.</li>
+            <li>404 for missing id; 400 for invalid body or id.</li>
+            <li>DELETE returns 204 No Content.</li>
+            <li>Code under <code>src/todo/</code> with all five subfolders.</li>
         </ul>
     </div>
 
     <div class="troubleshooting">
         <h2>Troubleshooting</h2>
         <ul>
-            <li><strong><code>401 Invalid token</code></strong> — paste the full token after <code>Bearer </code>; check <code>JWT_SECRET</code> matches between login and middleware.</li>
-            <li><strong><code>401 Missing Authorization header</code></strong> — header must be exactly <code>Authorization: Bearer &lt;token&gt;</code>.</li>
-            <li><strong><code>409 Email already registered</code></strong> — use a new email or delete the user in Atlas.</li>
-            <li><strong>Password visible in DB</strong> — you must store <code>passwordHash</code>, never <code>password</code>.</li>
+            <li><strong>Routes 404 after refactor</strong> — check <code>app.use("/todos", todoRoutes)</code> and <code>.ts</code> import paths.</li>
+            <li><strong><code>CastError: Cast to ObjectId failed</code></strong> — invalid id; return 400 with a friendly message.</li>
+            <li><strong>PUT clears fields unexpectedly</strong> — send all required fields on PUT; use PATCH for partial updates.</li>
+            <li><strong>Forgot <code>express.json()</code></strong> — must run in <code>app.ts</code> before mounted routes.</li>
         </ul>
     </div>
 
     <div class="practice-shell">
-        <strong>Week 6 complete.</strong> Submit your repo using the
-        <a href="../assignment/week-6-assignment.html">Week 6 assignment sheet</a>.
-        Next week you can build a React todo client that talks to this API.
+        <strong>Submit:</strong> complete the <a href="../assignment/week-6-assignment.html">Week 6 assignment</a> (CRUD + validation + <code>todo/</code> structure).
+        <p style="margin-top: 0.75rem;"><strong>Next week:</strong> <a href="../../week-7/index.html">Week 7</a> adds backend JWT authentication to this API.</p>
     </div>
 </body>
 

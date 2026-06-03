@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 7 Class 1 hands-on - Backend Authentication</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .troubleshooting {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff1f2;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 7 - Class 1 Lab</strong> -
+        <a href="../slides/session-1.html">Open session deck</a>
+        - Register/login, JWT, protected todo routes
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 0 - Week 6 prerequisite checklist</h2>
+        <p>Before adding auth, confirm your Week 6 assignment API works. Fix gaps first.</p>
+        <ul>
+            <li>[ ] <code>npm run dev</code> starts without errors</li>
+            <li>[ ] <code>GET /health</code> returns <code>{ status: "ok" }</code></li>
+            <li>[ ] MongoDB connects (<code>MongoDB connected</code> in terminal)</li>
+            <li>[ ] Full CRUD on <code>/todos</code> with correct status codes</li>
+            <li>[ ] Invalid body returns 400 (Zod)</li>
+            <li>[ ] Code lives under <code>src/todo/</code></li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> every box is checked or you know what you are fixing.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Install auth packages</h2>
+        <ol>
+            <li><code>npm install bcryptjs jsonwebtoken</code></li>
+            <li><code>npm install -D @types/bcryptjs @types/jsonwebtoken</code></li>
+            <li>Add to <code>.env</code>: <code>JWT_SECRET=your-long-random-secret-for-class</code></li>
+            <li>Add <code>JWT_SECRET=</code> to <code>.env.example</code> (no real secret).</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> packages install and <code>JWT_SECRET</code> is set (not committed).</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Auth module (DDD layout)</h2>
+        <p>Create <code>src/auth/</code> with the same nested pattern as <code>todo/</code>.</p>
+        <pre>// src/auth/model/user.model.ts
+import { Schema, model } from "mongoose";
+
+const userSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    passwordHash: { type: String, required: true },
+  },
+  { timestamps: true }
+);
+
+export const UserModel = model("User", userSchema);</pre>
+        <pre>// src/auth/schema/auth.schema.ts
+import { z } from "zod";
+
+export const registerSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
+
+export type RegisterDto = z.infer&lt;typeof registerSchema&gt;;
+export type LoginDto = z.infer&lt;typeof loginSchema&gt;;</pre>
+        <pre>// src/auth/service/auth.service.ts
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { UserModel } from "../model/user.model.ts";
+import type { RegisterDto, LoginDto } from "../schema/auth.schema.ts";
+
+const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret";
+
+export async function registerUser(dto: RegisterDto) {
+  const existing = await UserModel.findOne({ email: dto.email });
+  if (existing) throw new Error("EMAIL_TAKEN");
+
+  const passwordHash = await bcrypt.hash(dto.password, 10);
+  const user = await UserModel.create({
+    name: dto.name,
+    email: dto.email,
+    passwordHash,
+  });
+
+  return { id: user.id, name: user.name, email: user.email };
+}
+
+export async function loginUser(dto: LoginDto) {
+  const user = await UserModel.findOne({ email: dto.email });
+  if (!user) throw new Error("INVALID_CREDENTIALS");
+
+  const ok = await bcrypt.compare(dto.password, user.passwordHash);
+  if (!ok) throw new Error("INVALID_CREDENTIALS");
+
+  const token = jwt.sign({ sub: user.id }, JWT_SECRET, { expiresIn: "7d" });
+  return {
+    token,
+    user: { id: user.id, name: user.name, email: user.email },
+  };
+}</pre>
+        <pre>// src/auth/controller/auth.controller.ts
+import { Request, Response } from "express";
+import * as authService from "../service/auth.service.ts";
+import type { RegisterDto, LoginDto } from "../schema/auth.schema.ts";
+
+export async function register(req: Request, res: Response) {
+  try {
+    const dto = req.body as RegisterDto;
+    const user = await authService.registerUser(dto);
+    res.status(201).json({ user });
+  } catch (err) {
+    if (err instanceof Error &amp;&amp; err.message === "EMAIL_TAKEN") {
+      return res.status(409).json({ error: "Email already registered" });
+    }
+    res.status(500).json({ error: "Registration failed" });
+  }
+}
+
+export async function login(req: Request, res: Response) {
+  try {
+    const dto = req.body as LoginDto;
+    const result = await authService.loginUser(dto);
+    res.json(result);
+  } catch (err) {
+    if (err instanceof Error &amp;&amp; err.message === "INVALID_CREDENTIALS") {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+    res.status(500).json({ error: "Login failed" });
+  }
+}</pre>
+        <pre>// src/auth/routes/auth.routes.ts
+import { Router } from "express";
+import { validate } from "../../middleware/validate.ts";
+import { registerSchema, loginSchema } from "../schema/auth.schema.ts";
+import * as controller from "../controller/auth.controller.ts";
+
+export const authRoutes = Router();
+
+authRoutes.post("/register", validate(registerSchema), controller.register);
+authRoutes.post("/login", validate(loginSchema), controller.login);</pre>
+        <p>Mount in <code>app.ts</code>: <code>app.use("/auth", authRoutes);</code></p>
+        <div class="done-when"><strong>Done when:</strong> register returns 201; login returns <code>{ token, user }</code>; duplicate email returns 409.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - requireAuth middleware</h2>
+        <pre>// src/middleware/requireAuth.ts
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: string;
+    }
+  }
+}
+
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Missing or invalid Authorization header" });
+  }
+
+  const token = header.slice("Bearer ".length);
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET ?? "dev-secret") as { sub: string };
+    req.userId = payload.sub;
+    next();
+  } catch {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+}</pre>
+        <div class="done-when"><strong>Done when:</strong> middleware compiles and rejects requests without a valid Bearer token.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - Protect todo routes</h2>
+        <p>Keep <code>GET /todos</code> and <code>GET /todos/:id</code> public. Require auth to create or modify todos.</p>
+        <pre>// src/todo/routes/todo.routes.ts (example)
+todoRoutes.get("/", controller.list);
+todoRoutes.get("/:id", controller.getOne);
+
+todoRoutes.post("/", requireAuth, validate(createTodoSchema), controller.create);
+todoRoutes.put("/:id", requireAuth, validate(createTodoSchema), controller.replace);
+todoRoutes.patch("/:id", requireAuth, validate(updateTodoSchema), controller.update);
+todoRoutes.delete("/:id", requireAuth, controller.remove);</pre>
+        <div class="done-when"><strong>Done when:</strong> POST without token → 401; POST with Bearer token → 201.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 5 - Full auth flow test</h2>
+        <pre># Register
+curl -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Alice","email":"alice@example.com","password":"secret123"}'
+
+# Login (copy token from response)
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"alice@example.com","password":"secret123"}'
+
+# Create todo WITH token
+curl -X POST http://localhost:3000/todos \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer PASTE_TOKEN_HERE" \
+  -d '{"title":"Auth Demo"}'
+
+# Create todo WITHOUT token (should fail)
+curl -X POST http://localhost:3000/todos \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Should Fail"}'</pre>
+        <div class="done-when"><strong>Done when:</strong> authenticated POST works; unauthenticated POST returns 401.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Lab checklist</h2>
+        <ul>
+            <li>Week 6 prerequisite checklist complete.</li>
+            <li><code>POST /auth/register</code> and <code>POST /auth/login</code> work.</li>
+            <li>Passwords stored as hash — never plain text in MongoDB.</li>
+            <li><code>requireAuth</code> verifies JWT and sets <code>req.userId</code>.</li>
+            <li>Protected routes return 401 without token.</li>
+            <li>Public <code>GET /todos</code> still works without token.</li>
+        </ul>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li><strong><code>401 Invalid token</code></strong> — paste the full token after <code>Bearer </code>; check <code>JWT_SECRET</code> matches between login and middleware.</li>
+            <li><strong><code>401 Missing Authorization header</code></strong> — header must be exactly <code>Authorization: Bearer &lt;token&gt;</code>.</li>
+            <li><strong><code>409 Email already registered</code></strong> — use a new email or delete the user in Atlas.</li>
+            <li><strong>Password visible in DB</strong> — you must store <code>passwordHash</code>, never <code>password</code>.</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Submit:</strong> complete the <a href="../assignment/week-7-assignment.html">Week 7 assignment</a> by extending your Week 6 <code>todo-api</code> repo with backend auth.
+    </div>
+</body>
+
+</html>

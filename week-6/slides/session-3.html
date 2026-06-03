@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 6 - Session 3 - Revision and Backend Auth</title>
+    <title>Week 6 - Session 3 - Clean Architecture, DDD, and Full CRUD</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="session-deck-theme.css" />
@@ -19,273 +19,312 @@
     </header>
 
     <div class="slide active bg1">
-        <h1>Class 3: Revision + Backend Authentication</h1>
-        <p>Review the Todo API, then implement register/login and JWT-protected routes on the server.</p>
+        <h1>Class 3: Clean Architecture, DDD, and Full CRUD</h1>
+        <p>Split routes into files, organize by domain, complete CRUD, and ship the Week 6 assignment.</p>
     </div>
 
     <div class="slide bg1">
         <h2>Session Agenda</h2>
         <ol>
-            <li>Revision — CRUD + DDD checklist</li>
-            <li>Authentication vs authorization</li>
-            <li>Password hashing with bcrypt</li>
-            <li>JWT sign on login, verify on protected routes</li>
-            <li>New <code>auth/</code> domain (same layout as <code>todo/</code>)</li>
-            <li>Protect POST /todos (and mutations)</li>
+            <li>Recap Session 2 — TypeScript + Zod on POST</li>
+            <li>Extract routes into <code>Express.Router</code></li>
+            <li>Clean architecture — layers and responsibilities</li>
+            <li>Domain-driven design — <code>todo/</code> folders</li>
+            <li>Full CRUD (PUT vs PATCH, status codes)</li>
+            <li>Week 6 assignment intro</li>
             <li>Quiz (8 questions)</li>
         </ol>
     </div>
 
     <div class="slide bg2">
         <p class="part-kicker">Part 1</p>
-        <h1>Revision Block</h1>
-        <p>20 minutes: re-run your curl suite and tour your folder structure before adding auth.</p>
+        <h1>Recap Session 2</h1>
+        <p>You migrated to TypeScript and added Zod validation on POST <code>/todos</code>. Routes still live in one <code>server.ts</code> file.</p>
     </div>
 
     <div class="slide bg2">
-        <h2>Revision checklist</h2>
+        <h2>Quick demo checklist</h2>
         <ul>
-            <li>Server boots; MongoDB connects</li>
-            <li>Full CRUD on <code>/todos</code></li>
-            <li>Zod returns 400 on bad input</li>
-            <li>404 on missing id; 204 on delete</li>
-            <li>Code under <code>src/todo/</code> (controller, routes, service, model, schema)</li>
+            <li><code>npm run dev</code> starts without errors</li>
+            <li>Valid POST → <code>201</code> + todo JSON</li>
+            <li>Invalid POST (empty <code>title</code>) → <code>400</code> + Zod errors</li>
+            <li>GET <code>/todos</code> still lists persisted todos</li>
         </ul>
-        <p>Fix gaps now — auth builds on top of this foundation.</p>
     </div>
 
     <div class="slide bg3">
         <p class="part-kicker">Part 2</p>
-        <h1>Authentication Mental Model</h1>
-        <p><strong>Authentication</strong> — who is this user? <strong>Authorization</strong> — what may they do?</p>
+        <h1>Extract the Router</h1>
+        <p>One giant <code>server.ts</code> is hard to navigate. Move todo routes into their own file.</p>
     </div>
 
     <div class="slide bg3">
-        <h2>Week 4 vs Week 6</h2>
-        <ul>
-            <li>Week 4 — JWT stored in React localStorage; client-side route guards</li>
-            <li>Week 6 — server verifies JWT on every protected API route</li>
-        </ul>
-        <p>Client guards improve UX. <strong>Server enforcement</strong> is what actually secures data.</p>
+        <h2>Express.Router</h2>
+        <pre>// todo/routes/todo.routes.ts
+import { Router } from "express";
+
+export const todoRoutes = Router();
+
+todoRoutes.get("/", listHandler);
+todoRoutes.post("/", validate(createTodoSchema), createHandler);</pre>
     </div>
 
     <div class="slide bg3">
-        <h2>Server login flow</h2>
-        <ol>
-            <li>Client POSTs email + password to <code>/auth/login</code></li>
-            <li>Server finds user, compares password hash</li>
-            <li>Server signs JWT with secret, returns <code>{ token, user }</code></li>
-            <li>Client sends <code>Authorization: Bearer &lt;token&gt;</code> on protected requests</li>
-            <li>Server middleware verifies token before running handler</li>
-        </ol>
-    </div>
+        <h2>Mount in app.ts</h2>
+        <pre>import { todoRoutes } from "./todo/routes/todo.routes.ts";
 
-    <div class="slide bg3">
-        <h2>Never store plain passwords</h2>
-        <pre>// BAD — never do this
-{ email: "a@b.com", password: "secret123" }
-
-// GOOD — store hash only
-{ email: "a@b.com", passwordHash: "$2a$10$..." }</pre>
-        <p>Use <code>bcrypt.hash</code> on register; <code>bcrypt.compare</code> on login.</p>
+app.use(express.json());
+app.use("/todos", todoRoutes);</pre>
+        <p><code>todoRoutes.get("/")</code> becomes <code>GET /todos</code>. The mount path is the prefix.</p>
     </div>
 
     <div class="slide bg4">
         <p class="part-kicker">Part 3</p>
-        <h1>Auth Module</h1>
-        <p>Same DDD layout as todos: model, schema, service, controller, routes.</p>
+        <h1>Clean Architecture (Beginner)</h1>
+        <p>Each layer has one job. Dependencies point inward — HTTP should not call Mongoose directly from routes.</p>
     </div>
 
     <div class="slide bg4">
-        <h2>Auth routes</h2>
+        <h2>Layer flow</h2>
+        <pre>Client
+  → routes      (URL + middleware chain)
+  → controller  (req/res, status codes)
+  → service     (business rules + DB calls)
+  → model       (Mongoose schema)
+  → MongoDB</pre>
+        <p>Zod <code>schema</code> validates at the boundary — usually on routes before the controller.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Router vs controller</h2>
         <ul>
-            <li><code>POST /auth/register</code> — create user, return profile (no password)</li>
-            <li><code>POST /auth/login</code> — return JWT + user profile</li>
+            <li><strong>Router</strong> — maps method + path + middleware to a handler</li>
+            <li><strong>Controller</strong> — reads <code>req</code>, calls service, sends <code>res</code> with correct status</li>
+            <li><strong>Service</strong> — owns Mongoose queries; no <code>res.status</code> here</li>
         </ul>
-        <p>Status codes: <code>201</code> register, <code>200</code> login, <code>401</code> bad credentials, <code>409</code> email taken.</p>
-    </div>
-
-    <div class="slide bg4">
-        <h2>Sign JWT on login</h2>
-        <pre>const token = jwt.sign(
-  { sub: user.id },
-  process.env.JWT_SECRET,
-  { expiresIn: "7d" }
-);</pre>
-        <p><code>sub</code> = subject (user id). Keep <code>JWT_SECRET</code> in <code>.env</code>.</p>
-    </div>
-
-    <div class="slide bg4">
-        <h2>requireAuth middleware</h2>
-        <pre>const header = req.headers.authorization;
-if (!header?.startsWith("Bearer ")) {
-  return res.status(401).json({ error: "Missing token" });
-}
-const token = header.slice("Bearer ".length);
-const payload = jwt.verify(token, JWT_SECRET);
-req.userId = payload.sub;
-next();</pre>
     </div>
 
     <div class="slide bg5">
         <p class="part-kicker">Part 4</p>
-        <h1>Protect Routes</h1>
-        <p>Apply <code>requireAuth</code> before handlers that change data.</p>
+        <h1>Domain-Driven Design (Beginner)</h1>
+        <p>Group code by <strong>business area</strong> (<code>todo/</code>), not only by technical type (<code>controllers/</code> mixed).</p>
     </div>
 
     <div class="slide bg5">
-        <h2>Suggested policy for Todo API</h2>
-        <ul>
-            <li><strong>Public:</strong> <code>GET /todos</code>, <code>GET /todos/:id</code></li>
-            <li><strong>Protected:</strong> POST, PUT, PATCH, DELETE on todos</li>
-        </ul>
-        <p>Anyone can browse; only logged-in users can create or edit.</p>
-    </div>
-
-    <div class="slide bg5">
-        <h2>Test the full flow</h2>
-        <pre>POST /auth/register  → 201
-POST /auth/login     → { token, user }
-POST /todos + Bearer token → 201
-POST /todos (no token)     → 401</pre>
-    </div>
-
-    <div class="slide bg5">
-        <h2>Security notes (beginners)</h2>
-        <ul>
-            <li>Never commit <code>.env</code> or <code>JWT_SECRET</code></li>
-            <li>Do not return <code>passwordHash</code> in JSON responses</li>
-            <li>Production: prefer httpOnly cookies over localStorage (Week 4 tradeoff)</li>
-            <li>This week: no refresh tokens — keep scope small</li>
-        </ul>
-    </div>
-
-    <div class="slide bg5">
-        <h2>Updated folder tree</h2>
+        <h2>Bad: layer-only folders</h2>
         <pre>src/
-  todo/       ← CRUD (controller, routes, service, model, schema)
-  auth/       ← register, login (same nested layout)
-  middleware/
-    validate.ts
-    requireAuth.ts</pre>
+  controllers/   # all domains mixed
+  models/
+  routes/</pre>
+        <p>Works for tiny apps. Gets messy when you add users, auth, notifications…</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Better: <code>todo/</code> domain</h2>
+        <pre>src/
+  app.ts
+  server.ts
+  config/db.ts
+  middleware/validate.ts
+  todo/
+    controller/todo.controller.ts
+    routes/todo.routes.ts
+    service/todo.service.ts
+    model/todo.model.ts
+    schema/todo.schema.ts</pre>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Request flow after refactor</h2>
+        <pre>Client → app.ts → todo.routes.ts → validate
+  → todo.controller.ts → todo.service.ts → TodoModel</pre>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 5</p>
+        <h1>Full CRUD</h1>
+        <p>Complete the todo API with the right HTTP verbs and status codes.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>CRUD mapping</h2>
+        <ul>
+            <li><strong>CREATE</strong> — <code>POST /todos</code> → <code>201</code></li>
+            <li><strong>READ (list)</strong> — <code>GET /todos</code> → <code>200</code></li>
+            <li><strong>READ (one)</strong> — <code>GET /todos/:id</code> → <code>200</code> or <code>404</code></li>
+            <li><strong>UPDATE (full)</strong> — <code>PUT /todos/:id</code></li>
+            <li><strong>UPDATE (partial)</strong> — <code>PATCH /todos/:id</code></li>
+            <li><strong>DELETE</strong> — <code>DELETE /todos/:id</code> → <code>204</code></li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>PUT vs PATCH</h2>
+        <div class="comparison">
+            <article>
+                <h3>PUT</h3>
+                <ul>
+                    <li>Replace the entire resource</li>
+                    <li>Send <code>title</code> and <code>completed</code></li>
+                </ul>
+            </article>
+            <article>
+                <h3>PATCH</h3>
+                <ul>
+                    <li>Update only what changed</li>
+                    <li>Send <code>{ "completed": true }</code> only</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg2">
+        <h2>PATCH — mark complete</h2>
+        <pre>PATCH /todos/:id
+{ "completed": true }</pre>
+        <p>Use <code>updateTodoSchema = createTodoSchema.partial()</code> on PATCH routes.</p>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 6</p>
+        <h1>Week 6 Assignment</h1>
+        <p>Build a complete Todo API with validation and domain folder structure. Due Sunday 11:59 PM.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Assignment requirements</h2>
+        <ul>
+            <li>TypeScript + Express + MongoDB + Zod</li>
+            <li>Full CRUD on <code>/todos</code> with correct status codes</li>
+            <li><code>src/todo/</code> with controller, routes, service, model, schema</li>
+            <li><code>app.ts</code> + <code>server.ts</code> split</li>
+            <li>README + <code>.env.example</code></li>
+        </ul>
+        <p>Details: <a href="../assignment/week-6-assignment.html">Week 6 assignment sheet</a></p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Coming in Week 7</h2>
+        <p>Backend JWT authentication — register, login, and protect todo mutations. Finish this assignment first.</p>
     </div>
 
     <div class="slide bg1">
         <h2>Session Summary</h2>
         <ul>
-            <li>Revised CRUD + DDD before adding features</li>
-            <li>bcrypt for passwords; JWT for session tokens</li>
-            <li><code>auth/</code> mirrors <code>todo/</code> structure (controller, routes, service, model, schema)</li>
-            <li><code>requireAuth</code> enforces Bearer JWT on server</li>
-            <li>Client-side auth from Week 4 + this server = full stack auth</li>
+            <li>Extract todo routes with <code>Express.Router</code></li>
+            <li>Clean architecture: routes → controller → service → model</li>
+            <li>DDD: group under <code>src/todo/</code></li>
+            <li>Full CRUD with PUT, PATCH, DELETE</li>
+            <li>Complete the Week 6 assignment</li>
+            <li>Week 7: backend auth on this API</li>
         </ul>
     </div>
 
     <div class="slide bg-quiz quiz-segment">
         <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
         <h1 class="quiz-round-title">Week 6 Session 3 Quiz</h1>
-        <p class="quiz-hint">8 questions on bcrypt, JWT, and server-side auth.</p>
+        <p class="quiz-hint">8 questions on routers, layers, CRUD, and folder structure.</p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 1 of 8</h2>
-        <p class="question">Why must the server validate JWT on protected routes?</p>
+        <p class="question">You only want to mark a todo as <code>completed: true</code>. Which method?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="APIs can be called directly; UI guards alone do not secure data.">Clients can call the API without your React app</button>
-            <button type="button" data-correct="false" data-explanation="React Router does not protect backend endpoints.">React Router blocks all HTTP requests</button>
-            <button type="button" data-correct="false" data-explanation="MongoDB does not validate JWTs.">MongoDB rejects unauthenticated writes automatically</button>
-            <button type="button" data-correct="false" data-explanation="CORS is not authentication.">CORS prevents unauthorized access</button>
+            <button type="button" data-correct="true" data-explanation="PATCH is for partial updates like toggling completed.">PATCH</button>
+            <button type="button" data-correct="false" data-explanation="PUT expects a full resource replacement.">PUT</button>
+            <button type="button" data-correct="false" data-explanation="POST creates new resources.">POST</button>
+            <button type="button" data-correct="false" data-explanation="GET is read-only.">GET</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 2 of 8</h2>
-        <p class="question">Correct header to send a JWT to the API?</p>
+        <p class="question">Best status code after successful DELETE with no response body?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="Bearer scheme is the standard for JWT APIs.">Authorization: Bearer &lt;token&gt;</button>
-            <button type="button" data-correct="false" data-explanation="Basic auth encodes username:password, not JWT.">Authorization: Basic &lt;token&gt;</button>
-            <button type="button" data-correct="false" data-explanation="JWT is not sent as Content-Type.">Content-Type: JWT</button>
-            <button type="button" data-correct="false" data-explanation="Non-standard header name.">Token: localStorage</button>
+            <button type="button" data-correct="true" data-explanation="204 No Content is standard for successful DELETE.">204 No Content</button>
+            <button type="button" data-correct="false" data-explanation="201 is for creation.">201 Created</button>
+            <button type="button" data-correct="false" data-explanation="404 means the resource was not found.">404 Not Found</button>
+            <button type="button" data-correct="false" data-explanation="500 is a server error.">500 Internal Server Error</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 3 of 8</h2>
-        <p class="question">What should you store in MongoDB for a password?</p>
+        <p class="question">Where should Mongoose <code>findById</code> calls live in our structure?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="bcrypt hash is one-way; plain text must never be stored.">bcrypt password hash</button>
-            <button type="button" data-correct="false" data-explanation="Plain text passwords are a critical security failure.">Plain text password</button>
-            <button type="button" data-correct="false" data-explanation="JWT is returned after login, not stored as the password.">JWT string</button>
-            <button type="button" data-correct="false" data-explanation="Base64 is encoding, not secure hashing.">Base64-encoded password</button>
+            <button type="button" data-correct="true" data-explanation="Service layer owns data access and business rules.">todo.service.ts</button>
+            <button type="button" data-correct="false" data-explanation="Routes should stay thin — wire URLs only.">todo.routes.ts directly</button>
+            <button type="button" data-correct="false" data-explanation="Zod schemas validate input, they do not query MongoDB.">todo.schema.ts</button>
+            <button type="button" data-correct="false" data-explanation="db.ts connects once; domain services query.">config/db.ts only</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 4 of 8</h2>
-        <p class="question">POST /todos without a token when route uses requireAuth returns:</p>
+        <p class="question">What is the router's main job?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="401 Unauthorized — authentication required.">401 Unauthorized</button>
-            <button type="button" data-correct="false" data-explanation="404 means resource not found.">404 Not Found</button>
-            <button type="button" data-correct="false" data-explanation="201 would mean todo was created.">201 Created</button>
-            <button type="button" data-correct="false" data-explanation="500 is an unexpected server error.">500 Internal Server Error</button>
+            <button type="button" data-correct="true" data-explanation="Routes map HTTP method + path to middleware and handlers.">Map URLs and methods to handlers</button>
+            <button type="button" data-correct="false" data-explanation="Controllers send HTTP responses.">Send JSON responses directly</button>
+            <button type="button" data-correct="false" data-explanation="Services talk to the database.">Run Mongoose queries</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB connection is configured separately.">Connect to MongoDB</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 5 of 8</h2>
-        <p class="question">JWT <code>sub</code> claim typically holds:</p>
+        <p class="question">Todo id not found in database — return:</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="sub = subject, usually the user id.">User id (subject)</button>
-            <button type="button" data-correct="false" data-explanation="Never put passwords in JWT payload.">Plain text password</button>
-            <button type="button" data-correct="false" data-explanation="JWT secret is server-side only, not in the token.">JWT_SECRET</button>
-            <button type="button" data-correct="false" data-explanation="Database URL must never be in JWT.">MongoDB connection string</button>
+            <button type="button" data-correct="true" data-explanation="404 tells the client the resource does not exist.">404 Not Found</button>
+            <button type="button" data-correct="false" data-explanation="400 is for malformed requests, not missing resources.">400 Bad Request</button>
+            <button type="button" data-correct="false" data-explanation="401 is for missing/invalid auth.">401 Unauthorized</button>
+            <button type="button" data-correct="false" data-explanation="200 would lie about success.">200 with empty array</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 6 of 8</h2>
-        <p class="question">Duplicate email on register should return:</p>
+        <p class="question">Why split controller vs service?</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="409 Conflict — resource already exists.">409 Conflict</button>
-            <button type="button" data-correct="false" data-explanation="201 is for successful creation only.">201 Created</button>
-            <button type="button" data-correct="false" data-explanation="401 is for failed authentication.">401 Unauthorized</button>
-            <button type="button" data-correct="false" data-explanation="204 has no body; wrong for this error.">204 No Content</button>
+            <button type="button" data-correct="true" data-explanation="Controller handles HTTP; service handles business/DB — easier to test and grow.">Separation of HTTP from business logic</button>
+            <button type="button" data-correct="false" data-explanation="Extra files have a purpose — organization.">To create more files for no reason</button>
+            <button type="button" data-correct="false" data-explanation="TypeScript works with any structure.">TypeScript requires exactly 5 files</button>
+            <button type="button" data-correct="false" data-explanation="Express supports any structure you choose.">Express forces this pattern</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 7 of 8</h2>
-        <p class="question">Where does <code>requireAuth</code> attach the logged-in user id?</p>
+        <p class="question">After refactor, <code>app.use("/todos", todoRoutes)</code> means:</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="After verify, set req.userId from payload.sub for downstream handlers.">req.userId from JWT payload</button>
-            <button type="button" data-correct="false" data-explanation="res is for the response, not request state.">res.userId automatically</button>
-            <button type="button" data-correct="false" data-explanation="MongoDB _id is not auto-set on req by middleware.">MongoDB _id on req.body</button>
-            <button type="button" data-correct="false" data-explanation="localStorage is browser-only; server uses headers.">localStorage on the server</button>
+            <button type="button" data-correct="true" data-explanation="Router paths are relative; GET / in router becomes GET /todos.">Routes in the router are prefixed with /todos</button>
+            <button type="button" data-correct="false" data-explanation="Other domains can have their own routers too.">All requests go only to todos</button>
+            <button type="button" data-correct="false" data-explanation="express.json() must still run in app.ts before routes.">Express skips JSON parsing</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB connection is separate from route mounting.">MongoDB auto-connects in the router</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 8 of 8</h2>
-        <p class="question">Authentication vs authorization — pick the correct pair:</p>
+        <p class="question">DDD in this course means:</p>
         <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="AuthN = who you are; AuthZ = what you may do.">Authentication = identity; Authorization = permissions</button>
-            <button type="button" data-correct="false" data-explanation="They are related but not the same thing.">They mean exactly the same thing</button>
-            <button type="button" data-correct="false" data-explanation="Roles/permissions are authorization.">Authorization only happens in React</button>
-            <button type="button" data-correct="false" data-explanation="JWT helps authentication; authorization is separate rules.">JWT replaces authorization entirely</button>
+            <button type="button" data-correct="true" data-explanation="Group code by business area like todo/ rather than mixing all controllers together.">Organize folders by business domain</button>
+            <button type="button" data-correct="false" data-explanation="DDD is about folder grouping by feature, not deleting layers.">Delete all service and controller layers</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB is the database; DDD is code organization.">Use MongoDB instead of SQL only</button>
+            <button type="button" data-correct="false" data-explanation="Validation still happens at the HTTP boundary with Zod.">Skip validation entirely</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
     <div class="slide bg1">
-        <h1>End of Week 6</h1>
-        <p>Complete <a href="../handson/class-3-handson.html">Class 3 hands-on</a> and the <a href="../assignment/week-6-assignment.html">Week 6 assignment</a>. You built a real MERN Todo API backend.</p>
+        <h1>End of Week 6 Session 3</h1>
+        <p>Complete <a href="../handson/class-3-handson.html">Class 3 hands-on</a> and the <a href="../assignment/week-6-assignment.html">Week 6 assignment</a>. Next week — backend JWT auth in Week 7.</p>
     </div>
 
     <div class="progress-wrap" aria-hidden="true">

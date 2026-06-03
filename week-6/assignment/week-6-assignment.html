@@ -80,7 +80,7 @@
 </head>
 
 <body>
-    <h1>Week 6 Assignments — MERN Todo API</h1>
+    <h1>Week 6 Assignments — Todo API (CRUD + Validation + Structure)</h1>
 
     <section class="deadline">
         <h2>Submission</h2>
@@ -88,7 +88,7 @@
         <p>Push your <code>todo-api</code> server to GitHub and share:</p>
         <ul>
             <li>Repository link</li>
-            <li>Terminal log or short screen recording of the auth + CRUD curl flow below</li>
+            <li>Terminal log or short screen recording of the CRUD curl flow below</li>
             <li>README with setup steps (Atlas, env vars, how to run)</li>
         </ul>
         <p>Suggested layout:</p>
@@ -97,19 +97,13 @@
 │  ├─ app.ts
 │  ├─ server.ts
 │  ├─ config/db.ts
-│  ├─ middleware/
-│  ├─ todo/
-│  │  ├─ controller/
-│  │  ├─ routes/
-│  │  ├─ service/
-│  │  ├─ model/
-│  │  └─ schema/
-│  └─ auth/
-│     ├─ controller/
-│     ├─ routes/
-│     ├─ service/
-│     ├─ model/
-│     └─ schema/
+│  ├─ middleware/validate.ts
+│  └─ todo/
+│     ├─ controller/todo.controller.ts
+│     ├─ routes/todo.routes.ts
+│     ├─ service/todo.service.ts
+│     ├─ model/todo.model.ts
+│     └─ schema/todo.schema.ts
 ├─ .env.example
 ├─ .gitignore
 ├─ package.json
@@ -118,19 +112,18 @@
     </section>
 
     <section>
-        <h2>Core Assignment — Todo API with MongoDB and Auth</h2>
-        <p>Build a small todo backend using Node.js, TypeScript, Express, MongoDB (Mongoose), Zod, and JWT authentication.</p>
+        <h2>Core Assignment — Todo API with MongoDB</h2>
+        <p>Build a small todo backend using Node.js, TypeScript, Express, MongoDB (Mongoose), and Zod validation with a clean domain folder structure.</p>
 
         <h3>Requirements</h3>
         <ul>
             <li>Express + TypeScript with <code>strict: true</code> and ESM (<code>"type": "module"</code>). Relative imports between <code>src/</code> files use <code>.ts</code> extensions with <code>noEmit</code> and <code>allowImportingTsExtensions</code> in <code>tsconfig.json</code>.</li>
             <li>MongoDB connection via Mongoose and <code>DATABASE_URL</code> in <code>.env</code>.</li>
-            <li>Domain-driven folders: at least <code>todo/</code> and <code>auth/</code>, each with controller, routes, service, model, and schema subfolders.</li>
+            <li>Domain folder <code>src/todo/</code> with controller, routes, service, model, and schema subfolders.</li>
             <li>Todos CRUD: <code>GET</code> list, <code>GET</code> by id, <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, <code>DELETE</code>.</li>
             <li>Todo model: <code>title</code> (string), <code>completed</code> (boolean, default false).</li>
             <li>Zod validation on create/update bodies; return <code>400</code> with readable errors.</li>
-            <li>Auth: <code>POST /auth/register</code>, <code>POST /auth/login</code> with bcrypt password hashing.</li>
-            <li>JWT middleware protecting mutation routes (POST/PUT/PATCH/DELETE on todos).</li>
+            <li>Split <code>app.ts</code> (Express setup + route mounting) and <code>server.ts</code> (startup + listen).</li>
             <li><code>GET /health</code> endpoint.</li>
             <li>README documents env vars, install, run command, and folder structure (3–5 sentences).</li>
         </ul>
@@ -143,9 +136,7 @@
             <li>Missing todo id returns 404.</li>
             <li>PATCH can set <code>completed: true</code>.</li>
             <li>DELETE returns 204.</li>
-            <li>Register + login work; passwords are hashed in DB.</li>
-            <li>POST /todos without token returns 401.</li>
-            <li>POST /todos with valid Bearer token returns 201.</li>
+            <li>Routes → controller → service → model separation under <code>src/todo/</code>.</li>
             <li><code>.env</code> is gitignored; <code>.env.example</code> lists keys without secrets.</li>
         </ul>
     </section>
@@ -156,35 +147,34 @@
         <pre># Health
 curl http://localhost:3000/health
 
-# Register
-curl -X POST http://localhost:3000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Demo User","email":"demo@example.com","password":"demo123456"}'
-
-# Login — save token
-curl -X POST http://localhost:3000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"demo@example.com","password":"demo123456"}'
-
-# Create todo (authenticated)
+# Create
 curl -X POST http://localhost:3000/todos \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{"title":"Week 6 Demo"}'
 
-# List todos (public)
+# List
 curl http://localhost:3000/todos
+
+# Get one (use _id from create response)
+curl http://localhost:3000/todos/TODO_ID
+
+# Full replace
+curl -X PUT http://localhost:3000/todos/TODO_ID \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Updated title","completed":false}'
 
 # Mark complete
 curl -X PATCH http://localhost:3000/todos/TODO_ID \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{"completed": true}'
 
-# Unauthenticated create (should 401)
+# Delete
+curl -i -X DELETE http://localhost:3000/todos/TODO_ID
+
+# Invalid create (should 400)
 curl -X POST http://localhost:3000/todos \
   -H "Content-Type: application/json" \
-  -d '{"title":"Fail"}'</pre>
+  -d '{"title":""}'</pre>
     </section>
 
     <section>
@@ -192,9 +182,8 @@ curl -X POST http://localhost:3000/todos \
         <ul>
             <li>Add <code>GET /todos?completed=false</code> query filter.</li>
             <li>Add optional <code>description</code> field to todos.</li>
-            <li>Seed script that inserts sample todos.</li>
-            <li>Build a simple React todo client that calls this API.</li>
             <li>Add <code>errorHandler</code> middleware for consistent 500 JSON.</li>
+            <li>Continue to <a href="../../week-7/assignment/week-7-assignment.html">Week 7</a> and add backend JWT auth.</li>
         </ul>
     </section>
 
