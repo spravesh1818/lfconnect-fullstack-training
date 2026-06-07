@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 7 Class 3 hands-on - BullMQ and Multer</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .troubleshooting {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff1f2;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 7 - Class 3 Lab</strong> -
+        <a href="../slides/session-3.html">Open session deck</a>
+        - BullMQ export job + Multer file upload
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Before you start</h2>
+        <p>Continue your <code>todo-api</code> with auth (Class 1) and Redis caching (Class 2). Redis must be running:</p>
+        <pre>docker run -p 6379:6379 redis:7-alpine</pre>
+        <p>Create folders: <code>exports/</code>, <code>uploads/</code> (add to <code>.gitignore</code>).</p>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Install packages</h2>
+        <ol>
+            <li><code>npm install bullmq multer</code></li>
+            <li><code>npm install -D @types/multer</code></li>
+            <li>Add worker script to <code>package.json</code>: <code>"worker": "tsx src/workers/todo.worker.ts"</code></li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> packages install and worker script is defined.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Export queue</h2>
+        <p>Create <code>src/queues/todo.queue.ts</code>:</p>
+        <pre>import { Queue } from "bullmq";
+
+const connection = { url: process.env.REDIS_URL ?? "redis://localhost:6379" };
+
+export const todoExportQueue = new Queue("todo-export", { connection });</pre>
+        <div class="done-when"><strong>Done when:</strong> queue module exports without TypeScript errors.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Enqueue from API</h2>
+        <p>Add a protected route <code>POST /todos/export</code>:</p>
+        <pre>import { todoExportQueue } from "../queues/todo.queue.ts";
+
+export async function exportTodos(req: Request, res: Response) {
+  const job = await todoExportQueue.add("export-todos", {
+    requestedBy: req.userId,
+  });
+  res.status(202).json({ jobId: job.id, status: "queued" });
+}</pre>
+        <p>Mount with <code>requireAuth</code>. Response must return in under 1 second even though work takes longer.</p>
+        <div class="done-when"><strong>Done when:</strong> curl returns <code>202</code> with a <code>jobId</code> immediately.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - Worker process</h2>
+        <p>Create <code>src/workers/todo.worker.ts</code>:</p>
+        <pre>import { Worker } from "bullmq";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { connectDB } from "../config/db.ts";
+import { TodoModel } from "../todo/model/todo.model.ts";
+
+const connection = { url: process.env.REDIS_URL ?? "redis://localhost:6379" };
+
+await connectDB();
+
+new Worker(
+  "todo-export",
+  async (job) =&gt; {
+    if (job.name !== "export-todos") return;
+
+    console.log("Worker started job", job.id);
+    await new Promise((r) =&gt; setTimeout(r, 5000));
+
+    const todos = await TodoModel.find().lean();
+    const filePath = path.join("exports", `todos-${job.id}.json`);
+    await fs.writeFile(filePath, JSON.stringify(todos, null, 2));
+
+    console.log("Worker finished job", job.id, "→", filePath);
+    return { filePath, count: todos.length };
+  },
+  { connection }
+);
+
+console.log("Todo export worker listening...");</pre>
+        <p>Run in a <strong>second terminal</strong>: <code>npm run worker</code></p>
+        <div class="done-when"><strong>Done when:</strong> worker logs start + finish after you POST /todos/export.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 5 - Test export flow</h2>
+        <pre># Terminal 1
+npm run dev
+
+# Terminal 2
+npm run worker
+
+# Terminal 3 — enqueue (use token from Class 1)
+curl -X POST http://localhost:3000/todos/export \
+  -H "Authorization: Bearer YOUR_TOKEN"</pre>
+        <p>Check <code>exports/</code> for the generated JSON file.</p>
+        <div class="done-when"><strong>Done when:</strong> API returns 202 instantly; worker writes file within ~5 seconds.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 6 - Multer attachment upload (optional but recommended)</h2>
+        <p>Create <code>src/middleware/upload.ts</code>:</p>
+        <pre>import multer from "multer";
+
+export const todoUpload = multer({
+  dest: "uploads/",
+  limits: { fileSize: 2 * 1024 * 1024 },
+});</pre>
+        <p>Add route <code>POST /todos/:id/attachment</code> with <code>requireAuth</code> and <code>todoUpload.single("file")</code>. Save <code>req.file.path</code> on the todo document (add optional <code>attachmentPath</code> field).</p>
+        <pre>curl -X POST http://localhost:3000/todos/TODO_ID/attachment \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "file=@./notes.txt"</pre>
+        <div class="done-when"><strong>Done when:</strong> response JSON includes the saved file path under <code>uploads/</code>.</div>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li><strong>Job stays queued forever</strong> — worker terminal not running; queue name must match (<code>todo-export</code>).</li>
+            <li><strong>Worker MongoDB error</strong> — call <code>connectDB()</code> in worker before queries.</li>
+            <li><strong><code>ECONNREFUSED</code> on export</strong> — Redis not running; same <code>REDIS_URL</code> in both processes.</li>
+            <li><strong>Multer <code>LIMIT_FILE_SIZE</code></strong> — file exceeds 2 MB limit.</li>
+            <li><strong><code>req.file</code> undefined</strong> — curl must use <code>-F</code> and field name <code>file</code>.</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Practice complete.</strong> You have practiced auth, caching, queues, and uploads on the Todo API.
+        <p style="margin-top: 0.75rem;"><strong>Capstone:</strong> build your own <a href="../assignment/week-7-assignment.html">Event Management Backend</a> (<code>event-mgmt-api</code>) — individual project with presentation. Due Sunday 11:59 PM.</p>
+    </div>
+</body>
+
+</html>

@@ -66,6 +66,11 @@
             background: #fff1f2;
         }
 
+        .presentation {
+            border-left: 5px solid #3b82f6;
+            background: #eff6ff;
+        }
+
         ul.checklist {
             list-style: none;
             padding-left: 0;
@@ -76,72 +81,167 @@
             color: #475569;
             font-weight: bold;
         }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem 0.65rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f8fafc;
+        }
     </style>
 </head>
 
 <body>
-    <h1>Week 7 Assignments — Todo API + Backend Auth</h1>
+    <h1>Week 7 Capstone — Event Management Backend</h1>
 
     <section class="deadline">
         <h2>Submission</h2>
         <p>Deadline: <strong>Sunday evening, 11:59 PM</strong>.</p>
-        <p>Extend your Week 6 <code>todo-api</code> repo (or submit the same repo with new commits). Share:</p>
+        <p><strong>Individual project.</strong> Every student builds and presents their own <code>event-mgmt-api</code> repository. Do not submit the Week 6 Todo API as this assignment.</p>
+        <p>Share:</p>
         <ul>
-            <li>Repository link</li>
-            <li>Terminal log or short screen recording of the auth + CRUD curl flow below</li>
-            <li>Updated README mentioning auth env vars and protected routes</li>
+            <li>Repository link (your own repo)</li>
+            <li>README with setup, env vars, <code>npm run dev</code>, <code>npm run worker</code>, and Docker Redis command</li>
+            <li>Terminal log or short screen recording of the curl flow below</li>
         </ul>
-        <p><strong>Prerequisite:</strong> Week 6 assignment requirements must still pass (CRUD + <code>todo/</code> structure).</p>
-        <p>Suggested layout (additions in bold):</p>
-        <pre>todo-api/
+        <p><strong>Prerequisite:</strong> Week 6 Todo API patterns (CRUD, Zod, DDD folders). Week 7 class labs on the Todo API are practice only.</p>
+    </section>
+
+    <section class="presentation">
+        <h2>Presentation (in class)</h2>
+        <p>Each student presents their project in a <strong>5–8 minute demo</strong>. Cover:</p>
+        <ul>
+            <li>Register + login flow (JWT)</li>
+            <li>Redis cache hit on public published events list</li>
+            <li>Publishing an event triggers a BullMQ background job (show worker logs or output file)</li>
+            <li>Banner image upload with Multer</li>
+            <li>One design choice: something you chose <strong>not</strong> to cache and why</li>
+        </ul>
+        <p>Be ready to answer questions about auth, cache invalidation, and why the export/notify job runs in a worker.</p>
+    </section>
+
+    <section>
+        <h2>Project overview</h2>
+        <p>Build a fresh <strong>Event Management Backend</strong> API for organizers to create and publish events. Use all Week 7 concepts together in one cohesive project.</p>
+
+        <h3>Tech stack</h3>
+        <ul>
+            <li>Node.js + Express + TypeScript</li>
+            <li>MongoDB + Mongoose</li>
+            <li>Zod validation middleware</li>
+            <li>DDD folder structure (same pattern as Week 6 <code>todo/</code>)</li>
+            <li>Redis (caching + BullMQ)</li>
+            <li>Multer (file uploads)</li>
+        </ul>
+
+        <h3>Suggested folder tree</h3>
+        <pre>event-mgmt-api/
 ├─ src/
 │  ├─ app.ts
 │  ├─ server.ts
-│  ├─ config/db.ts
+│  ├─ config/
+│  │  ├─ db.ts
+│  │  └─ redis.ts
 │  ├─ middleware/
 │  │  ├─ validate.ts
-│  │  └─ requireAuth.ts
-│  ├─ todo/
+│  │  ├─ requireAuth.ts
+│  │  └─ upload.ts
+│  ├─ cache/
+│  │  └─ cache.service.ts
+│  ├─ queues/
+│  │  └─ event.queue.ts
+│  ├─ workers/
+│  │  └─ event.worker.ts
+│  ├─ auth/
 │  │  ├─ controller/
 │  │  ├─ routes/
 │  │  ├─ service/
 │  │  ├─ model/
 │  │  └─ schema/
-│  └─ auth/
+│  └─ event/
 │     ├─ controller/
 │     ├─ routes/
 │     ├─ service/
 │     ├─ model/
 │     └─ schema/
+├─ uploads/
+├─ exports/
 ├─ .env.example
 └─ README.md</pre>
     </section>
 
     <section>
-        <h2>Core Assignment — Add backend authentication</h2>
-        <p>Add register/login and JWT-protected mutation routes to your Week 6 Todo API.</p>
+        <h2>Requirements by area</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Area</th>
+                    <th>Requirement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Auth</strong></td>
+                    <td><code>POST /auth/register</code>, <code>POST /auth/login</code>; bcrypt <code>passwordHash</code>; JWT in <code>.env</code>; <code>requireAuth</code> on organizer mutations</td>
+                </tr>
+                <tr>
+                    <td><strong>Events</strong></td>
+                    <td>CRUD on <code>/events</code> with fields: title, description, date, venue, capacity, status (<code>draft</code> | <code>published</code>); Zod validation; DDD <code>event/</code> module</td>
+                </tr>
+                <tr>
+                    <td><strong>Caching</strong></td>
+                    <td>Redis cache-aside on <code>GET /events</code> for <strong>published</strong> events only; invalidate on create/update/delete/publish; log CACHE HIT/MISS</td>
+                </tr>
+                <tr>
+                    <td><strong>Task queue</strong></td>
+                    <td>When an event moves to <code>published</code>, enqueue a BullMQ job (e.g. <code>notify-subscribers</code> or <code>generate-attendee-report</code>); simulate 5s+ work; write log file or JSON to <code>exports/</code>; API returns without waiting</td>
+                </tr>
+                <tr>
+                    <td><strong>File upload</strong></td>
+                    <td><code>POST /events/:id/banner</code> with Multer; store banner path on event document; protected route</td>
+                </tr>
+                <tr>
+                    <td><strong>Worker</strong></td>
+                    <td>Separate <code>npm run worker</code> script; worker shares <code>REDIS_URL</code> and MongoDB with API</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 
-        <h3>Requirements</h3>
-        <ul>
-            <li>All Week 6 requirements still met (CRUD, Zod, <code>todo/</code> domain folders).</li>
-            <li>New <code>auth/</code> domain with controller, routes, service, model, and schema subfolders.</li>
-            <li><code>POST /auth/register</code> and <code>POST /auth/login</code> with Zod validation.</li>
-            <li>Passwords hashed with bcrypt — store <code>passwordHash</code> only.</li>
-            <li>JWT signed on login; <code>JWT_SECRET</code> in <code>.env</code>.</li>
-            <li><code>requireAuth</code> middleware on POST/PUT/PATCH/DELETE for todos.</li>
-            <li>Public: <code>GET /todos</code> and <code>GET /todos/:id</code>.</li>
-            <li>Never return <code>passwordHash</code> in JSON responses.</li>
-        </ul>
-
-        <h3>Checklist</h3>
+    <section>
+        <h2>Checklist</h2>
         <ul class="checklist">
+            <li>Fresh <code>event-mgmt-api</code> repo (not the Todo API).</li>
             <li>Register + login work; duplicate email returns 409.</li>
-            <li>Passwords are hashed in the database.</li>
-            <li>POST /todos without token returns 401.</li>
-            <li>POST /todos with valid Bearer token returns 201.</li>
-            <li>GET /todos works without token.</li>
-            <li><code>JWT_SECRET</code> in <code>.env.example</code> (no real secret).</li>
+            <li>Only authenticated organizers can create/edit/delete events.</li>
+            <li>Public <code>GET /events</code> returns published events; draft events hidden from public list.</li>
+            <li>Second <code>GET /events</code> shows CACHE HIT in server logs.</li>
+            <li>Publishing an event invalidates cache and enqueues a background job.</li>
+            <li>Worker logs job completion; output file or clear log message exists.</li>
+            <li>Banner upload saves file under <code>uploads/</code> and path in MongoDB.</li>
+            <li><code>.env.example</code> lists <code>MONGODB_URI</code>, <code>JWT_SECRET</code>, <code>REDIS_URL</code> (no real secrets).</li>
+            <li>README documents Redis Docker command and two-terminal setup.</li>
         </ul>
+    </section>
+
+    <section>
+        <h2>Environment variables</h2>
+        <pre># .env.example
+MONGODB_URI=
+JWT_SECRET=
+REDIS_URL=redis://localhost:6379
+PORT=3000</pre>
+        <p>Start Redis: <code>docker run -p 6379:6379 redis:7-alpine</code></p>
     </section>
 
     <section>
@@ -149,43 +249,63 @@
         <pre># Health
 curl http://localhost:3000/health
 
-# Register
+# Register organizer
 curl -X POST http://localhost:3000/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"name":"Demo User","email":"demo@example.com","password":"demo123456"}'
+  -d '{"name":"Organizer","email":"org@example.com","password":"demo123456"}'
 
 # Login — save token
 curl -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"demo@example.com","password":"demo123456"}'
+  -d '{"email":"org@example.com","password":"demo123456"}'
 
-# Create todo (authenticated)
-curl -X POST http://localhost:3000/todos \
+# Create draft event (authenticated)
+curl -X POST http://localhost:3000/events \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{"title":"Week 7 Demo"}'
+  -d '{"title":"Tech Meetup","description":"Monthly meetup","date":"2026-07-15T18:00:00.000Z","venue":"Hall A","capacity":100,"status":"draft"}'
 
-# List todos (public)
-curl http://localhost:3000/todos
+# Upload banner (replace EVENT_ID)
+curl -X POST http://localhost:3000/events/EVENT_ID/banner \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "file=@./banner.png"
 
-# Mark complete (authenticated)
-curl -X PATCH http://localhost:3000/todos/TODO_ID \
+# Publish event — triggers background job + cache invalidation
+curl -X PATCH http://localhost:3000/events/EVENT_ID \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{"completed": true}'
+  -d '{"status":"published"}'
+
+# Public list (first = MISS, second = HIT)
+curl http://localhost:3000/events
+curl http://localhost:3000/events
 
 # Unauthenticated create (should 401)
-curl -X POST http://localhost:3000/todos \
+curl -X POST http://localhost:3000/events \
   -H "Content-Type: application/json" \
   -d '{"title":"Fail"}'</pre>
     </section>
 
     <section>
+        <h2>When not to cache (explain in README or presentation)</h2>
+        <p>Document at least one endpoint or data type you intentionally <strong>do not</strong> cache. Examples:</p>
+        <ul>
+            <li>Organizer's draft events (personalized, changes often)</li>
+            <li>Remaining seat count during ticket sales (strong consistency)</li>
+            <li>Auth/session state</li>
+        </ul>
+    </section>
+
+    <section>
         <h2>Resources</h2>
         <ul>
-            <li><a href="../../week-6/assignment/week-6-assignment.html">Week 6 assignment</a> (prerequisite)</li>
-            <li><a href="../handson/class-1-handson.html">Class 1 hands-on</a></li>
+            <li><a href="../../week-6/assignment/week-6-assignment.html">Week 6 assignment</a> (patterns prerequisite)</li>
+            <li><a href="../handson/class-1-handson.html">Class 1 hands-on</a> (auth practice)</li>
+            <li><a href="../handson/class-2-handson.html">Class 2 hands-on</a> (Redis practice)</li>
+            <li><a href="../handson/class-3-handson.html">Class 3 hands-on</a> (BullMQ + Multer practice)</li>
             <li><a href="../slides/session-1.html">Session 1 slides</a></li>
+            <li><a href="../slides/session-2.html">Session 2 slides</a></li>
+            <li><a href="../slides/session-3.html">Session 3 slides</a></li>
         </ul>
     </section>
 </body>

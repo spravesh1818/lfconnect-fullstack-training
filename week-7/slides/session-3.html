@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 7 - Session 3 - Scaling, BullMQ, and Multer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 7 - Session 3</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 3: Scaling, Task Queues, and File Uploads</h1>
+        <p>Offload long-running work to BullMQ workers and accept files with Multer — without blocking HTTP requests.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Recap Session 2 — Redis cache-aside on Todo API</li>
+            <li>Scaling — vertical vs horizontal; when HTTP handlers bottleneck</li>
+            <li>Task queues — producer, queue, worker</li>
+            <li>BullMQ — enqueue export jobs, run separate worker process</li>
+            <li>Multer — multipart file uploads</li>
+            <li>Week 7 capstone assignment review</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Recap Session 2</h1>
+        <p>You cached <code>GET /todos</code> in Redis with cache-aside and invalidated on writes. Redis is now shared infrastructure for caching <strong>and</strong> job queues.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Today's additions</h2>
+        <ul>
+            <li><code>POST /todos/export</code> — enqueue job, return <code>202</code> immediately</li>
+            <li>Worker process — simulate long export, write file to <code>exports/</code></li>
+            <li><code>POST /todos/:id/attachment</code> — Multer file upload (practice)</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Scaling at Application Level</h1>
+        <p>More users → more requests. Two broad strategies before you reach Kubernetes-level infra.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Vertical vs horizontal</h2>
+        <div class="comparison">
+            <article>
+                <h3>Vertical</h3>
+                <ul>
+                    <li>Bigger CPU/RAM on one server</li>
+                    <li>Simple but has a ceiling</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Horizontal</h3>
+                <ul>
+                    <li>More API instances behind a load balancer</li>
+                    <li>Needs shared Redis/DB; stateless APIs help</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg3">
+        <h2>The long-running work problem</h2>
+        <ul>
+            <li>Send 10,000 emails after event publish</li>
+            <li>Generate PDF/CSV report from 50k rows</li>
+            <li>Resize uploaded images</li>
+        </ul>
+        <p><strong>Never hold an HTTP request open for 30+ seconds.</strong> Users timeout; one slow job blocks a server thread.</p>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Task Queues</h1>
+        <p>Decouple “accept work” from “do work.” API enqueues; worker processes in the background.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Producer → Queue → Worker</h2>
+        <ol>
+            <li><strong>Producer</strong> — Express route adds a job to the queue</li>
+            <li><strong>Queue</strong> — Redis-backed BullMQ holds pending jobs</li>
+            <li><strong>Worker</strong> — separate Node process picks up jobs and runs handlers</li>
+        </ol>
+        <p>API returns <code>202 Accepted</code> with <code>jobId</code> in milliseconds.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Request flow</h2>
+        <pre>Client  →  POST /todos/export
+API     →  queue.add("export-todos", { requestedBy })
+API     →  202 { jobId: "abc123" }
+Worker  →  fetch todos, simulate delay, write exports/todos.json
+Worker  →  log "Export complete"</pre>
+    </div>
+
+    <div class="slide bg5">
+        <p class="part-kicker">Part 4</p>
+        <h1>BullMQ</h1>
+        <p>Popular Redis-backed queue for Node.js. Same <code>REDIS_URL</code> as Session 2.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Queue (API side)</h2>
+        <pre>import { Queue } from "bullmq";
+
+export const todoExportQueue = new Queue("todo-export", {
+  connection: { url: process.env.REDIS_URL },
+});
+
+const job = await todoExportQueue.add("export-todos", {
+  requestedBy: req.userId,
+});
+res.status(202).json({ jobId: job.id });</pre>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Worker (separate process)</h2>
+        <pre>import { Worker } from "bullmq";
+import fs from "node:fs/promises";
+
+new Worker("todo-export", async (job) =&gt; {
+  if (job.name !== "export-todos") return;
+  await new Promise((r) =&gt; setTimeout(r, 5000)); // simulate work
+  const todos = await TodoModel.find().lean();
+  await fs.writeFile("exports/todos.json", JSON.stringify(todos, null, 2));
+  console.log("Export job", job.id, "complete");
+}, { connection: { url: process.env.REDIS_URL } });</pre>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Run two terminals</h2>
+        <pre># Terminal 1 — API
+npm run dev
+
+# Terminal 2 — worker
+npm run worker</pre>
+        <p>In <code>package.json</code>: <code>"worker": "tsx src/workers/todo.worker.ts"</code></p>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 5</p>
+        <h1>Multer File Uploads</h1>
+        <p>HTTP JSON cannot carry binary files. Use <code>multipart/form-data</code> and Multer middleware.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Disk storage setup</h2>
+        <pre>import multer from "multer";
+
+const upload = multer({
+  dest: "uploads/",
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+});
+
+todoRoutes.post("/:id/attachment", requireAuth, upload.single("file"), attachHandler);</pre>
+        <p>Client sends field name <code>file</code>. Handler reads <code>req.file.path</code> and saves path in MongoDB.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Upload with curl</h2>
+        <pre>curl -X POST http://localhost:3000/todos/TODO_ID/attachment \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "file=@./notes.txt"</pre>
+        <p>Validate MIME type and size in production. Class uses local <code>uploads/</code>; production moves to S3.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Production notes</h2>
+        <ul>
+            <li><strong>Idempotent jobs</strong> — safe to retry without duplicate side effects</li>
+            <li><strong>Attempts + backoff</strong> — BullMQ retries failed jobs automatically</li>
+            <li><strong>Dead-letter queue</strong> — inspect jobs that fail permanently</li>
+            <li><strong>File storage</strong> — S3 + signed URLs instead of local disk in production</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Week 7 Capstone Assignment</h2>
+        <p>Build a fresh <strong>Event Management Backend</strong> — individual project with presentation.</p>
+        <ul>
+            <li>Auth (JWT + bcrypt)</li>
+            <li>Redis cache on published events list</li>
+            <li>BullMQ job when event is published</li>
+            <li>Multer banner upload on events</li>
+        </ul>
+        <p>Details: <a href="../assignment/week-7-assignment.html">Week 7 assignment sheet</a></p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Summary</h2>
+        <ul>
+            <li>Long work belongs in background workers, not HTTP handlers</li>
+            <li>BullMQ uses Redis; API enqueues, worker processes</li>
+            <li>Run API and worker as separate processes</li>
+            <li>Multer handles <code>multipart/form-data</code> file uploads</li>
+            <li>Capstone combines all Week 7 concepts in <code>event-mgmt-api</code></li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 7 Session 3 Quiz</h1>
+        <p class="quiz-hint">8 questions on task queues, BullMQ, workers, and Multer.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">Why return 202 Accepted instead of waiting for a 30-second export inside the HTTP handler?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Clients and load balancers timeout; blocking ties up a server thread.">Long sync work causes timeouts and blocks the API</button>
+            <button type="button" data-correct="false" data-explanation="202 does not make MongoDB faster.">MongoDB requires 202 for exports</button>
+            <button type="button" data-correct="false" data-explanation="JWT works the same regardless of status code.">JWT cannot be sent on 200 responses</button>
+            <button type="button" data-correct="false" data-explanation="Redis cache is unrelated to async job acceptance.">Redis cache requires 202</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">In BullMQ, where does job processing logic run?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Worker is a separate process that consumes jobs from the queue.">In a separate worker process</button>
+            <button type="button" data-correct="false" data-explanation="Express handles HTTP; workers handle queued jobs.">Inside the Express request handler only</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB stores data, not BullMQ job handlers.">Inside MongoDB triggers</button>
+            <button type="button" data-correct="false" data-explanation="React runs in the browser, not job workers.">In the React frontend</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">BullMQ stores queue metadata in:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="BullMQ is Redis-backed — same infra as your cache.">Redis</button>
+            <button type="button" data-correct="false" data-explanation="Multer writes uploads to disk, not queue state.">Local uploads/ folder</button>
+            <button type="button" data-correct="false" data-explanation="JWT is for auth tokens, not job queues.">JWT payload</button>
+            <button type="button" data-correct="false" data-explanation="Browser localStorage cannot back server queues.">Browser localStorage</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">API and worker processes must share:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Same Redis URL and usually same MongoDB for the worker to read/write data.">Redis connection (and typically MongoDB)</button>
+            <button type="button" data-correct="false" data-explanation="They need shared queue/storage, not identical Express ports.">The exact same TCP port 3000</button>
+            <button type="button" data-correct="false" data-explanation="Workers do not need the user's JWT for class demos.">The user's JWT in every job</button>
+            <button type="button" data-correct="false" data-explanation="React app is separate from backend workers.">The React build folder</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">Multer is used for:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Multer parses multipart/form-data file uploads in Express.">Parsing multipart/form-data file uploads</button>
+            <button type="button" data-correct="false" data-explanation="Zod validates JSON bodies; files use multipart.">Validating JSON with Zod</button>
+            <button type="button" data-correct="false" data-explanation="bcrypt hashes passwords, not HTTP files.">Hashing passwords</button>
+            <button type="button" data-correct="false" data-explanation="BullMQ manages job queues, not HTTP uploads.">Enqueueing BullMQ jobs automatically</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question"><code>upload.single("file")</code> means:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Expect one file in the form field named file.">Accept exactly one file in the file field</button>
+            <button type="button" data-correct="false" data-explanation="single() is one file, not unlimited.">Reject all file uploads</button>
+            <button type="button" data-correct="false" data-explanation="That would be upload.array() or multiple fields.">Accept unlimited files with any field name</button>
+            <button type="button" data-correct="false" data-explanation="Files are not stored in JWT.">Store the file inside the JWT</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">An idempotent background job is one that:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Retrying does not double-charge or send duplicate emails.">Can be safely retried without duplicate side effects</button>
+            <button type="button" data-correct="false" data-explanation="Idempotency is about retries, not speed.">Always finishes in under 1 second</button>
+            <button type="button" data-correct="false" data-explanation="Jobs should still be logged for debugging.">Never logs anything</button>
+            <button type="button" data-correct="false" data-explanation="Idempotent jobs can still write files if retries are handled.">Cannot write to disk</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">For the Event Management capstone, publishing an event should trigger:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Publish enqueues notify/report work; API responds fast.">A BullMQ background job (e.g. notify or report)</button>
+            <button type="button" data-correct="false" data-explanation="Blocking HTTP for 30s violates the queue pattern taught this week.">A 30-second synchronous HTTP handler</button>
+            <button type="button" data-correct="false" data-explanation="Caching lists is separate from publish side effects.">Only a Redis cache delete, no job</button>
+            <button type="button" data-correct="false" data-explanation="Multer is for banner upload, not publish notifications.">Multer upload on every publish click</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 7 Session 3</h1>
+        <p>Complete <a href="../handson/class-3-handson.html">Class 3 hands-on</a>, then build your <a href="../assignment/week-7-assignment.html">Event Management Backend</a> for presentation.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

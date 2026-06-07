@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 7 - Session 2 - Caching and Redis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 7 - Session 2</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 2: Caching and Redis</h1>
+        <p>Speed up read-heavy API routes with Redis and the cache-aside pattern — and know when caching hurts more than it helps.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Recap Session 1 — backend JWT auth on Todo API</li>
+            <li>Why cache? Hit vs miss, latency, DB load</li>
+            <li>Caching layers — browser, CDN, application, database</li>
+            <li>Redis intro and Docker setup</li>
+            <li>Cache-aside pattern with invalidation</li>
+            <li>When <strong>not</strong> to cache</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Recap Session 1</h1>
+        <p>You added <code>auth/</code>, bcrypt, JWT login, and <code>requireAuth</code> on todo mutations. Reads on <code>GET /todos</code> stayed public.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Today's target</h2>
+        <ul>
+            <li>Cache the todo list in Redis</li>
+            <li>Invalidate cache when todos change</li>
+            <li>Log cache hits so you can see it working</li>
+        </ul>
+        <p>Same Redis instance will power BullMQ in Session 3.</p>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Why Cache?</h1>
+        <p>Store a copy of expensive or frequent data in fast storage so the next read is cheaper.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Cache hit vs cache miss</h2>
+        <ul>
+            <li><strong>Hit</strong> — data found in cache; skip database query</li>
+            <li><strong>Miss</strong> — data not in cache; read from DB, then write to cache</li>
+        </ul>
+        <p>Benefits: lower latency, less DB load, lower cloud cost at scale.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Caching layers</h2>
+        <ul>
+            <li><strong>Browser cache</strong> — static assets (Week 1)</li>
+            <li><strong>CDN / edge</strong> — HTML, images, API responses close to users</li>
+            <li><strong>Application cache</strong> — Redis in your Node server (today)</li>
+            <li><strong>Database query cache</strong> — built into some DBs; different concern</li>
+        </ul>
+        <p>Today we focus on <strong>application-level caching</strong> you control in Express.</p>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Redis</h1>
+        <p>In-memory key-value store. Extremely fast reads/writes. Used for cache, sessions, rate limits, and job queues.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Run Redis locally</h2>
+        <pre>docker run -p 6379:6379 redis:7-alpine</pre>
+        <p>Add to <code>.env</code>: <code>REDIS_URL=redis://localhost:6379</code></p>
+        <p>Core commands: <code>SET key value EX 60</code>, <code>GET key</code>, <code>DEL key</code></p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Node client — ioredis</h2>
+        <pre>import Redis from "ioredis";
+
+export const redis = new Redis(process.env.REDIS_URL);
+
+redis.on("connect", () =&gt; console.log("Redis connected"));
+redis.on("error", (err) =&gt; console.error("Redis error", err));</pre>
+    </div>
+
+    <div class="slide bg5">
+        <p class="part-kicker">Part 4</p>
+        <h1>Cache-Aside Pattern</h1>
+        <p>The application checks cache first, falls back to DB, then populates cache. Most common pattern for REST APIs.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Read path — GET /todos</h2>
+        <pre>const key = "todos:list";
+const cached = await redis.get(key);
+if (cached) {
+  console.log("CACHE HIT");
+  return JSON.parse(cached);
+}
+
+const todos = await todoService.findAll();
+await redis.set(key, JSON.stringify(todos), "EX", 60);
+return todos;</pre>
+        <p><code>EX 60</code> = TTL 60 seconds. Data expires automatically if you forget to invalidate.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Invalidation on writes</h2>
+        <p>When todos change, delete the cache key so the next GET rebuilds from MongoDB.</p>
+        <pre>// After create, update, or delete:
+await redis.del("todos:list");</pre>
+        <p>Rule: <strong>every write path</strong> that affects cached data must invalidate (or update) the cache.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Good class example</h2>
+        <ul>
+            <li><code>GET /todos</code> — read-heavy, many repeated requests</li>
+            <li>Short staleness OK (list might be 60s old in a demo app)</li>
+            <li>Easy to verify: second request logs <code>CACHE HIT</code></li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 5</p>
+        <h1>When NOT to Cache</h1>
+        <p>Caching is a tradeoff. Wrong caching causes bugs worse than slow queries.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Do not cache these</h2>
+        <ul>
+            <li><strong>Financial balances</strong> — stale balance = angry users or money lost</li>
+            <li><strong>Inventory / seat counts</strong> — overselling events or products</li>
+            <li><strong>Auth revocation lists</strong> — logged-out tokens must fail immediately</li>
+            <li><strong>Highly personalized per-user data</strong> — cache key explosion, low hit rate</li>
+            <li><strong>Write-heavy endpoints</strong> — invalidation complexity exceeds benefit</li>
+            <li><strong>Strong consistency requirements</strong> — user must always see latest</li>
+            <li><strong>Large files / images</strong> — use object storage + CDN, not Redis strings</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Anti-patterns</h2>
+        <ul>
+            <li>“Cache everything” without measuring — premature optimization</li>
+            <li>No TTL and no invalidation — stale data forever</li>
+            <li>Caching errors or empty results — error cached for 60s</li>
+            <li>Same cache key for different users' private data — data leak risk</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>TTL guidance</h2>
+        <p>Pick TTL based on how stale data your business tolerates.</p>
+        <ul>
+            <li>Public event listings — 30–120 seconds might be fine</li>
+            <li>User profile — often skip cache or use very short TTL + invalidation</li>
+            <li>Never rely on TTL alone when correctness matters — invalidate on writes</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Summary</h2>
+        <ul>
+            <li>Cache-aside: check Redis → DB on miss → set with TTL</li>
+            <li>Invalidate on every write that affects cached reads</li>
+            <li>Redis is fast; use it for small JSON blobs, not giant files</li>
+            <li>Skip caching when correctness or personalization dominates</li>
+            <li>Next session — BullMQ task queues and Multer file uploads</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 7 Session 2 Quiz</h1>
+        <p class="quiz-hint">8 questions on Redis, cache-aside, TTL, and anti-patterns.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">A cache hit means:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Hit = requested data was found in cache; DB can be skipped.">Data was found in cache</button>
+            <button type="button" data-correct="false" data-explanation="Miss means data was not in cache.">The database was always queried</button>
+            <button type="button" data-correct="false" data-explanation="Hit is about cache lookup success, not HTTP 404.">The API returned 404</button>
+            <button type="button" data-correct="false" data-explanation="Redis can be down; that is a separate failure mode.">Redis crashed</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">In cache-aside, who is responsible for reading and writing the cache?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Application code checks cache, loads DB on miss, and sets cache.">Your application code</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB does not manage your Redis cache automatically.">MongoDB automatically</button>
+            <button type="button" data-correct="false" data-explanation="Redis stores values but does not know your query logic.">Redis server alone</button>
+            <button type="button" data-correct="false" data-explanation="The browser has its own cache layer, separate from app cache-aside.">The browser only</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">You cache <code>GET /todos</code>. After <code>POST /todos</code> you should:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Delete the list key so the next GET rebuilds from MongoDB.">Delete or invalidate the todos:list cache key</button>
+            <button type="button" data-correct="false" data-explanation="Ignoring cache leaves stale list until TTL expires.">Do nothing; TTL will fix it eventually</button>
+            <button type="button" data-correct="false" data-explanation="Never cache 500 errors — clients need fresh success/failure.">Cache the 500 error for 60s</button>
+            <button type="button" data-correct="false" data-explanation="Deleting MongoDB would destroy data.">Delete all todos from MongoDB</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question"><code>SET key value EX 60</code> in Redis means:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="EX sets expiry in seconds; key auto-deletes after 60s.">Value expires after 60 seconds (TTL)</button>
+            <button type="button" data-correct="false" data-explanation="EX is expiry, not encryption.">Value is encrypted for 60 seconds</button>
+            <button type="button" data-correct="false" data-explanation="EX does not limit value size to 60 bytes.">Maximum value size is 60 bytes</button>
+            <button type="button" data-correct="false" data-explanation="Redis persists in memory; EX only controls key lifetime.">Value is stored on disk permanently</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">Which endpoint is the <strong>worst</strong> candidate for caching?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Wallet balance must be exact; stale cache causes real harm.">GET /wallet/balance (real-time money)</button>
+            <button type="button" data-correct="false" data-explanation="Public product catalog often tolerates short staleness.">GET /products (public catalog)</button>
+            <button type="button" data-correct="false" data-explanation="Published events list is a classic cache candidate.">GET /events?status=published</button>
+            <button type="button" data-correct="false" data-explanation="Static config changes rarely; cache with invalidation works.">GET /config/app-settings</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">Caching the same key for all users' private dashboards risks:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="User A could receive User B's cached data — a serious data leak.">Serving one user's data to another user</button>
+            <button type="button" data-correct="false" data-explanation="Redis speed is not the issue; key design is.">Making Redis too fast</button>
+            <button type="button" data-correct="false" data-explanation="JWT validation is separate from cache key scoping.">Breaking JWT signatures</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB indexes are unrelated to per-user cache keys.">Slowing MongoDB indexes</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">Redis is a good fit for storing:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Small JSON strings, session ids, and queue jobs fit Redis well.">Small serialized JSON and job queue metadata</button>
+            <button type="button" data-correct="false" data-explanation="Large video files belong in object storage (S3), not Redis memory.">500 MB video files</button>
+            <button type="button" data-correct="false" data-explanation="Authoritative long-term records belong in MongoDB/Postgres.">Permanent user account records as sole database</button>
+            <button type="button" data-correct="false" data-explanation="Source code belongs in git, not Redis.">Your entire codebase backup</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">If Redis is down, a resilient API might:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Fallback to DB keeps the API working; cache is an optimization, not the source of truth.">Log the error and read directly from MongoDB</button>
+            <button type="button" data-correct="false" data-explanation="Returning 500 for all reads when cache is optional is poor resilience.">Return 500 for every request permanently</button>
+            <button type="button" data-correct="false" data-explanation="Deleting MongoDB data would be catastrophic.">Delete all MongoDB data</button>
+            <button type="button" data-correct="false" data-explanation="Disabling auth is unrelated to cache failures.">Disable authentication globally</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 7 Session 2</h1>
+        <p>Complete <a href="../handson/class-2-handson.html">Class 2 hands-on</a> — Redis cache-aside on <code>GET /todos</code>. Next — <a href="session-3.html">Session 3: BullMQ and Multer</a>.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

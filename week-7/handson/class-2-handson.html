@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 7 Class 2 hands-on - Redis Caching</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .troubleshooting {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff1f2;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 7 - Class 2 Lab</strong> -
+        <a href="../slides/session-2.html">Open session deck</a>
+        - Redis cache-aside on GET /todos
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Before you start</h2>
+        <p>Continue your Week 6/7 <code>todo-api</code> with backend auth from <a href="class-1-handson.html">Class 1</a>. Start Redis before the API:</p>
+        <pre>docker run -p 6379:6379 redis:7-alpine</pre>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Install Redis client</h2>
+        <ol>
+            <li><code>npm install ioredis</code></li>
+            <li>Add to <code>.env</code>: <code>REDIS_URL=redis://localhost:6379</code></li>
+            <li>Add <code>REDIS_URL=</code> to <code>.env.example</code></li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> package installs and env vars are documented.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Redis connection</h2>
+        <p>Create <code>src/config/redis.ts</code>:</p>
+        <pre>import Redis from "ioredis";
+
+const url = process.env.REDIS_URL ?? "redis://localhost:6379";
+export const redis = new Redis(url);
+
+redis.on("connect", () =&gt; console.log("Redis connected"));
+redis.on("error", (err) =&gt; console.error("Redis error:", err.message));</pre>
+        <p>Import and connect in <code>server.ts</code> (after DB connect). If Redis is down, log the error — the API should still boot for this lab.</p>
+        <div class="done-when"><strong>Done when:</strong> <code>npm run dev</code> logs <code>Redis connected</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Cache service helpers</h2>
+        <p>Create <code>src/cache/cache.service.ts</code>:</p>
+        <pre>import { redis } from "../config/redis.ts";
+
+const DEFAULT_TTL_SECONDS = 60;
+
+export async function cacheGet&lt;T&gt;(key: string): Promise&lt;T | null&gt; {
+  try {
+    const raw = await redis.get(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function cacheSet(key: string, value: unknown, ttl = DEFAULT_TTL_SECONDS) {
+  try {
+    await redis.set(key, JSON.stringify(value), "EX", ttl);
+  } catch {
+    // cache is optional — swallow and continue
+  }
+}
+
+export async function cacheDel(key: string) {
+  try {
+    await redis.del(key);
+  } catch {
+    // optional
+  }
+}</pre>
+        <div class="done-when"><strong>Done when:</strong> helpers compile and export without errors.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - Cache-aside on GET /todos</h2>
+        <p>In your todo service (or list handler), wrap the list read:</p>
+        <pre>const LIST_KEY = "todos:list";
+
+export async function listTodos() {
+  const cached = await cacheGet&lt;Todo[]&gt;(LIST_KEY);
+  if (cached) {
+    console.log("CACHE HIT", LIST_KEY);
+    return cached;
+  }
+
+  console.log("CACHE MISS", LIST_KEY);
+  const todos = await TodoModel.find().sort({ createdAt: -1 });
+  await cacheSet(LIST_KEY, todos);
+  return todos;
+}</pre>
+        <p>Wire <code>GET /todos</code> to call <code>listTodos()</code>.</p>
+        <div class="done-when"><strong>Done when:</strong> first <code>curl http://localhost:3000/todos</code> logs CACHE MISS; second call logs CACHE HIT.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 5 - Invalidate on writes</h2>
+        <p>After create, update, and delete operations, clear the list cache:</p>
+        <pre>await cacheDel("todos:list");</pre>
+        <p>Add this to your create, update, and delete service methods (or controllers after successful writes).</p>
+        <div class="done-when"><strong>Done when:</strong> create a todo → next GET shows the new item (CACHE MISS after invalidation).</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 6 - Verify the full flow</h2>
+        <pre># Miss — reads MongoDB
+curl http://localhost:3000/todos
+
+# Hit — reads Redis
+curl http://localhost:3000/todos
+
+# Create (with auth token from Class 1)
+curl -X POST http://localhost:3000/todos \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"title":"Cache invalidation test"}'
+
+# Miss again — cache was cleared
+curl http://localhost:3000/todos</pre>
+        <div class="done-when"><strong>Done when:</strong> terminal shows MISS → HIT → (after POST) MISS with updated list.</div>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li><strong><code>ECONNREFUSED 6379</code></strong> — start Redis with Docker; check <code>REDIS_URL</code>.</li>
+            <li><strong>Always CACHE MISS</strong> — confirm <code>cacheSet</code> runs on miss; check Redis with <code>redis-cli KEYS '*'</code>.</li>
+            <li><strong>Stale list after create</strong> — you forgot <code>cacheDel</code> on write paths.</li>
+            <li><strong><code>JSON.parse</code> error</strong> — only cache JSON-serializable data; Mongoose docs need <code>.lean()</code> or map to plain objects.</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Practice:</strong> Redis caching on your Todo API. Same Redis instance will power BullMQ in Class 3.
+        <p style="margin-top: 0.75rem;"><strong>Next:</strong> <a href="class-3-handson.html">Class 3 hands-on</a> — task queues and file uploads. Capstone: <a href="../assignment/week-7-assignment.html">Event Management Backend</a>.</p>
+    </div>
+</body>
+
+</html>

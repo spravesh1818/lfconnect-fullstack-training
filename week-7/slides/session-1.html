@@ -19,31 +19,98 @@
     </header>
 
     <div class="slide active bg1">
-        <h1>Class 1: Backend Authentication</h1>
-        <p>Add register/login and JWT-protected routes to your Week 6 Todo API.</p>
+        <h1>Class 1: Authentication Background + Backend JWT</h1>
+        <p>Understand authentication types and tradeoffs, then add register/login and JWT-protected routes to your Week 6 Todo API.</p>
     </div>
 
     <div class="slide bg1">
         <h2>Session Agenda</h2>
         <ol>
+            <li>Authentication landscape — types, when and where they are used</li>
+            <li>Stateful vs stateless; client vs server enforcement</li>
             <li>Prerequisite — Week 6 Todo API checklist</li>
-            <li>Authentication vs authorization</li>
             <li>Password hashing with bcrypt</li>
             <li>JWT sign on login, verify on protected routes</li>
             <li>New <code>auth/</code> domain (same layout as <code>todo/</code>)</li>
-            <li>Protect POST /todos (and mutations)</li>
-            <li>Week 7 assignment intro</li>
+            <li>Week 7 capstone assignment intro</li>
             <li>Quiz (8 questions)</li>
         </ol>
     </div>
 
     <div class="slide bg2">
         <p class="part-kicker">Part 1</p>
+        <h1>Authentication Landscape</h1>
+        <p><strong>Authentication</strong> — who is this user? <strong>Authorization</strong> — what may they do?</p>
+        <p>Analogy: your ID card proves identity (authN); your building badge grants floor access (authZ).</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Common authentication types</h2>
+        <ul>
+            <li><strong>Session cookies</strong> — server stores session id; browser sends cookie automatically. Classic server-rendered web apps.</li>
+            <li><strong>JWT (Bearer tokens)</strong> — signed token in <code>Authorization</code> header. SPAs, mobile apps, APIs. Week 4 client + Week 7 server.</li>
+            <li><strong>OAuth 2.0 / OIDC</strong> — “Login with Google/GitHub.” Delegate identity to a provider. SaaS and social login.</li>
+            <li><strong>API keys</strong> — long-lived secret for scripts, webhooks, service-to-service. Not for human passwords.</li>
+            <li><strong>Magic links / OTP</strong> — passwordless email or SMS one-time codes.</li>
+            <li><strong>MFA</strong> — second factor (TOTP app, SMS) on top of any method above.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>When to use which?</h2>
+        <ul>
+            <li><strong>Same-site browser app</strong> — httpOnly session cookies (CSRF protection required)</li>
+            <li><strong>SPA + REST API</strong> — JWT Bearer tokens (watch XSS on client storage)</li>
+            <li><strong>Third-party login</strong> — OAuth/OIDC; you trust Google/GitHub to verify identity</li>
+            <li><strong>CI pipeline / cron job</strong> — API keys with scoped permissions and rotation</li>
+            <li><strong>High-security accounts</strong> — password + MFA regardless of token type</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Stateful vs stateless</h2>
+        <div class="comparison">
+            <article>
+                <h3>Stateful (sessions)</h3>
+                <ul>
+                    <li>Session stored in Redis or DB</li>
+                    <li>Easy to revoke instantly</li>
+                    <li>Server must look up session each request</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Stateless (JWT)</h3>
+                <ul>
+                    <li>Token carries signed claims</li>
+                    <li>Scales horizontally without shared session store</li>
+                    <li>Revocation needs extra work (blocklist, short TTL)</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Where auth lives</h2>
+        <ul>
+            <li><strong>Client guards</strong> (Week 4 React Router) — hide pages, improve UX</li>
+            <li><strong>Server middleware</strong> (Week 7) — enforce who may call each API route</li>
+        </ul>
+        <p>Anyone can call your API with curl or Postman. <strong>Server enforcement</strong> is what actually secures data.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>What we build in class</h2>
+        <p>JWT + bcrypt on the Week 6 Todo API — register, login, <code>requireAuth</code> on mutations.</p>
+        <p>Capstone assignment: fresh <strong>Event Management Backend</strong> using auth, Redis caching, BullMQ, and Multer.</p>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
         <h1>Prerequisites</h1>
         <p>Week 7 builds on your Week 6 assignment — CRUD + Zod + <code>todo/</code> folder structure.</p>
     </div>
 
-    <div class="slide bg2">
+    <div class="slide bg3">
         <h2>Week 6 checklist</h2>
         <ul>
             <li>Server boots; MongoDB connects</li>
@@ -55,9 +122,9 @@
     </div>
 
     <div class="slide bg3">
-        <p class="part-kicker">Part 2</p>
-        <h1>Authentication Mental Model</h1>
-        <p><strong>Authentication</strong> — who is this user? <strong>Authorization</strong> — what may they do?</p>
+        <p class="part-kicker">Part 3</p>
+        <h1>Backend Auth Mental Model</h1>
+        <p>Week 4 taught client-side JWT storage. Today we implement the server side.</p>
     </div>
 
     <div class="slide bg3">
@@ -91,7 +158,7 @@
     </div>
 
     <div class="slide bg4">
-        <p class="part-kicker">Part 3</p>
+        <p class="part-kicker">Part 4</p>
         <h1>Auth Module</h1>
         <p>Same DDD layout as todos: model, schema, service, controller, routes under <code>auth/</code>.</p>
     </div>
@@ -128,7 +195,7 @@ next();</pre>
     </div>
 
     <div class="slide bg5">
-        <p class="part-kicker">Part 4</p>
+        <p class="part-kicker">Part 5</p>
         <h1>Protect Routes</h1>
         <p>Apply <code>requireAuth</code> before handlers that change data.</p>
     </div>
@@ -161,30 +228,43 @@ POST /todos (no token)     → 401</pre>
     </div>
 
     <div class="slide bg3">
-        <h2>Week 7 Assignment</h2>
-        <p>Extend your Week 6 repo with backend auth. Due Sunday 11:59 PM.</p>
+        <h2>Week 7 Capstone Assignment</h2>
+        <p>Build a fresh <strong>Event Management Backend</strong> (individual project + presentation). Due Sunday 11:59 PM.</p>
+        <p>Class labs practice on the Todo API; the assignment is a new <code>event-mgmt-api</code> repo.</p>
         <p>Details: <a href="../assignment/week-7-assignment.html">Week 7 assignment sheet</a></p>
     </div>
 
     <div class="slide bg1">
         <h2>Session Summary</h2>
         <ul>
-            <li>Week 6 Todo API is the foundation</li>
+            <li>Many auth types — sessions, JWT, OAuth, API keys, MFA — each fits different products</li>
+            <li>Client guards improve UX; server middleware secures data</li>
             <li>bcrypt for passwords; JWT for session tokens</li>
-            <li><code>auth/</code> mirrors <code>todo/</code> structure</li>
-            <li><code>requireAuth</code> enforces Bearer JWT on server</li>
-            <li>Client-side auth from Week 4 + this server = full stack auth</li>
+            <li><code>auth/</code> mirrors <code>todo/</code> structure; <code>requireAuth</code> on mutations</li>
+            <li>Next session — Redis caching on the Todo API</li>
         </ul>
     </div>
 
     <div class="slide bg-quiz quiz-segment">
         <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
         <h1 class="quiz-round-title">Week 7 Session 1 Quiz</h1>
-        <p class="quiz-hint">8 questions on bcrypt, JWT, and server-side auth.</p>
+        <p class="quiz-hint">8 questions on auth types, bcrypt, JWT, and server-side enforcement.</p>
     </div>
 
     <div class="slide bg-quiz quiz">
         <h2>Question 1 of 8</h2>
+        <p class="question">“Login with Google” in a SaaS product typically uses:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="OAuth/OIDC delegates identity verification to an external provider.">OAuth 2.0 / OIDC</button>
+            <button type="button" data-correct="false" data-explanation="API keys are for machine clients, not human social login.">API keys only</button>
+            <button type="button" data-correct="false" data-explanation="Magic links are email-based passwordless login, not social login.">Magic links</button>
+            <button type="button" data-correct="false" data-explanation="MFA is a second factor on top of login, not the primary social flow.">MFA alone</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
         <p class="question">Why must the server validate JWT on protected routes?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="true" data-explanation="APIs can be called directly; UI guards alone do not secure data.">Clients can call the API without your React app</button>
@@ -196,7 +276,19 @@ POST /todos (no token)     → 401</pre>
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 2 of 8</h2>
+        <h2>Question 3 of 8</h2>
+        <p class="question">A nightly backup script calling your API should authenticate with:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="API keys suit machine-to-machine access with scoped permissions.">API key (scoped, rotatable)</button>
+            <button type="button" data-correct="false" data-explanation="OAuth social login is for humans in a browser.">OAuth “Login with Google”</button>
+            <button type="button" data-correct="false" data-explanation="Magic links require human email interaction each run.">Magic link email</button>
+            <button type="button" data-correct="false" data-explanation="Session cookies are browser-centric, awkward for cron scripts.">Browser session cookie only</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
         <p class="question">Correct header to send a JWT to the API?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="true" data-explanation="Bearer scheme is the standard for JWT APIs.">Authorization: Bearer &lt;token&gt;</button>
@@ -208,7 +300,7 @@ POST /todos (no token)     → 401</pre>
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 3 of 8</h2>
+        <h2>Question 5 of 8</h2>
         <p class="question">What should you store in MongoDB for a password?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="true" data-explanation="bcrypt hash is one-way; plain text must never be stored.">bcrypt password hash</button>
@@ -220,7 +312,7 @@ POST /todos (no token)     → 401</pre>
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 4 of 8</h2>
+        <h2>Question 6 of 8</h2>
         <p class="question">POST /todos without a token when route uses requireAuth returns:</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="true" data-explanation="401 Unauthorized — authentication required.">401 Unauthorized</button>
@@ -232,37 +324,13 @@ POST /todos (no token)     → 401</pre>
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 5 of 8</h2>
+        <h2>Question 7 of 8</h2>
         <p class="question">JWT <code>sub</code> claim typically holds:</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="true" data-explanation="sub = subject, usually the user id.">User id (subject)</button>
             <button type="button" data-correct="false" data-explanation="Never put passwords in JWT payload.">Plain text password</button>
             <button type="button" data-correct="false" data-explanation="JWT secret is server-side only, not in the token.">JWT_SECRET</button>
             <button type="button" data-correct="false" data-explanation="Database URL must never be in JWT.">MongoDB connection string</button>
-        </div>
-        <p class="quiz-feedback" aria-live="polite"></p>
-    </div>
-
-    <div class="slide bg-quiz quiz">
-        <h2>Question 6 of 8</h2>
-        <p class="question">Duplicate email on register should return:</p>
-        <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="409 Conflict — resource already exists.">409 Conflict</button>
-            <button type="button" data-correct="false" data-explanation="201 is for successful creation only.">201 Created</button>
-            <button type="button" data-correct="false" data-explanation="401 is for failed authentication.">401 Unauthorized</button>
-            <button type="button" data-correct="false" data-explanation="204 has no body; wrong for this error.">204 No Content</button>
-        </div>
-        <p class="quiz-feedback" aria-live="polite"></p>
-    </div>
-
-    <div class="slide bg-quiz quiz">
-        <h2>Question 7 of 8</h2>
-        <p class="question">Where does <code>requireAuth</code> attach the logged-in user id?</p>
-        <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="After verify, set req.userId from payload.sub for downstream handlers.">req.userId from JWT payload</button>
-            <button type="button" data-correct="false" data-explanation="res is for the response, not request state.">res.userId automatically</button>
-            <button type="button" data-correct="false" data-explanation="MongoDB _id is not auto-set on req by middleware.">MongoDB _id on req.body</button>
-            <button type="button" data-correct="false" data-explanation="localStorage is browser-only; server uses headers.">localStorage on the server</button>
         </div>
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
@@ -281,7 +349,7 @@ POST /todos (no token)     → 401</pre>
 
     <div class="slide bg1">
         <h1>End of Week 7 Session 1</h1>
-        <p>Complete <a href="../handson/class-1-handson.html">Class 1 hands-on</a> and the <a href="../assignment/week-7-assignment.html">Week 7 assignment</a>.</p>
+        <p>Complete <a href="../handson/class-1-handson.html">Class 1 hands-on</a> (auth on Todo API). Next session — <a href="session-2.html">Redis caching</a>.</p>
     </div>
 
     <div class="progress-wrap" aria-hidden="true">
