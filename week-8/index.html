@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 8 - Full Stack Training</title>
+    <style>
+        :root {
+            --bg: #f5faf7;
+            --surface: #ffffff;
+            --text: #0f2a1c;
+            --text-muted: #4b6356;
+            --border: #d7e7dd;
+            --accent-dark: #166a40;
+            --radius: 14px;
+            --shadow: 0 14px 34px rgba(15, 42, 28, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, system-ui, -apple-system, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(900px 400px at 8% -20%, #d9f3e4, transparent 58%),
+                radial-gradient(700px 320px at 95% 0%, #eef8f2, transparent 58%),
+                var(--bg);
+        }
+
+        main {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 2.5rem 1rem 3rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            text-decoration: none;
+            margin-bottom: 0.85rem;
+            color: var(--accent-dark);
+            border: 1px solid #4ea16f;
+            border-radius: 999px;
+            padding: 0.4rem 0.75rem;
+            background: #f1fcf5;
+        }
+
+        .shell {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 1.8rem 1.2rem 1.35rem;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, #ffffff, #f7fcf9);
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(1.8rem, 3.2vw, 2.2rem);
+        }
+
+        .hero p {
+            margin: 0.52rem 0 0;
+            color: var(--text-muted);
+            font-size: 0.98rem;
+        }
+
+        .deadline-note {
+            margin-top: 0.8rem;
+            display: inline-block;
+            padding: 0.35rem 0.65rem;
+            border: 1px solid #fda4af;
+            border-radius: 999px;
+            color: #9f1239;
+            background: #fff1f2;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .section-card {
+            margin: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.9rem 1rem 0.95rem;
+            background: #fff;
+        }
+
+        .section-card h2 {
+            margin: 0;
+            font-size: 1.08rem;
+        }
+
+        .item-list {
+            list-style: none;
+            margin: 0.7rem 0 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.56rem;
+        }
+
+        .item-list a {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.72rem 0.85rem;
+            background: #fff;
+            transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+        }
+
+        .item-list a:hover,
+        .item-list a:focus-visible {
+            transform: translateY(-1px);
+            border-color: #8fd4aa;
+            background-color: #f3fcf6;
+            outline: none;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <a class="back-link" href="../index.html">Back to course home</a>
+        <section class="shell">
+            <header class="hero">
+                <h1>Full Stack Engineering</h1>
+                <p>Week 8 materials: build a <code>file-upload-api</code> with Multer in class (Session 1), React Todo frontend (Session 2), and Passport.js / Supabase / Clerk mini-labs (Session 3). Assignments: Part 1 migrate file uploads to MinIO; Part 2 Event Management Frontend.</p>
+                <p class="deadline-note">Week 8 assignment deadline: Sunday evening, 11:59 PM</p>
+            </header>
+
+            <section class="section-card">
+                <h2>Slides</h2>
+                <ul class="item-list">
+                    <li><a href="slides/session-1.html">Session 1 - Multer file upload API (in-class live build)</a></li>
+                    <li><a href="slides/session-2.html">Session 2 - React Todo frontend with auth and full CRUD</a></li>
+                    <li><a href="slides/session-3.html">Session 3 - Passport.js, Supabase, and Clerk auth tooling</a></li>
+                </ul>
+            </section>
+
+            <section class="section-card">
+                <h2>Hands-on</h2>
+                <ul class="item-list">
+                    <li><a href="handson/class-1-handson.html">Class 1 hands-on - Multer file-upload-api (in-class)</a></li>
+                    <li><a href="handson/class-2-handson.html">Class 2 hands-on - Todo React frontend</a></li>
+                    <li><a href="handson/class-3-handson.html">Class 3 hands-on - Passport, Supabase, and Clerk mini-labs</a></li>
+                </ul>
+            </section>
+
+            <section class="section-card">
+                <h2>Assignments</h2>
+                <ul class="item-list">
+                    <li><a href="assignment/week-8-assignment.html">Week 8 assignments - Part 1 MinIO file upload + Part 2 Event Frontend</a></li>
+                </ul>
+                <p style="margin: 0.75rem 0 0; font-size: 0.92rem; color: var(--text-muted);">Part 1: migrate in-class <code>file-upload-api</code> to MinIO. Part 2: <code>event-mgmt-web</code> frontend (requires <a href="../week-7/assignment/week-7-assignment.html">Week 7</a> <code>event-mgmt-api</code>). Session 2 class lab uses Todo API.</p>
+            </section>
+        </section>
+    </main>
+</body>
+
+</html>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 8 Class 3 hands-on - Auth Tooling Mini-labs</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .mini-lab-header {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1.5rem auto 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: #1e3a5f;
+            color: #e2e8f0;
+            border-radius: 8px 8px 0 0;
+            font-weight: 700;
+        }
+
+        .reflection {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #93c5fd;
+            border-radius: 8px;
+            background: #eff6ff;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 8 - Class 3 Lab</strong> -
+        <a href="../slides/session-3.html">Open session deck</a>
+        - Three mini-labs: Passport.js, Supabase, Clerk (~20 min each)
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Setup</h2>
+        <p>Use a throwaway <code>auth-sandbox</code> folder (or git branches) so experiments do not break your Todo or Event projects.</p>
+        <pre>mkdir auth-sandbox && cd auth-sandbox</pre>
+        <p>You will create up to three small apps inside — or one Vite app with three branches. Pick what keeps your workspace clean.</p>
+    </div>
+
+    <div class="mini-lab-header">Mini-lab A — Passport.js (Express)</div>
+
+    <div class="exercise-instructions">
+        <h2>A1 - Install and configure local strategy</h2>
+        <p>In your Todo API repo (or a minimal Express app):</p>
+        <pre>npm install passport passport-local
+npm install -D @types/passport @types/passport-local</pre>
+        <pre>import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+
+passport.use(new LocalStrategy(
+  { usernameField: "email" },
+  async (email, password, done) =&gt; {
+    const user = await UserModel.findOne({ email });
+    if (!user) return done(null, false);
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) return done(null, false);
+    return done(null, user);
+  }
+));</pre>
+        <div class="done-when"><strong>Done when:</strong> strategy registered without startup errors.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>A2 - Passport login route</h2>
+        <pre>app.post("/auth/passport-login",
+  passport.authenticate("local", { session: false }),
+  (req, res) =&gt; {
+    const token = jwt.sign({ sub: req.user.id }, process.env.JWT_SECRET!, {
+      expiresIn: "7d",
+    });
+    res.json({
+      token,
+      user: { id: req.user.id, name: req.user.name, email: req.user.email },
+    });
+  }
+);</pre>
+        <pre>curl -X POST http://localhost:3000/auth/passport-login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"yourpassword"}'</pre>
+        <div class="done-when"><strong>Done when:</strong> response matches your existing <code>/auth/login</code> shape.</div>
+    </div>
+
+    <div class="reflection">
+        <strong>Reflection A:</strong> Write 2 sentences — when would you pick Passport over your custom Week 7 login handler?
+    </div>
+
+    <div class="mini-lab-header">Mini-lab B — Supabase Auth (React)</div>
+
+    <div class="exercise-instructions">
+        <h2>B1 - Create Supabase project</h2>
+        <ol>
+            <li>Sign up at <a href="https://supabase.com">supabase.com</a></li>
+            <li>Create a new project</li>
+            <li>Settings → API → copy <strong>Project URL</strong> and <strong>anon public</strong> key</li>
+            <li>Authentication → Providers → ensure Email is enabled</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> you have URL and anon key ready.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>B2 - Vite + Supabase client</h2>
+        <pre>npm create vite@latest supabase-sandbox -- --template react-ts
+cd supabase-sandbox
+npm install @supabase/supabase-js</pre>
+        <pre># .env
+VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key</pre>
+        <pre>import { createClient } from "@supabase/supabase-js";
+
+export const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);</pre>
+        <div class="done-when"><strong>Done when:</strong> client initializes without env errors.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>B3 - Register, login, display session</h2>
+        <pre>// Register
+await supabase.auth.signUp({ email, password });
+
+// Login
+const { data, error } = await supabase.auth.signInWithPassword({
+  email, password,
+});
+
+// Logout
+await supabase.auth.signOut();</pre>
+        <p>Build three buttons and show <code>data.session?.user.email</code> plus a JSON dump of the session on screen.</p>
+        <div class="done-when"><strong>Done when:</strong> you can sign up a test user, log in, see email, and log out.</div>
+    </div>
+
+    <div class="reflection">
+        <strong>Reflection B:</strong> Write 2 sentences — when would you pick Supabase over custom JWT + MongoDB?
+    </div>
+
+    <div class="mini-lab-header">Mini-lab C — Clerk (React)</div>
+
+    <div class="exercise-instructions">
+        <h2>C1 - Create Clerk application</h2>
+        <ol>
+            <li>Sign up at <a href="https://clerk.com">clerk.com</a></li>
+            <li>Create an application</li>
+            <li>Copy the <strong>Publishable key</strong></li>
+            <li>Configure allowed origins: <code>http://localhost:5173</code></li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> publishable key is ready.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>C2 - Vite + ClerkProvider</h2>
+        <pre>npm create vite@latest clerk-sandbox -- --template react-ts
+cd clerk-sandbox
+npm install @clerk/clerk-react react-router-dom</pre>
+        <pre># .env
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...</pre>
+        <pre>import { ClerkProvider, SignIn, SignUp, UserButton } from "@clerk/clerk-react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+const pk = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+export default function App() {
+  return (
+    &lt;ClerkProvider publishableKey={pk}&gt;
+      &lt;BrowserRouter&gt;
+        &lt;header&gt;&lt;UserButton /&gt;&lt;/header&gt;
+        &lt;Routes&gt;
+          &lt;Route path="/sign-in" element={&lt;SignIn /&gt;} /&gt;
+          &lt;Route path="/sign-up" element={&lt;SignUp /&gt;} /&gt;
+          &lt;Route path="/" element={&lt;p&gt;Home — sign in to continue&lt;/p&gt;} /&gt;
+        &lt;/Routes&gt;
+      &lt;/BrowserRouter&gt;
+    &lt;/ClerkProvider&gt;
+  );
+}</pre>
+        <div class="done-when"><strong>Done when:</strong> SignIn and SignUp pages render; UserButton appears when signed in.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>C3 - useUser hook</h2>
+        <pre>import { useUser } from "@clerk/clerk-react";
+
+const { user, isSignedIn } = useUser();
+// Display user.primaryEmailAddress?.emailAddress on home page</pre>
+        <div class="done-when"><strong>Done when:</strong> home page shows signed-in user's email.</div>
+    </div>
+
+    <div class="reflection">
+        <strong>Reflection C:</strong> Write 2 sentences — when would you pick Clerk over Supabase for a new React SaaS?
+    </div>
+
+    <div class="practice-shell">
+        <strong>All three mini-labs complete.</strong> You have touched Passport (server), Supabase (hosted BaaS), and Clerk (hosted UI).
+        <p style="margin-top: 0.75rem;">Your Week 8 capstone still uses custom JWT from <code>event-mgmt-api</code>. Apply Session 2 frontend patterns: <a href="../assignment/week-8-assignment.html">Event Management Frontend assignment</a>.</p>
+    </div>
+</body>
+
+</html>

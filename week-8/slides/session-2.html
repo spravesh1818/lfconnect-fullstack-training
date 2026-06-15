@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 8 - Session 2 - Todo React Frontend</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 8 - Session 2</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 2: Build a Todo Frontend for Your API</h1>
+        <p>Register, login, list todos, add, edit, delete, and mark complete — all against your real Week 6/7 Todo API.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Full-stack picture — CORS and two dev servers</li>
+            <li>Vite + React + TypeScript scaffold</li>
+            <li>Auth context and protected routes</li>
+            <li>API client with Bearer token</li>
+            <li>Todo CRUD UI</li>
+            <li>FormData preview for Part 2 banner upload</li>
+            <li>Week 8 assignment tie-in</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Two Apps, One Product</h1>
+        <p>Your Todo API runs on <code>:3000</code>. Your React app runs on <code>:5173</code>. Different origins — the browser enforces CORS.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>CORS on the API</h2>
+        <pre>import cors from "cors";
+
+app.use(cors({
+  origin: "http://localhost:5173",
+}));</pre>
+        <p>Without this, fetch from React fails with a CORS error in DevTools. Quick check: open <code>http://localhost:3000/health</code> from the browser after enabling CORS.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Frontend env</h2>
+        <pre># todo-frontend/.env
+VITE_API_URL=http://localhost:3000</pre>
+        <pre>const base = import.meta.env.VITE_API_URL;</pre>
+        <p>Only <code>VITE_*</code> variables are exposed to client code. Never put secrets here — the bundle is public.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Request flow</h2>
+        <ol>
+            <li>User logs in on React → API returns JWT</li>
+            <li>React stores token in localStorage</li>
+            <li>Every API call sends <code>Authorization: Bearer …</code></li>
+            <li>API <code>requireAuth</code> verifies before mutations</li>
+        </ol>
+        <p>Week 4 taught client guards. Week 7 secured the server. Today both sides talk.</p>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Project Scaffold</h1>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Create the app</h2>
+        <pre>npm create vite@latest todo-frontend -- --template react-ts
+cd todo-frontend
+npm install
+npm install react-router-dom</pre>
+        <p>Run: <code>npm run dev</code> — default port 5173.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Suggested folders</h2>
+        <pre>src/
+  api/
+    client.ts       # fetch wrapper + Bearer header
+    todos.ts        # todo API calls
+    auth.ts         # login/register
+  context/
+    AuthContext.tsx
+  components/
+    ProtectedRoute.tsx
+    TodoList.tsx
+    TodoForm.tsx
+  pages/
+    LoginPage.tsx
+    RegisterPage.tsx
+    TodosPage.tsx
+  types/
+    todo.ts
+    user.ts</pre>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Auth Layer</h1>
+        <p>Reuse Week 4 patterns — provider at root, hook for consumers — but call your real API endpoints.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>AuthContext shape</h2>
+        <pre>type AuthState = {
+  token: string | null;
+  user: { id: string; name: string; email: string } | null;
+  login: (email: string, password: string) =&gt; Promise&lt;void&gt;;
+  register: (name: string, email: string, password: string) =&gt; Promise&lt;void&gt;;
+  logout: () =&gt; void;
+};</pre>
+        <p>On mount: read <code>token</code> and <code>user</code> from localStorage to survive refresh.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Login request</h2>
+        <pre>const res = await fetch(`${API_URL}/auth/login`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email, password }),
+});
+if (!res.ok) throw new Error("Invalid credentials");
+const { token, user } = await res.json();
+localStorage.setItem("token", token);
+localStorage.setItem("user", JSON.stringify(user));</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>API client with Bearer</h2>
+        <pre>export async function apiFetch(path: string, options: RequestInit = {}) {
+  const token = localStorage.getItem("token");
+  const headers = new Headers(options.headers);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+    throw new Error("Unauthorized");
+  }
+  return res;
+}</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>ProtectedRoute</h2>
+        <pre>function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { token } = useAuth();
+  if (!token) return &lt;Navigate to="/login" replace /&gt;;
+  return children;
+}</pre>
+        <p>Client guard improves UX. Server <code>requireAuth</code> is what actually blocks bad requests.</p>
+    </div>
+
+    <div class="slide bg5">
+        <p class="part-kicker">Part 4</p>
+        <h1>Todo CRUD UI</h1>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Load todos</h2>
+        <pre>useEffect(() =&gt; {
+  apiFetch("/todos")
+    .then(r =&gt; r.json())
+    .then(setTodos)
+    .catch(setError)
+    .finally(() =&gt; setLoading(false));
+}, []);</pre>
+        <p>Show loading spinner, error message, or empty state — three states users always hit.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Create todo</h2>
+        <pre>await apiFetch("/todos", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ title, completed: false }),
+});</pre>
+        <p>Clear the input and refetch — or optimistically append to local state.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Edit, delete, toggle complete</h2>
+        <ul>
+            <li><strong>Edit title</strong> — <code>PATCH /todos/:id</code> with <code>{ title }</code></li>
+            <li><strong>Delete</strong> — <code>DELETE /todos/:id</code>, remove from list</li>
+            <li><strong>Toggle</strong> — checkbox calls <code>PATCH</code> with <code>{ completed: !todo.completed }</code></li>
+        </ul>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Routes sketch</h2>
+        <pre>&lt;Route path="/login" element={&lt;LoginPage /&gt;} /&gt;
+&lt;Route path="/register" element={&lt;RegisterPage /&gt;} /&gt;
+&lt;Route path="/todos" element={
+  &lt;ProtectedRoute&gt;&lt;TodosPage /&gt;&lt;/ProtectedRoute&gt;
+} /&gt;</pre>
+        <p>Redirect <code>/</code> to <code>/todos</code> when logged in, else <code>/login</code>.</p>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 5</p>
+        <h1>FormData preview (Part 2 assignment)</h1>
+        <p>Session 1 was a standalone <code>file-upload-api</code>. In Part 2 you upload event banners from React using the same multipart pattern.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Upload from React</h2>
+        <pre>const form = new FormData();
+form.append("file", bannerFile);
+await apiFetch(`/events/${eventId}/banner`, {
+  method: "POST",
+  body: form, // no Content-Type — browser sets multipart boundary
+});</pre>
+        <p>Do not set <code>Content-Type: application/json</code> on FormData requests.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Demo checklist</h2>
+        <ul>
+            <li>Register a new user</li>
+            <li>Login — land on todos page</li>
+            <li>Add two todos, toggle one complete</li>
+            <li>Edit a title, delete one todo</li>
+            <li>Logout — <code>/todos</code> redirects to login</li>
+            <li>POST without token via curl still returns 401</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Week 8 Assignment Tie-in</h2>
+        <p>Same patterns for your <code>event-mgmt-web</code> frontend:</p>
+        <ul>
+            <li>Auth pages + protected organizer dashboard</li>
+            <li>Public events list + CRUD for drafts</li>
+            <li>Banner upload with FormData</li>
+        </ul>
+        <p>Details: <a href="../assignment/week-8-assignment.html">Week 8 assignment sheet</a></p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Summary</h2>
+        <ul>
+            <li>Enable CORS on API; <code>VITE_API_URL</code> on frontend</li>
+            <li>AuthContext + localStorage + ProtectedRoute</li>
+            <li><code>apiFetch</code> attaches Bearer token; handle 401</li>
+            <li>Full todo CRUD against real endpoints</li>
+            <li>Next session — Passport, Supabase, Clerk mini-labs</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 8 Session 2 Quiz</h1>
+        <p class="quiz-hint">8 questions on CORS, Vite env, auth context, and API integration.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">React on :5173 cannot fetch API on :3000 without CORS because:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Different ports = different origins; browser blocks unless API allows the origin.">Different ports are different origins; browser enforces cross-origin policy</button>
+            <button type="button" data-correct="false" data-explanation="React works with any port if CORS is configured.">React only works on port 3000</button>
+            <button type="button" data-correct="false" data-explanation="JWT is sent after CORS preflight passes.">JWT prevents cross-origin requests</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB is server-side; CORS is a browser rule.">MongoDB blocks port 5173</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">Which env variable is exposed to Vite client code?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Only VITE_ prefixed vars are bundled into the client.">VITE_API_URL</button>
+            <button type="button" data-correct="false" data-explanation="No VITE_ prefix — not exposed to client bundle.">JWT_SECRET</button>
+            <button type="button" data-correct="false" data-explanation="Server-side only unless prefixed VITE_.">MINIO_SECRET_KEY</button>
+            <button type="button" data-correct="false" data-explanation="Database URLs must stay server-side.">MONGODB_URI</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">Correct way to send JWT from React to your API:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Bearer scheme in Authorization header is standard.">Authorization: Bearer &lt;token&gt;</button>
+            <button type="button" data-correct="false" data-explanation="Password must never be sent after login.">Body: { password: token }</button>
+            <button type="button" data-correct="false" data-explanation="Query strings leak in logs and referrer headers.">?token= in the URL query string only</button>
+            <button type="button" data-correct="false" data-explanation="Content-Type describes body format, not auth.">Content-Type: Bearer</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">ProtectedRoute in React primarily improves:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Hides pages from logged-out users; server still enforces auth.">User experience — redirect before showing private UI</button>
+            <button type="button" data-correct="false" data-explanation="Server middleware secures the API; curl bypasses React.">Server-side security replacing requireAuth</button>
+            <button type="button" data-correct="false" data-explanation="CORS is separate from route guards.">CORS configuration automatically</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB does not read React Router.">MongoDB write permissions</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">When API returns 401, the frontend should:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Token expired or invalid — clear storage and send user to login.">Clear token and redirect to login</button>
+            <button type="button" data-correct="false" data-explanation="Retrying with same bad token loops forever.">Retry the same request indefinitely</button>
+            <button type="button" data-correct="false" data-explanation="401 means auth failed, not server crash.">Show "server is down" always</button>
+            <button type="button" data-correct="false" data-explanation="Ignoring 401 leaves user in a broken authenticated state.">Ignore and keep showing protected data</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">To mark a todo complete, call:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="PATCH partial update with completed flag.">PATCH /todos/:id with { completed: true }</button>
+            <button type="button" data-correct="false" data-explanation="GET must not mutate data.">GET /todos/:id/complete</button>
+            <button type="button" data-correct="false" data-explanation="Login returns token, does not update todos.">POST /auth/login with completed field</button>
+            <button type="button" data-correct="false" data-explanation="DELETE removes the todo entirely.">DELETE /todos without id</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">Uploading a file from React with FormData — you should:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Browser sets multipart boundary automatically when Content-Type is omitted.">Omit Content-Type so the browser sets multipart boundary</button>
+            <button type="button" data-correct="false" data-explanation="JSON cannot carry raw file bytes in standard fetch.">Stringify the file as JSON</button>
+            <button type="button" data-correct="false" data-explanation="application/json breaks multipart upload.">Set Content-Type: application/json</button>
+            <button type="button" data-correct="false" data-explanation="Files use multipart, not Bearer in body.">Put the file in the Authorization header</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">Why persist token in localStorage for this class demo?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Simple SPA pattern for labs; production may prefer httpOnly cookies.">Survives page refresh; simple for SPA teaching</button>
+            <button type="button" data-correct="false" data-explanation="localStorage is readable by XSS — not the most secure option.">Most secure option for all production apps</button>
+            <button type="button" data-correct="false" data-explanation="Tokens are for auth headers, not password storage.">Required to store passwords too</button>
+            <button type="button" data-correct="false" data-explanation="CORS is configured on server, unrelated to storage choice.">Replaces CORS configuration</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 8 Session 2</h1>
+        <p>Complete <a href="../handson/class-2-handson.html">Class 2 hands-on</a> (Todo frontend). Next session — <a href="session-3.html">Passport, Supabase, Clerk</a>.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

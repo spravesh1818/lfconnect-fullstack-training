@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 8 Class 1 hands-on - Multer File Upload API</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .troubleshooting {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff1f2;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 8 - Class 1 Lab (in-class)</strong> -
+        <a href="../slides/session-1.html">Open session deck</a>
+        - Build <code>file-upload-api</code> with Multer disk storage — we code this together
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 0 — Prerequisites</h2>
+        <ul>
+            <li>[ ] Node.js 18+ installed</li>
+            <li>[ ] MongoDB running locally or Atlas connection string ready</li>
+            <li>[ ] Comfortable with Express + Mongoose from Weeks 5–6</li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> you can start a basic Express server and connect to MongoDB.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 — Scaffold file-upload-api</h2>
+        <pre>mkdir file-upload-api && cd file-upload-api
+npm init -y</pre>
+        <p>Set in <code>package.json</code>: <code>"type": "module"</code> and <code>"dev": "tsx src/server.ts"</code></p>
+        <pre>npm install express mongoose multer dotenv
+npm install -D typescript tsx @types/express @types/multer @types/node</pre>
+        <p>Create <code>src/server.ts</code>, <code>src/app.ts</code>, <code>src/config/db.ts</code>.</p>
+        <pre># .env
+MONGODB_URI=mongodb://localhost:27017/file-upload
+PORT=3000</pre>
+        <div class="done-when"><strong>Done when:</strong> <code>npm run dev</code> starts; <code>GET /health</code> returns <code>{ status: "ok" }</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 — uploads/ folder and .gitignore</h2>
+        <pre>mkdir uploads
+echo "uploads/" >> .gitignore
+echo ".env" >> .gitignore</pre>
+        <p>Add <code>.env.example</code> with <code>MONGODB_URI=</code> and <code>PORT=3000</code> (no secrets).</p>
+        <div class="done-when"><strong>Done when:</strong> <code>uploads/</code> exists and is gitignored.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 — Multer diskStorage middleware</h2>
+        <p>Create <code>src/middleware/upload.ts</code>:</p>
+        <pre>import multer from "multer";
+import { randomUUID } from "node:crypto";
+
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (_req, file, cb) => {
+    const safe = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
+    cb(null, `${randomUUID()}-${safe}`);
+  },
+});
+
+export const fileUpload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["image/png", "image/jpeg", "text/plain", "application/pdf"];
+    cb(null, allowed.includes(file.mimetype));
+  },
+});</pre>
+        <div class="done-when"><strong>Done when:</strong> file exports <code>fileUpload</code>; server imports without errors.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 — File model and POST /files</h2>
+        <p>Create <code>src/file/model/file.model.ts</code>:</p>
+        <pre>import { Schema, model } from "mongoose";
+
+const fileSchema = new Schema({
+  originalName: { type: String, required: true },
+  storedPath:   { type: String, required: true },
+  mimeType:     { type: String, required: true },
+  size:         { type: Number, required: true },
+}, { timestamps: true });
+
+export const FileModel = model("File", fileSchema);</pre>
+        <p>Controller <code>uploadFile</code>: if no <code>req.file</code> return 400; else <code>FileModel.create</code> with <code>originalname</code>, <code>path</code>, <code>mimetype</code>, <code>size</code>.</p>
+        <p>Route: <code>router.post("/", fileUpload.single("file"), uploadFile)</code></p>
+        <div class="done-when"><strong>Done when:</strong> curl upload returns 201 JSON with <code>originalName</code> and <code>storedPath</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 5 — GET /files list</h2>
+        <pre>export async function listFiles(_req, res) {
+  const files = await FileModel.find().sort({ createdAt: -1 }).lean();
+  res.json(files);
+}</pre>
+        <p>Register <code>router.get("/", listFiles)</code>.</p>
+        <div class="done-when"><strong>Done when:</strong> <code>curl http://localhost:3000/files</code> returns an array including your upload.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 6 — Download endpoint</h2>
+        <pre>export async function downloadFile(req, res) {
+  const doc = await FileModel.findById(req.params.id);
+  if (!doc) return res.status(404).json({ error: "Not found" });
+  res.download(doc.storedPath, doc.originalName);
+}</pre>
+        <p>Route: <code>router.get("/:id/download", downloadFile)</code></p>
+        <div class="done-when"><strong>Done when:</strong> download returns the file with the correct original filename.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 7 — End-to-end curl test</h2>
+        <pre>echo "hello class" > notes.txt
+
+curl -X POST http://localhost:3000/files \
+  -F "file=@./notes.txt"
+
+curl http://localhost:3000/files
+
+# Replace FILE_ID from list response
+curl -O -J http://localhost:3000/files/FILE_ID/download</pre>
+        <div class="done-when"><strong>Done when:</strong> downloaded file content matches <code>notes.txt</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 8 — Verify MongoDB metadata</h2>
+        <p>Open MongoDB (Compass or shell) and confirm the document has:</p>
+        <ul>
+            <li><code>originalName: "notes.txt"</code></li>
+            <li><code>storedPath</code> pointing to a file under <code>uploads/</code></li>
+            <li><code>mimeType</code> and <code>size</code> populated</li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> database record matches what curl returned.</div>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li><strong><code>req.file</code> undefined</strong> — use <code>-F "file=@path"</code>; field name must be <code>file</code>.</li>
+            <li><strong><code>LIMIT_FILE_SIZE</code></strong> — file exceeds 2 MB.</li>
+            <li><strong>File filter rejected</strong> — check MIME type; try <code>.txt</code> for <code>text/plain</code>.</li>
+            <li><strong>ENOENT on download</strong> — <code>storedPath</code> wrong; confirm file exists in <code>uploads/</code>.</li>
+            <li><strong>MongoDB connection error</strong> — check <code>MONGODB_URI</code>; Atlas IP whitelist if using cloud.</li>
+            <li><strong><code>Unexpected field</code></strong> — curl field name does not match <code>upload.single("file")</code>.</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Class lab complete.</strong> You have a working <code>file-upload-api</code> with Multer disk storage.
+        <p style="margin-top: 0.75rem;"><strong>Assignment Part 1:</strong> migrate this project to MinIO — see <a href="../assignment/week-8-assignment.html">Week 8 assignment sheet</a>.</p>
+        <p><strong>Next class:</strong> <a href="class-2-handson.html">Class 2 hands-on</a> — React Todo frontend.</p>
+    </div>
+</body>
+
+</html>

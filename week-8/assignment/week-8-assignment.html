@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 8 Assignments</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            padding: 24px;
+            line-height: 1.6;
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        h1 {
+            max-width: 56rem;
+            margin: 0 auto 1.5rem;
+            padding: 1rem 1.25rem;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 8px;
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+        }
+
+        section {
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1.25rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.6rem;
+            color: #0f172a;
+        }
+
+        h3 {
+            margin-top: 1.25rem;
+        }
+
+        a {
+            color: #0369a1;
+        }
+
+        code {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 0.05rem 0.35rem;
+        }
+
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .deadline {
+            border-left: 5px solid #ef4444;
+            background: #fff1f2;
+        }
+
+        .presentation {
+            border-left: 5px solid #3b82f6;
+            background: #eff6ff;
+        }
+
+        .prerequisite {
+            border-left: 5px solid #f59e0b;
+            background: #fffbeb;
+        }
+
+        .part-header {
+            border-left: 5px solid #16a34a;
+            background: #f0fdf4;
+        }
+
+        ul.checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul.checklist li::before {
+            content: "☐ ";
+            color: #475569;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem 0.65rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f8fafc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Week 8 Assignments</h1>
+
+    <section class="deadline">
+        <h2>Submission</h2>
+        <p>Deadline: <strong>Sunday evening, 11:59 PM</strong>.</p>
+        <p><strong>Individual project.</strong> Two required parts:</p>
+        <ol>
+            <li><strong>Part 1</strong> — MinIO migration of <code>file-upload-api</code> (from Session 1 class)</li>
+            <li><strong>Part 2</strong> — React frontend for your Week 7 <code>event-mgmt-api</code></li>
+        </ol>
+        <p>Share repo links, READMEs, and demo evidence for both parts.</p>
+    </section>
+
+    <!-- ========== PART 1: MINIO ========== -->
+
+    <section class="part-header">
+        <h2>Assignment Part 1 — MinIO File Upload API</h2>
+        <p>Migrate the in-class <code>file-upload-api</code> from Multer disk storage to MinIO object storage. Files are stored with a <strong>timestamp object key</strong>; the <strong>original filename</strong> is tracked in MongoDB.</p>
+    </section>
+
+    <section class="prerequisite">
+        <h2>Prerequisite — Session 1 class lab</h2>
+        <p>Complete the in-class <a href="../handson/class-1-handson.html">Class 1 hands-on</a> first. Your repo must have working:</p>
+        <ul>
+            <li><code>POST /files</code> with Multer disk upload</li>
+            <li><code>GET /files</code> listing metadata</li>
+            <li><code>GET /files/:id/download</code> serving from disk</li>
+            <li>MongoDB fields: <code>originalName</code>, <code>storedPath</code>, <code>mimeType</code>, <code>size</code></li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Part 1 requirements</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Area</th>
+                    <th>Requirement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>MinIO</strong></td>
+                    <td>Docker MinIO on ports 9000/9001; bucket <code>file-uploads</code> (private)</td>
+                </tr>
+                <tr>
+                    <td><strong>Multer</strong></td>
+                    <td>Switch to <code>memoryStorage()</code>; keep size limit and MIME filter</td>
+                </tr>
+                <tr>
+                    <td><strong>Upload</strong></td>
+                    <td><code>PutObjectCommand</code> with key <code>${Date.now()}-${req.file.originalname}</code></td>
+                </tr>
+                <tr>
+                    <td><strong>MongoDB</strong></td>
+                    <td>Store <code>originalName</code>, <code>objectKey</code>, <code>mimeType</code>, <code>size</code> — remove <code>storedPath</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Download</strong></td>
+                    <td><code>GET /files/:id/url</code> returns presigned URL (60s TTL); remove or keep disk download route disabled</td>
+                </tr>
+                <tr>
+                    <td><strong>List</strong></td>
+                    <td><code>GET /files</code> still returns all file metadata</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Part 1 — Step-by-step guide</h2>
+
+        <h3>Step 1 — Start MinIO</h3>
+        <pre>docker run -p 9000:9000 -p 9001:9001 \
+  -e MINIO_ROOT_USER=minioadmin \
+  -e MINIO_ROOT_PASSWORD=minioadmin \
+  minio/minio server /data --console-address ":9001"</pre>
+        <p>Open <code>http://localhost:9001</code> — login <code>minioadmin</code> / <code>minioadmin</code>. Create bucket <code>file-uploads</code>.</p>
+
+        <h3>Step 2 — Install SDK and env vars</h3>
+        <pre>npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner</pre>
+        <pre># .env (add to existing)
+MINIO_ENDPOINT=http://localhost:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=file-uploads</pre>
+        <p>Mirror keys in <code>.env.example</code> with empty values.</p>
+
+        <h3>Step 3 — S3 client factory</h3>
+        <pre>// src/config/minio.ts
+import { S3Client } from "@aws-sdk/client-s3";
+
+export const s3 = new S3Client({
+  region: "us-east-1",
+  endpoint: process.env.MINIO_ENDPOINT,
+  forcePathStyle: true,
+  credentials: {
+    accessKeyId: process.env.MINIO_ACCESS_KEY!,
+    secretAccessKey: process.env.MINIO_SECRET_KEY!,
+  },
+});</pre>
+
+        <h3>Step 4 — Update Multer to memoryStorage</h3>
+        <pre>export const fileUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["image/png", "image/jpeg", "text/plain", "application/pdf"];
+    cb(null, allowed.includes(file.mimetype));
+  },
+});</pre>
+
+        <h3>Step 5 — Upload handler with PutObject</h3>
+        <pre>import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { s3 } from "../config/minio.js";
+
+const objectKey = `${Date.now()}-${req.file.originalname}`;
+
+await s3.send(new PutObjectCommand({
+  Bucket: process.env.MINIO_BUCKET!,
+  Key: objectKey,
+  Body: req.file.buffer,
+  ContentType: req.file.mimetype,
+}));
+
+const doc = await FileModel.create({
+  originalName: req.file.originalname,
+  objectKey,
+  mimeType: req.file.mimetype,
+  size: req.file.size,
+});</pre>
+
+        <h3>Step 6 — Update File model</h3>
+        <pre>const fileSchema = new Schema({
+  originalName: { type: String, required: true },
+  objectKey:    { type: String, required: true },
+  mimeType:     { type: String, required: true },
+  size:         { type: Number, required: true },
+}, { timestamps: true });</pre>
+
+        <h3>Step 7 — Presigned download URL</h3>
+        <pre>import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const url = await getSignedUrl(
+  s3,
+  new GetObjectCommand({
+    Bucket: process.env.MINIO_BUCKET!,
+    Key: doc.objectKey,
+  }),
+  { expiresIn: 60 }
+);
+res.json({ url, originalName: doc.originalName });</pre>
+
+        <h3>Step 8 — Test with curl</h3>
+        <pre>curl -X POST http://localhost:3000/files -F "file=@./notes.txt"
+curl http://localhost:3000/files
+curl http://localhost:3000/files/FILE_ID/url</pre>
+        <p>Open the <code>url</code> from the last response in a browser — file content should match.</p>
+    </section>
+
+    <section>
+        <h2>Part 1 checklist</h2>
+        <ul class="checklist">
+            <li>MinIO container running; bucket <code>file-uploads</code> exists.</li>
+            <li>Upload stores object in MinIO with timestamp-prefixed key.</li>
+            <li>MongoDB has <code>originalName</code> matching the uploaded file's name.</li>
+            <li>MongoDB has <code>objectKey</code> — no <code>storedPath</code> on new uploads.</li>
+            <li><code>GET /files/:id/url</code> returns a working presigned URL.</li>
+            <li>MinIO console shows the object with the timestamp key.</li>
+            <li><code>.env.example</code> lists all MinIO vars (no real secrets).</li>
+            <li>README documents Docker MinIO command and curl test flow.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Part 1 submission</h2>
+        <ul>
+            <li>Repository link (<code>file-upload-api</code>)</li>
+            <li>Screenshot of MinIO console showing an uploaded object</li>
+            <li>Terminal log or recording: upload → list → presigned URL → download</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Part 1 troubleshooting</h2>
+        <ul>
+            <li><strong>AccessDenied</strong> — wrong access key/secret or bucket name mismatch.</li>
+            <li><strong>ECONNREFUSED on port 9000</strong> — MinIO container not running.</li>
+            <li><strong>Bucket not found</strong> — create <code>file-uploads</code> in console.</li>
+            <li><strong><code>req.file</code> undefined</strong> — curl must use <code>-F "file=@path"</code>.</li>
+            <li><strong>Presigned URL 403</strong> — verify object exists; credentials must match.</li>
+        </ul>
+    </section>
+
+    <!-- ========== PART 2: EVENT FRONTEND ========== -->
+
+    <section class="part-header">
+        <h2>Assignment Part 2 — Event Management Frontend</h2>
+        <p>Build a React frontend (<code>event-mgmt-web</code>) that talks to your Week 7 <code>event-mgmt-api</code>.</p>
+    </section>
+
+    <section class="prerequisite">
+        <h2>Prerequisite — Week 7 backend required</h2>
+        <p>You <strong>cannot</strong> complete Part 2 without a working <a href="../../week-7/assignment/week-7-assignment.html">Week 7 Event Management Backend</a>.</p>
+        <p>Minimum API features:</p>
+        <ul>
+            <li><code>POST /auth/register</code> and <code>POST /auth/login</code> (JWT)</li>
+            <li>CRUD on <code>/events</code> with <code>draft</code> and <code>published</code> status</li>
+            <li><code>GET /events</code> returns published events publicly</li>
+            <li><code>POST /events/:id/banner</code> with Multer</li>
+            <li>Publishing triggers BullMQ job</li>
+        </ul>
+    </section>
+
+    <section class="presentation">
+        <h2>Part 2 presentation (in class)</h2>
+        <p>5–8 minute demo covering:</p>
+        <ul>
+            <li>Register + login in the browser</li>
+            <li>Create draft event on organizer dashboard</li>
+            <li>Upload banner image</li>
+            <li>Publish event — mention background job</li>
+            <li>Public <code>/events</code> shows published event with banner</li>
+            <li>One auth/UI decision and one API integration challenge</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Part 2 project overview</h2>
+        <p>Apply Week 8 Session 2 patterns: auth context, protected routes, CRUD UI, FormData banner upload.</p>
+
+        <h3>Tech stack</h3>
+        <ul>
+            <li>Vite + React + TypeScript + React Router</li>
+            <li>JWT in localStorage</li>
+            <li><code>VITE_API_URL=http://localhost:3000</code></li>
+        </ul>
+
+        <h3>Suggested folder tree</h3>
+        <pre>event-mgmt-web/
+├─ src/
+│  ├─ api/client.ts, auth.ts, events.ts
+│  ├─ context/AuthContext.tsx
+│  ├─ components/ProtectedRoute.tsx, EventCard.tsx, EventForm.tsx
+│  ├─ pages/LoginPage, RegisterPage, EventsPage, DashboardPage
+│  └─ types/event.ts
+├─ .env.example
+└─ README.md</pre>
+    </section>
+
+    <section>
+        <h2>Part 2 — Backend prep (document in README)</h2>
+        <pre>app.use(cors({ origin: "http://localhost:5173" }));
+app.use("/uploads", express.static("uploads"));</pre>
+        <p>Run Redis, API (<code>npm run dev</code>), worker (<code>npm run worker</code>), and frontend (<code>npm run dev</code>).</p>
+    </section>
+
+    <section>
+        <h2>Part 2 requirements</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Area</th>
+                    <th>Requirement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Auth</strong></td>
+                    <td>Register, login, logout; Bearer token; protected organizer routes; 401 → login</td>
+                </tr>
+                <tr>
+                    <td><strong>Public events</strong></td>
+                    <td><code>/events</code> lists published events; loading, error, empty states</td>
+                </tr>
+                <tr>
+                    <td><strong>Dashboard</strong></td>
+                    <td>Protected CRUD for draft events</td>
+                </tr>
+                <tr>
+                    <td><strong>Publish</strong></td>
+                    <td>PATCH <code>status: "published"</code>; user feedback that job fired</td>
+                </tr>
+                <tr>
+                    <td><strong>Banner</strong></td>
+                    <td>FormData upload to <code>/events/:id/banner</code>; display on card via <code>/uploads/...</code></td>
+                </tr>
+                <tr>
+                    <td><strong>UX</strong></td>
+                    <td>Basic responsive layout and navigation</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Part 2 checklist</h2>
+        <ul class="checklist">
+            <li>Fresh <code>event-mgmt-web</code> repo (separate from API).</li>
+            <li>CORS enabled on <code>event-mgmt-api</code>.</li>
+            <li>Auth flow works in browser; token persists on refresh.</li>
+            <li>Public <code>/events</code> lists published events.</li>
+            <li>Dashboard CRUD for drafts works.</li>
+            <li>Banner upload displays on event card.</li>
+            <li>Publish shows confirmation message.</li>
+            <li>README explains running API + worker + Redis + frontend.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Part 2 demo flow</h2>
+        <ol>
+            <li>Register → login → dashboard</li>
+            <li>Create draft → upload banner → publish</li>
+            <li>Public <code>/events</code> shows event with banner</li>
+            <li>Logout → dashboard blocked</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>Part 2 stretch goals (optional)</h2>
+        <ul>
+            <li>Note in README that second <code>GET /events</code> shows CACHE HIT in API logs</li>
+            <li>Filter or search on public events list</li>
+            <li>Optimistic UI on publish</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Resources</h2>
+        <ul>
+            <li><a href="../handson/class-1-handson.html">Class 1 hands-on</a> (Multer — in-class)</li>
+            <li><a href="../slides/session-1.html">Session 1 slides</a> (Multer + MinIO preview)</li>
+            <li><a href="../handson/class-2-handson.html">Class 2 hands-on</a> (Todo frontend patterns)</li>
+            <li><a href="../slides/session-2.html">Session 2 slides</a></li>
+            <li><a href="../../week-7/assignment/week-7-assignment.html">Week 7 assignment</a> (backend prerequisite for Part 2)</li>
+        </ul>
+    </section>
+</body>
+
+</html>

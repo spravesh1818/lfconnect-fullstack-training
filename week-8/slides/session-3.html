@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 8 - Session 3 - Passport, Supabase, Clerk</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 8 - Session 3</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 3: Faster Auth with Passport, Supabase, and Clerk</h1>
+        <p>You built custom JWT auth in Week 7. Today we compare three tools that speed up prototyping — and run a mini-lab with each.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>When to roll your own vs use a library or hosted service</li>
+            <li>Passport.js — strategies and Express middleware</li>
+            <li>Supabase Auth — hosted auth + database</li>
+            <li>Clerk — pre-built React auth UI</li>
+            <li>Tradeoffs for real products</li>
+            <li>Three mini-labs (one per tool)</li>
+            <li>Week 8 assignment reminder</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Pick Your Auth Layer</h1>
+        <p>Custom JWT taught you the mechanics. In industry, teams often reach for tools once the basics are understood.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Four approaches compared</h2>
+        <div class="comparison">
+            <article>
+                <h3>Custom JWT (Week 7)</h3>
+                <ul>
+                    <li>You own every line</li>
+                    <li>Slowest to ship</li>
+                    <li>Best for learning + full control</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Passport.js</h3>
+                <ul>
+                    <li>Strategy plugins for Express</li>
+                    <li>Medium speed</li>
+                    <li>OAuth, local, JWT strategies</li>
+                </ul>
+            </article>
+        </div>
+        <div class="comparison" style="margin-top: 1rem;">
+            <article>
+                <h3>Supabase Auth</h3>
+                <ul>
+                    <li>Hosted auth + Postgres</li>
+                    <li>Fast MVPs</li>
+                    <li>Magic link, social login built-in</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Clerk</h3>
+                <ul>
+                    <li>Hosted auth + React components</li>
+                    <li>Fastest UI integration</li>
+                    <li>Dashboard, MFA, orgs</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Quick decision guide</h2>
+        <ul>
+            <li><strong>Learning / MERN course project</strong> — custom JWT (what you have)</li>
+            <li><strong>Express + "Login with Google"</strong> — Passport + OAuth strategy</li>
+            <li><strong>Startup MVP with Postgres</strong> — Supabase</li>
+            <li><strong>React SaaS needing auth UI yesterday</strong> — Clerk</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Passport.js</h1>
+        <p>Authentication middleware for Node. You plug in a <strong>strategy</strong> — local password, JWT, Google OAuth — and Passport standardizes the flow.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Core idea</h2>
+        <ul>
+            <li><strong>Strategy</strong> — how credentials are verified</li>
+            <li><strong>Serialize / deserialize</strong> — map user to session or token</li>
+            <li><strong>authenticate()</strong> — middleware on a route</li>
+        </ul>
+        <p>Passport does not replace your user model. You still store users and decide what to return (JWT, session cookie).</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Local strategy snippet</h2>
+        <pre>import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+
+passport.use(new LocalStrategy(
+  { usernameField: "email" },
+  async (email, password, done) =&gt; {
+    const user = await UserModel.findOne({ email });
+    if (!user || !await bcrypt.compare(password, user.passwordHash)) {
+      return done(null, false);
+    }
+    return done(null, user);
+  }
+));
+
+app.post("/auth/passport-login",
+  passport.authenticate("local", { session: false }),
+  (req, res) =&gt; {
+    const token = jwt.sign({ sub: req.user.id }, JWT_SECRET);
+    res.json({ token, user: req.user });
+  }
+);</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Common Passport strategies</h2>
+        <ul>
+            <li><code>passport-local</code> — email + password</li>
+            <li><code>passport-jwt</code> — extract Bearer token, verify</li>
+            <li><code>passport-google-oauth20</code> — "Sign in with Google"</li>
+            <li><code>passport-github2</code> — "Sign in with GitHub"</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Supabase Auth</h1>
+        <p>Backend-as-a-Service: hosted Postgres, auth, storage, realtime. Auth is one piece — but a powerful one for MVPs.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>What Supabase gives you</h2>
+        <ul>
+            <li>Email/password, magic links, phone OTP</li>
+            <li>Social providers (Google, GitHub, …)</li>
+            <li><code>session</code> object in client SDK</li>
+            <li>Row Level Security (RLS) — SQL policies per user</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>React snippet</h2>
+        <pre>import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
+// Register
+await supabase.auth.signUp({ email, password });
+
+// Login
+const { data, error } = await supabase.auth.signInWithPassword({
+  email, password,
+});
+// data.session.access_token available</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>When Supabase fits</h2>
+        <ul>
+            <li>You want Postgres + auth without managing servers</li>
+            <li>Magic link login is a product requirement</li>
+            <li>Small team shipping in weeks, not months</li>
+        </ul>
+        <p>Tradeoff: your data and auth rules live in Supabase's platform.</p>
+    </div>
+
+    <div class="slide bg5">
+        <p class="part-kicker">Part 4</p>
+        <h1>Clerk</h1>
+        <p>Hosted authentication with drop-in React components — sign-in forms, user button, session management out of the box.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Clerk React setup</h2>
+        <pre>import { ClerkProvider, SignIn, SignUp, UserButton } from "@clerk/clerk-react";
+
+const pk = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+&lt;ClerkProvider publishableKey={pk}&gt;
+  &lt;Routes&gt;
+    &lt;Route path="/sign-in" element={&lt;SignIn /&gt;} /&gt;
+    &lt;Route path="/sign-up" element={&lt;SignUp /&gt;} /&gt;
+  &lt;/Routes&gt;
+  &lt;UserButton /&gt;
+&lt;/ClerkProvider&gt;</pre>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Clerk hooks</h2>
+        <pre>import { useUser, useAuth } from "@clerk/clerk-react";
+
+const { user, isSignedIn } = useUser();
+const { getToken } = useAuth();
+
+// Attach to your API
+const token = await getToken();
+fetch("/api/events", {
+  headers: { Authorization: `Bearer ${token}` },
+});</pre>
+    </div>
+
+    <div class="slide bg5">
+        <h2>When Clerk fits</h2>
+        <ul>
+            <li>React/Next app needs polished auth UI immediately</li>
+            <li>You want MFA, orgs, and user management dashboard</li>
+            <li>Backend stays thin — Clerk handles identity</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 5</p>
+        <h1>Tradeoffs</h1>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Questions to ask before choosing</h2>
+        <ul>
+            <li><strong>Vendor lock-in</strong> — how hard is migration later?</li>
+            <li><strong>Pricing</strong> — free tier limits, per-MAU costs</li>
+            <li><strong>Data residency</strong> — where are users stored?</li>
+            <li><strong>Custom rules</strong> — odd login flows, legacy LDAP?</li>
+            <li><strong>Team skills</strong> — can you maintain custom auth?</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Week 8 assignment stays on custom JWT</h2>
+        <p>Your <code>event-mgmt-web</code> frontend talks to your Week 7 <code>event-mgmt-api</code> with Bearer tokens — same pattern as Session 2 Todo frontend.</p>
+        <p>Supabase and Clerk are tools for your <em>next</em> project, not this week's capstone.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Today's mini-labs</h2>
+        <ol>
+            <li><strong>A — Passport</strong> — local strategy route on Express (~20 min)</li>
+            <li><strong>B — Supabase</strong> — sign up + login in a Vite sandbox (~20 min)</li>
+            <li><strong>C — Clerk</strong> — SignIn / SignUp / UserButton (~20 min)</li>
+        </ol>
+        <p>Each ends with: <em>"When would I pick this over custom JWT?"</em> — write two sentences.</p>
+        <p>Lab sheet: <a href="../handson/class-3-handson.html">Class 3 hands-on</a></p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Summary</h2>
+        <ul>
+            <li>Custom JWT — full control, you built it in Week 7</li>
+            <li>Passport — strategy plugins for Express + OAuth</li>
+            <li>Supabase — hosted auth + Postgres + RLS</li>
+            <li>Clerk — fastest React auth UI integration</li>
+            <li>Capstone: Event Management Frontend due Sunday 11:59 PM</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 8 Session 3 Quiz</h1>
+        <p class="quiz-hint">8 questions on Passport, Supabase, Clerk, and auth tooling tradeoffs.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">In Passport.js, a "strategy" is:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Strategy = how credentials are verified (local, JWT, OAuth, etc.).">A plugin that verifies credentials a specific way</button>
+            <button type="button" data-correct="false" data-explanation="Passport does not replace MongoDB schemas.">A MongoDB schema for users</button>
+            <button type="button" data-correct="false" data-explanation="React components are Clerk/Supabase territory.">A React component for login forms</button>
+            <button type="button" data-correct="false" data-explanation="CORS is unrelated to Passport strategies.">A CORS configuration preset</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">Passport.js is the best fit when:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Passport shines in Express apps needing multiple auth methods.">You have an Express API and want pluggable OAuth/local strategies</button>
+            <button type="button" data-correct="false" data-explanation="Clerk provides hosted UI; Passport is server middleware.">You only need pre-built React sign-in components</button>
+            <button type="button" data-correct="false" data-explanation="Passport does not host databases.">You want a hosted Postgres database only</button>
+            <button type="button" data-correct="false" data-explanation="File uploads use Multer, not Passport.">You need multipart file upload parsing</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">Supabase Auth provides:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Supabase bundles hosted auth with Postgres and client SDK.">Hosted sign-up/login plus a Postgres database</button>
+            <button type="button" data-correct="false" data-explanation="Supabase is cloud-hosted, not local Docker MinIO.">Local S3-compatible object storage only</button>
+            <button type="button" data-correct="false" data-explanation="BullMQ is a Redis queue, not Supabase.">Redis job queues built-in</button>
+            <button type="button" data-correct="false" data-explanation="Supabase has its own auth; it does not replace Express routing.">Automatic Express route generation only</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">Row Level Security (RLS) in Supabase means:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="RLS policies filter database rows per authenticated user.">SQL policies that restrict which rows a user can read/write</button>
+            <button type="button" data-correct="false" data-explanation="RLS is database-level, not React Router.">React Router guards on the client</button>
+            <button type="button" data-correct="false" data-explanation="JWT signing is separate from RLS policies.">JWT secret rotation schedule</button>
+            <button type="button" data-correct="false" data-explanation="Multer handles HTTP uploads, not Postgres RLS.">File upload size limits</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">Clerk's main advantage for React teams is:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Clerk ships SignIn, SignUp, UserButton — minimal custom UI work.">Pre-built auth UI components and dashboard</button>
+            <button type="button" data-correct="false" data-explanation="Clerk is auth-focused, not a MongoDB ODM.">Replaces Mongoose for MongoDB</button>
+            <button type="button" data-correct="false" data-explanation="MinIO/S3 is object storage, not Clerk.">S3-compatible file storage</button>
+            <button type="button" data-correct="false" data-explanation="Clerk handles identity; you still write business API routes.">Automatic CRUD for all your domain models</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">For the Week 8 capstone, students should authenticate with:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Capstone uses custom JWT from Week 7 event-mgmt-api.">Bearer JWT from their Week 7 event-mgmt-api</button>
+            <button type="button" data-correct="false" data-explanation="Session 3 tools are for exploration; capstone uses course API.">Clerk only — replace the backend entirely</button>
+            <button type="button" data-correct="false" data-explanation="Supabase is a separate stack; capstone wires to event-mgmt-api.">Supabase session only — no custom API</button>
+            <button type="button" data-correct="false" data-explanation="API keys are for machine clients, not the React capstone.">Hard-coded API keys in the frontend repo</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">A downside of hosted auth (Supabase, Clerk) is:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Migration, pricing, and platform limits are real tradeoffs.">Vendor lock-in and platform dependency</button>
+            <button type="button" data-correct="false" data-explanation="Hosted services often speed up prototyping.">They always slow down every project</button>
+            <button type="button" data-correct="false" data-explanation="Hosted auth can be very secure when configured well.">They cannot support MFA or social login</button>
+            <button type="button" data-correct="false" data-explanation="React integration is a strength of Clerk especially.">They never work with React</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">You built custom JWT in Week 7. The best reason to still understand it when using Clerk is:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Knowing tokens, claims, and server verification helps debug any auth stack.">You still need to verify tokens and understand auth flows on your API</button>
+            <button type="button" data-correct="false" data-explanation="Clerk and custom JWT solve overlapping problems; knowing both is valuable.">Custom JWT makes Clerk unnecessary forever</button>
+            <button type="button" data-correct="false" data-explanation="Understanding auth helps you evaluate tools critically.">Hosted auth means you never touch security again</button>
+            <button type="button" data-correct="false" data-explanation="Passport, Supabase, and Clerk serve different niches.">Passport and Supabase are identical products</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 8 Session 3</h1>
+        <p>Complete <a href="../handson/class-3-handson.html">Class 3 hands-on</a> (three mini-labs). Build your <a href="../assignment/week-8-assignment.html">Event Management Frontend</a> capstone.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

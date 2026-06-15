@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 8 - Session 1 - Multer File Upload API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 8 - Session 1</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 1: File Uploads with Multer</h1>
+        <p>We code a standalone <code>file-upload-api</code> together — accept files, store metadata in MongoDB, download from disk. MinIO is your assignment.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Why JSON cannot carry files</li>
+            <li>Multer deep dive — single, disk storage, limits</li>
+            <li>Live build: <code>file-upload-api</code> step by step</li>
+            <li>Why disk is not enough for production</li>
+            <li>MinIO assignment preview</li>
+            <li>Security checklist</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>The Upload Problem</h1>
+        <p>REST APIs usually speak JSON. A photo, PDF, or zip file is binary — you cannot embed it in <code>{"name":"report"}</code>.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>multipart/form-data</h2>
+        <ul>
+            <li>HTTP content type built for HTML forms with files</li>
+            <li>One request carries text fields <strong>and</strong> a binary file part</li>
+            <li>Parts are separated by a <strong>boundary</strong> string</li>
+            <li>Browser <code>&lt;input type="file"&gt;</code> and curl <code>-F</code> both use it</li>
+        </ul>
+        <p>Express parses JSON and urlencoded bodies by default. It does <strong>not</strong> parse multipart — that is Multer's job.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>What a multipart request looks like</h2>
+        <pre>POST /files HTTP/1.1
+Content-Type: multipart/form-data; boundary=----FormBoundary
+
+------FormBoundary
+Content-Disposition: form-data; name="file"; filename="notes.txt"
+Content-Type: text/plain
+
+(file bytes here)
+------FormBoundary--</pre>
+        <p>The field name <code>file</code> must match what Multer expects in <code>upload.single("file")</code>.</p>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Multer Deep Dive</h1>
+        <p>Multer is Express middleware that reads the multipart stream and gives you a usable <code>req.file</code> object.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>single vs array vs fields</h2>
+        <ul>
+            <li><code>upload.single("file")</code> — exactly one file in field <code>file</code></li>
+            <li><code>upload.array("photos", 5)</code> — up to 5 files in field <code>photos</code></li>
+            <li><code>upload.fields([{ name: "avatar", maxCount: 1 }, { name: "gallery", maxCount: 8 }])</code> — mixed</li>
+        </ul>
+        <p>Today we use <code>single("file")</code> — one upload per request.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>req.file properties (disk storage)</h2>
+        <ul>
+            <li><code>originalname</code> — name from the client, e.g. <code>vacation.jpg</code></li>
+            <li><code>mimetype</code> — e.g. <code>image/jpeg</code></li>
+            <li><code>size</code> — bytes</li>
+            <li><code>filename</code> — name Multer saved on disk</li>
+            <li><code>path</code> — full path, e.g. <code>uploads/abc123-notes.txt</code></li>
+        </ul>
+        <p>Always save <code>originalname</code> in MongoDB — disk filenames can be hashed or random.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>diskStorage vs memoryStorage</h2>
+        <div class="comparison">
+            <article>
+                <h3>diskStorage (today)</h3>
+                <ul>
+                    <li>Writes to <code>uploads/</code></li>
+                    <li><code>req.file.path</code> available</li>
+                    <li>Good for learning and local demos</li>
+                </ul>
+            </article>
+            <article>
+                <h3>memoryStorage (assignment)</h3>
+                <ul>
+                    <li>File in <code>req.file.buffer</code></li>
+                    <li>Upload buffer to MinIO in handler</li>
+                    <li>No files left on server disk</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg3">
+        <h2>limits and fileFilter</h2>
+        <pre>const upload = multer({
+  storage: diskStorage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["image/png", "image/jpeg", "text/plain", "application/pdf"];
+    cb(null, allowed.includes(file.mimetype));
+  },
+});</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Multer errors</h2>
+        <ul>
+            <li><code>LIMIT_FILE_SIZE</code> — file exceeds <code>limits.fileSize</code></li>
+            <li><code>LIMIT_UNEXPECTED_FILE</code> — wrong field name sent</li>
+            <li><code>req.file</code> undefined — client used JSON instead of multipart</li>
+        </ul>
+        <pre>if (err instanceof multer.MulterError) {
+  return res.status(400).json({ error: err.code });
+}</pre>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Live Build: file-upload-api</h1>
+        <p>Fresh repo. Express + TypeScript + MongoDB + Multer. We code this together — open your editor.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Project structure</h2>
+        <pre>file-upload-api/
+├─ src/
+│  ├─ app.ts
+│  ├─ server.ts
+│  ├─ config/db.ts
+│  ├─ middleware/upload.ts
+│  └─ file/
+│     ├─ model/file.model.ts
+│     ├─ service/file.service.ts
+│     ├─ controller/file.controller.ts
+│     └─ routes/file.routes.ts
+├─ uploads/
+├─ .env.example
+└─ README.md</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 1 — Scaffold</h2>
+        <pre>mkdir file-upload-api && cd file-upload-api
+npm init -y
+npm install express mongoose multer dotenv
+npm install -D typescript tsx @types/express @types/multer @types/node</pre>
+        <p>Add <code>"type": "module"</code> and <code>"dev": "tsx src/server.ts"</code> to <code>package.json</code>.</p>
+        <p><strong>Try this now:</strong> folder exists, <code>npm install</code> finishes clean.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 2 — MongoDB connection</h2>
+        <pre>// src/config/db.ts
+import mongoose from "mongoose";
+
+export async function connectDB() {
+  await mongoose.connect(process.env.MONGODB_URI!);
+  console.log("MongoDB connected");
+}</pre>
+        <pre># .env
+MONGODB_URI=mongodb://localhost:27017/file-upload
+PORT=3000</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 3 — uploads/ and .gitignore</h2>
+        <pre>mkdir uploads
+echo "uploads/" >> .gitignore
+echo ".env" >> .gitignore</pre>
+        <p>Never commit uploaded files or secrets.</p>
+        <p><strong>Try this now:</strong> <code>uploads/</code> exists; git status does not list it once files land there.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 4 — diskStorage middleware</h2>
+        <pre>// src/middleware/upload.ts
+import multer from "multer";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
+
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (_req, file, cb) => {
+    const safe = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
+    cb(null, `${randomUUID()}-${safe}`);
+  },
+});
+
+export const fileUpload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["image/png", "image/jpeg", "text/plain", "application/pdf"];
+    cb(null, allowed.includes(file.mimetype));
+  },
+});</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 5 — File model</h2>
+        <pre>// src/file/model/file.model.ts
+import { Schema, model } from "mongoose";
+
+const fileSchema = new Schema({
+  originalName: { type: String, required: true },
+  storedPath:   { type: String, required: true },
+  mimeType:     { type: String, required: true },
+  size:         { type: Number, required: true },
+}, { timestamps: true });
+
+export const FileModel = model("File", fileSchema);</pre>
+        <p><code>originalName</code> = what the user uploaded. <code>storedPath</code> = where Multer saved it.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 6 — POST /files</h2>
+        <pre>// src/file/routes/file.routes.ts
+import { Router } from "express";
+import { fileUpload } from "../../middleware/upload.js";
+import { uploadFile, listFiles, downloadFile } from "../controller/file.controller.js";
+
+const router = Router();
+router.post("/", fileUpload.single("file"), uploadFile);
+router.get("/", listFiles);
+router.get("/:id/download", downloadFile);
+export default router;</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 6 — upload handler</h2>
+        <pre>export async function uploadFile(req, res) {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+  const doc = await FileModel.create({
+    originalName: req.file.originalname,
+    storedPath: req.file.path,
+    mimeType: req.file.mimetype,
+    size: req.file.size,
+  });
+  res.status(201).json(doc);
+}</pre>
+        <p><strong>Try this now:</strong> server boots; route is registered.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 7 — GET /files and download</h2>
+        <pre>export async function listFiles(_req, res) {
+  const files = await FileModel.find().sort({ createdAt: -1 }).lean();
+  res.json(files);
+}
+
+export async function downloadFile(req, res) {
+  const doc = await FileModel.findById(req.params.id);
+  if (!doc) return res.status(404).json({ error: "Not found" });
+  res.download(doc.storedPath, doc.originalName);
+}</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 8 — Wire app.ts</h2>
+        <pre>import express from "express";
+import fileRoutes from "./file/routes/file.routes.js";
+
+const app = express();
+app.use(express.json());
+app.get("/health", (_req, res) => res.json({ status: "ok" }));
+app.use("/files", fileRoutes);
+export default app;</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Step 9 — Test with curl</h2>
+        <pre># Upload
+curl -X POST http://localhost:3000/files \
+  -F "file=@./notes.txt"
+
+# List metadata
+curl http://localhost:3000/files
+
+# Download (replace FILE_ID)
+curl -O -J http://localhost:3000/files/FILE_ID/download</pre>
+        <p><strong>Quick check:</strong> MongoDB document shows <code>originalName: "notes.txt"</code>; file exists under <code>uploads/</code>.</p>
+    </div>
+
+    <div class="slide bg5">
+        <p class="part-kicker">Part 4</p>
+        <h1>Why Disk Is Not Enough</h1>
+        <p>Local <code>uploads/</code> works on one laptop. Production has different constraints.</p>
+    </div>
+
+    <div class="slide bg5">
+        <h2>Production problems with local disk</h2>
+        <ul>
+            <li>Two API servers — file saved on server A is missing on server B</li>
+            <li>Docker redeploy — container filesystem is wiped</li>
+            <li>Backups and CDN integration are painful</li>
+        </ul>
+        <p>Object storage (S3, MinIO) is the standard fix. You build that in the assignment — not today.</p>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 5</p>
+        <h1>MinIO Assignment Preview</h1>
+        <p>After class, migrate <code>file-upload-api</code> from disk to MinIO object storage.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>S3 vocabulary (for the assignment)</h2>
+        <ul>
+            <li><strong>Bucket</strong> — container, e.g. <code>file-uploads</code></li>
+            <li><strong>Object key</strong> — unique name in bucket, e.g. <code>1739123456789-notes.txt</code></li>
+            <li><strong>Endpoint</strong> — storage API URL, e.g. <code>http://localhost:9000</code></li>
+        </ul>
+        <p>MinIO runs S3 API locally via Docker. Same SDK code works on real AWS S3 later.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Your assignment task</h2>
+        <ol>
+            <li>Start MinIO with Docker; create bucket <code>file-uploads</code></li>
+            <li>Switch Multer to <code>memoryStorage()</code></li>
+            <li>Upload buffer with AWS SDK <code>PutObjectCommand</code></li>
+            <li>Object key: <code>${Date.now()}-${req.file.originalname}</code></li>
+            <li>MongoDB stores <code>originalName</code> + <code>objectKey</code> (drop <code>storedPath</code>)</li>
+            <li><code>GET /files/:id/url</code> — presigned download URL</li>
+        </ol>
+        <p>Details: <a href="../assignment/week-8-assignment.html">Week 8 assignment — Part 1</a></p>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 6</p>
+        <h1>Security Checklist</h1>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Before you ship uploads</h2>
+        <ul>
+            <li><strong>Size limit</strong> — Multer <code>limits.fileSize</code></li>
+            <li><strong>MIME allowlist</strong> — do not trust extension alone</li>
+            <li><strong>Sanitize filename</strong> — strip path characters from <code>originalname</code></li>
+            <li><strong>.gitignore uploads/</strong> — never commit user files</li>
+            <li><strong>Auth on mutations</strong> — optional stretch for this project</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Summary</h2>
+        <ul>
+            <li>Files use <code>multipart/form-data</code>; Multer parses them for Express</li>
+            <li><code>diskStorage</code> saves to <code>uploads/</code>; track <code>originalName</code> in MongoDB</li>
+            <li>We built <code>file-upload-api</code> together: POST, list, download</li>
+            <li>Assignment Part 1 — migrate the same project to MinIO with timestamp keys</li>
+            <li>Next session — React Todo frontend wired to your Week 6/7 API</li>
+        </ul>
+    </div>
+
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 8 Session 1 Quiz</h1>
+        <p class="quiz-hint">8 questions — mostly Multer; two on object storage for the assignment.</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">Why cannot you upload a PDF inside a JSON request body?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Express handles multipart with Multer middleware.">Express forbids all binary data</button>
+            <button type="button" data-correct="false" data-explanation="MongoDB can store metadata; HTTP encoding is the issue.">MongoDB cannot store files</button>
+            <button type="button" data-correct="true" data-explanation="JSON is text; binary files need multipart or raw bytes.">JSON carries structured text, not binary file payloads</button>
+            <button type="button" data-correct="false" data-explanation="JWT is unrelated to upload encoding.">JWT blocks file uploads</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question"><code>upload.single("file")</code> expects:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="That would be upload.array() or multiple fields.">Unlimited files with any field name</button>
+            <button type="button" data-correct="true" data-explanation="single() accepts one file in the named form field.">Exactly one file in the form field named file</button>
+            <button type="button" data-correct="false" data-explanation="JSON body does not populate req.file.">A JSON body with a base64 string only</button>
+            <button type="button" data-correct="false" data-explanation="Multer parses uploads; it does not write MongoDB schemas.">A Mongoose model named File</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">With diskStorage, where does Multer put the saved file path?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="buffer is for memoryStorage, not disk.">req.file.buffer only</button>
+            <button type="button" data-correct="false" data-explanation="JWT is for auth tokens.">Inside the JWT payload</button>
+            <button type="button" data-correct="false" data-explanation="Redis is not Multer's default disk backend.">Redis automatically</button>
+            <button type="button" data-correct="true" data-explanation="diskStorage sets req.file.path to the full filesystem path.">req.file.path</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">Why save originalName in MongoDB separately from the disk filename?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="MongoDB can store both strings easily.">MongoDB cannot store two name fields</button>
+            <button type="button" data-correct="true" data-explanation="Disk names may be UUID-prefixed; users expect their original name on download.">Disk filename may be randomized; users expect their original name when downloading</button>
+            <button type="button" data-correct="false" data-explanation="Multer still provides originalname regardless.">Multer does not provide originalname</button>
+            <button type="button" data-correct="false" data-explanation="CORS is unrelated to filenames.">CORS requires duplicate names</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">curl uploads a file correctly with:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="-d with JSON is not multipart file upload.">curl -d '{"file":"notes.txt"}' -H "Content-Type: application/json"</button>
+            <button type="button" data-correct="false" data-explanation="GET does not upload files.">curl -X GET -F "file=@./notes.txt"</button>
+            <button type="button" data-correct="true" data-explanation="-F sends multipart/form-data; field name must match Multer.">curl -F "file=@./notes.txt" http://localhost:3000/files</button>
+            <button type="button" data-correct="false" data-explanation="Field name wrong unless Multer expects attachment.">curl -F "attachment=@./notes.txt" when Multer expects file</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">LIMIT_FILE_SIZE from Multer means:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="That would be a MongoDB or disk space issue, not Multer's code.">MongoDB ran out of disk space</button>
+            <button type="button" data-correct="false" data-explanation="JWT size limits are separate.">The JWT was too large</button>
+            <button type="button" data-correct="false" data-explanation="CORS does not emit Multer error codes.">CORS blocked the request</button>
+            <button type="button" data-correct="true" data-explanation="File exceeded limits.fileSize configured in multer().">The uploaded file exceeded the configured size limit</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">MinIO is useful in development because:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="MinIO is object storage, not a document DB.">It replaces MongoDB</button>
+            <button type="button" data-correct="true" data-explanation="MinIO exposes S3-compatible API locally for assignment work.">It runs an S3-compatible object storage API via Docker</button>
+            <button type="button" data-correct="false" data-explanation="Multer still parses multipart in the assignment.">It replaces Multer entirely</button>
+            <button type="button" data-correct="false" data-explanation="React is frontend; MinIO is storage.">It compiles React components</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">In the MinIO assignment, object keys use a timestamp prefix so that:</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="false" data-explanation="Timestamps help uniqueness, not JWT signing.">JWT expiration is encoded in the key</button>
+            <button type="button" data-correct="false" data-explanation="Multer still parses the upload before PutObject.">Multer is no longer needed</button>
+            <button type="button" data-correct="true" data-explanation="Timestamp prefix keeps keys unique; originalName stays in MongoDB for display.">Keys stay unique while originalName is tracked separately in the database</button>
+            <button type="button" data-correct="false" data-explanation="Keys should not embed secrets.">MINIO_SECRET_KEY is stored in each key</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 8 Session 1</h1>
+        <p>Finish <a href="../handson/class-1-handson.html">Class 1 hands-on</a> with me if we did not complete every step live. Assignment Part 1 (MinIO) is on the <a href="../assignment/week-8-assignment.html">assignment sheet</a>. Next session — <a href="session-2.html">React Todo frontend</a>.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

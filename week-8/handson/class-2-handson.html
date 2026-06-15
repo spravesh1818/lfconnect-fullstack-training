@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 8 Class 2 hands-on - Todo React Frontend</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .troubleshooting {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff1f2;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 8 - Class 2 Lab</strong> -
+        <a href="../slides/session-2.html">Open session deck</a>
+        - React Todo frontend with auth and full CRUD
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 0 - API prerequisites</h2>
+        <p>Your Todo API must have Week 7 auth and full CRUD from Week 6.</p>
+        <ul>
+            <li>[ ] <code>npm run dev</code> on API — port 3000</li>
+            <li>[ ] <code>POST /auth/register</code> and <code>POST /auth/login</code> work</li>
+            <li>[ ] Protected mutations return 401 without token</li>
+            <li>[ ] <code>GET /todos</code>, <code>POST</code>, <code>PATCH</code>, <code>DELETE</code> work with Bearer token</li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> curl auth + CRUD flow passes before starting React.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Enable CORS on Todo API</h2>
+        <pre>npm install cors
+npm install -D @types/cors</pre>
+        <pre>import cors from "cors";
+
+app.use(cors({
+  origin: "http://localhost:5173",
+}));</pre>
+        <p>Restart API. Open DevTools on any page and run:</p>
+        <pre>fetch("http://localhost:3000/health").then(r =&gt; r.json()).then(console.log)</pre>
+        <div class="done-when"><strong>Done when:</strong> fetch returns <code>{ status: "ok" }</code> without CORS error.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Scaffold todo-frontend</h2>
+        <pre>npm create vite@latest todo-frontend -- --template react-ts
+cd todo-frontend
+npm install
+npm install react-router-dom</pre>
+        <p>Create <code>.env</code>:</p>
+        <pre>VITE_API_URL=http://localhost:3000</pre>
+        <p>Wire <code>BrowserRouter</code> in <code>main.tsx</code>. Run <code>npm run dev</code>.</p>
+        <div class="done-when"><strong>Done when:</strong> Vite app loads at <code>http://localhost:5173</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - AuthContext + Login + Register</h2>
+        <p>Create <code>src/context/AuthContext.tsx</code> with:</p>
+        <ul>
+            <li>State: <code>token</code>, <code>user</code></li>
+            <li>On mount: hydrate from <code>localStorage</code></li>
+            <li><code>login(email, password)</code> → <code>POST /auth/login</code></li>
+            <li><code>register(name, email, password)</code> → <code>POST /auth/register</code></li>
+            <li><code>logout()</code> → clear storage</li>
+        </ul>
+        <p>Build <code>LoginPage</code> and <code>RegisterPage</code> with controlled inputs. On success, navigate to <code>/todos</code>.</p>
+        <div class="done-when"><strong>Done when:</strong> you can register a new user in the browser and land on todos page after login.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - apiFetch helper</h2>
+        <p>Create <code>src/api/client.ts</code>:</p>
+        <pre>const API_URL = import.meta.env.VITE_API_URL;
+
+export async function apiFetch(path: string, options: RequestInit = {}) {
+  const token = localStorage.getItem("token");
+  const headers = new Headers(options.headers);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+    throw new Error("Unauthorized");
+  }
+  return res;
+}</pre>
+        <div class="done-when"><strong>Done when:</strong> helper is used by auth and todo calls; 401 redirects to login.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 5 - TodosPage: list, add, toggle complete</h2>
+        <p>On mount: <code>apiFetch("/todos").then(r =&gt; r.json())</code></p>
+        <ul>
+            <li>Show loading / error / empty states</li>
+            <li>Form to <code>POST /todos</code> with <code>{ title, completed: false }</code></li>
+            <li>Checkbox per row → <code>PATCH /todos/:id</code> with <code>{ completed: !todo.completed }</code></li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> todos load from API; add and toggle work in the UI.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 6 - Edit and delete</h2>
+        <ul>
+            <li><strong>Edit</strong> — inline input or small modal; <code>PATCH</code> with new <code>title</code></li>
+            <li><strong>Delete</strong> — button with confirm; <code>DELETE /todos/:id</code>; remove from list</li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> edit and delete persist after page refresh.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 7 - ProtectedRoute + logout</h2>
+        <pre>function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { token } = useAuth();
+  if (!token) return &lt;Navigate to="/login" replace /&gt;;
+  return &lt;&gt;{children}&lt;/&gt;;
+}</pre>
+        <p>Wrap <code>/todos</code> with <code>ProtectedRoute</code>. Add logout button that clears auth and navigates to <code>/login</code>.</p>
+        <p>Visit <code>/todos</code> while logged out — should redirect.</p>
+        <div class="done-when"><strong>Done when:</strong> unauthenticated users cannot see todos page; logout works.</div>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li><strong>CORS error in console</strong> — add <code>cors({ origin: "http://localhost:5173" })</code> on API; restart server.</li>
+            <li><strong><code>VITE_API_URL</code> undefined</strong> — file must be <code>.env</code> at project root; restart Vite after changes.</li>
+            <li><strong>401 on every todo request</strong> — token not sent; check <code>Authorization</code> header spelling.</li>
+            <li><strong>Network error</strong> — API not running on 3000.</li>
+            <li><strong>Upload fails</strong> — do not set <code>Content-Type</code> manually on FormData.</li>
+            <li><strong>Blank page after login</strong> — check React Router paths and <code>Navigate</code> import.</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Practice complete.</strong> You have a full-stack Todo app — API + React UI.
+        <p style="margin-top: 0.75rem;">Capstone preview: apply these patterns to <a href="../assignment/week-8-assignment.html">Event Management Frontend</a>.</p>
+        <p>Next: <a href="class-3-handson.html">Class 3 hands-on</a> — Passport, Supabase, Clerk mini-labs.</p>
+    </div>
+</body>
+
+</html>
