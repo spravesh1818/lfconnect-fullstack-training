@@ -85,6 +85,11 @@
             background: #f0fdf4;
         }
 
+        .challenge {
+            border-left: 5px solid #9333ea;
+            background: #faf5ff;
+        }
+
         ul.checklist {
             list-style: none;
             padding-left: 0;
@@ -121,19 +126,119 @@
     <section class="deadline">
         <h2>Submission</h2>
         <p>Deadline: <strong>Sunday evening, 11:59 PM</strong>.</p>
-        <p><strong>Individual project.</strong> Two required parts:</p>
+        <p><strong>Individual project.</strong> Three required parts:</p>
         <ol>
-            <li><strong>Part 1</strong> — MinIO migration of <code>file-upload-api</code> (from Session 1 class)</li>
-            <li><strong>Part 2</strong> — React frontend for your Week 7 <code>event-mgmt-api</code></li>
+            <li><strong>Part 1</strong> — Complete the Todo React frontend (<code>todo-frontend</code>)</li>
+            <li><strong>Part 2</strong> — MinIO-backed upload API (<code>file-upload-api</code>)</li>
+            <li><strong>Part 3</strong> — React frontend for your Week 7 <code>event-mgmt-api</code> (<code>event-mgmt-web</code>)</li>
         </ol>
-        <p>Share repo links, READMEs, and demo evidence for both parts.</p>
+        <p><strong>Optional challenge:</strong> presigned venue-image upload on <code>event-mgmt-api</code> + UI in <code>event-mgmt-web</code>.</p>
+        <p>Share repo links, READMEs, and demo evidence for all three required parts. Challenge evidence is optional but encouraged.</p>
     </section>
 
-    <!-- ========== PART 1: MINIO ========== -->
+    <!-- ========== PART 1: TODO REACT FE ========== -->
 
     <section class="part-header">
-        <h2>Assignment Part 1 — MinIO File Upload API</h2>
-        <p>Migrate the in-class <code>file-upload-api</code> from Multer disk storage to MinIO object storage. Files are stored with a <strong>timestamp object key</strong>; the <strong>original filename</strong> is tracked in MongoDB.</p>
+        <h2>Assignment Part 1 — Todo React Frontend</h2>
+        <p>Complete the React frontend (<code>todo-frontend</code>) for your Week 6/7 <code>todo-api</code>. Finish what you started in Session 2 class — auth, protected routes, and full CRUD in the browser.</p>
+    </section>
+
+    <section class="prerequisite">
+        <h2>Prerequisite — Session 2 class lab + Todo API</h2>
+        <p>Work through the in-class <a href="../handson/class-2-handson.html">Class 2 hands-on</a> first. Your <code>todo-api</code> must have:</p>
+        <ul>
+            <li><code>POST /auth/register</code> and <code>POST /auth/login</code> (JWT)</li>
+            <li>Protected <code>GET</code>, <code>POST</code>, <code>PATCH</code>, <code>DELETE</code> on <code>/todos</code></li>
+            <li>CORS enabled for <code>http://localhost:5173</code></li>
+        </ul>
+    </section>
+
+    <section class="presentation">
+        <h2>Part 1 presentation (in class)</h2>
+        <p>2–3 minute demo covering:</p>
+        <ul>
+            <li>Register + login in the browser</li>
+            <li>Add, toggle, edit, and delete todos</li>
+            <li>Refresh — todos persist; logout blocks <code>/todos</code></li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Part 1 requirements</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Area</th>
+                    <th>Requirement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Scaffold</strong></td>
+                    <td>Vite + React + TypeScript + React Router; <code>VITE_API_URL=http://localhost:3000</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Auth</strong></td>
+                    <td>Register, login, logout; JWT in localStorage; <code>AuthContext</code></td>
+                </tr>
+                <tr>
+                    <td><strong>API client</strong></td>
+                    <td><code>apiFetch</code> helper with Bearer token; 401 redirects to login</td>
+                </tr>
+                <tr>
+                    <td><strong>Todos CRUD</strong></td>
+                    <td>List with loading, error, and empty states; add; toggle complete; edit title; delete with confirm</td>
+                </tr>
+                <tr>
+                    <td><strong>Routing</strong></td>
+                    <td><code>ProtectedRoute</code> on <code>/todos</code>; public login and register pages</td>
+                </tr>
+                <tr>
+                    <td><strong>UX</strong></td>
+                    <td>Basic navigation with logout; readable layout</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Suggested folder tree</h3>
+        <pre>todo-frontend/
+├─ src/
+│  ├─ api/client.ts
+│  ├─ context/AuthContext.tsx
+│  ├─ components/ProtectedRoute.tsx
+│  ├─ pages/LoginPage.tsx, RegisterPage.tsx, TodosPage.tsx
+│  └─ main.tsx
+├─ .env.example
+└─ README.md</pre>
+    </section>
+
+    <section>
+        <h2>Part 1 checklist</h2>
+        <ul class="checklist">
+            <li>Separate <code>todo-frontend</code> repo (or monorepo documented in README).</li>
+            <li>CORS enabled on <code>todo-api</code> for <code>http://localhost:5173</code>.</li>
+            <li>Register and login work in the browser; token persists on refresh.</li>
+            <li>Todos load from API with loading, error, and empty states.</li>
+            <li>Add, toggle complete, edit title, and delete todos all work.</li>
+            <li>Unauthenticated users cannot access <code>/todos</code>.</li>
+            <li>Logout clears auth and redirects to login.</li>
+            <li>README explains running API on port 3000 and frontend on 5173.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Part 1 submission</h2>
+        <ul>
+            <li>Repository link (<code>todo-frontend</code>)</li>
+            <li>Short screen recording or screenshots: register → login → CRUD → refresh → logout</li>
+        </ul>
+    </section>
+
+    <!-- ========== PART 2: MINIO ========== -->
+
+    <section class="part-header">
+        <h2>Assignment Part 2 — MinIO File Upload API</h2>
+        <p>Create a MinIO-backed upload API by migrating the in-class <code>file-upload-api</code> from Multer disk storage to MinIO object storage. Files are stored with a <strong>timestamp object key</strong>; the <strong>original filename</strong> is tracked in MongoDB.</p>
     </section>
 
     <section class="prerequisite">
@@ -148,7 +253,7 @@
     </section>
 
     <section>
-        <h2>Part 1 requirements</h2>
+        <h2>Part 2 requirements</h2>
         <table>
             <thead>
                 <tr>
@@ -186,7 +291,7 @@
     </section>
 
     <section>
-        <h2>Part 1 — Step-by-step guide</h2>
+        <h2>Part 2 — Step-by-step guide</h2>
 
         <h3>Step 1 — Start MinIO</h3>
         <pre>docker run -p 9000:9000 -p 9001:9001 \
@@ -278,7 +383,7 @@ curl http://localhost:3000/files/FILE_ID/url</pre>
     </section>
 
     <section>
-        <h2>Part 1 checklist</h2>
+        <h2>Part 2 checklist</h2>
         <ul class="checklist">
             <li>MinIO container running; bucket <code>file-uploads</code> exists.</li>
             <li>Upload stores object in MinIO with timestamp-prefixed key.</li>
@@ -292,7 +397,7 @@ curl http://localhost:3000/files/FILE_ID/url</pre>
     </section>
 
     <section>
-        <h2>Part 1 submission</h2>
+        <h2>Part 2 submission</h2>
         <ul>
             <li>Repository link (<code>file-upload-api</code>)</li>
             <li>Screenshot of MinIO console showing an uploaded object</li>
@@ -301,7 +406,7 @@ curl http://localhost:3000/files/FILE_ID/url</pre>
     </section>
 
     <section>
-        <h2>Part 1 troubleshooting</h2>
+        <h2>Part 2 troubleshooting</h2>
         <ul>
             <li><strong>AccessDenied</strong> — wrong access key/secret or bucket name mismatch.</li>
             <li><strong>ECONNREFUSED on port 9000</strong> — MinIO container not running.</li>
@@ -311,16 +416,16 @@ curl http://localhost:3000/files/FILE_ID/url</pre>
         </ul>
     </section>
 
-    <!-- ========== PART 2: EVENT FRONTEND ========== -->
+    <!-- ========== PART 3: EVENT FRONTEND ========== -->
 
     <section class="part-header">
-        <h2>Assignment Part 2 — Event Management Frontend</h2>
-        <p>Build a React frontend (<code>event-mgmt-web</code>) that talks to your Week 7 <code>event-mgmt-api</code>.</p>
+        <h2>Assignment Part 3 — Event Management Frontend</h2>
+        <p>Build a React frontend (<code>event-mgmt-web</code>) that talks to your Week 7 <code>event-mgmt-api</code>. Apply the same patterns from Part 1: auth context, protected routes, and <code>apiFetch</code>.</p>
     </section>
 
     <section class="prerequisite">
         <h2>Prerequisite — Week 7 backend required</h2>
-        <p>You <strong>cannot</strong> complete Part 2 without a working <a href="../../week-7/assignment/week-7-assignment.html">Week 7 Event Management Backend</a>.</p>
+        <p>You <strong>cannot</strong> complete Part 3 without a working <a href="../../week-7/assignment/week-7-assignment.html">Week 7 Event Management Backend</a>.</p>
         <p>Minimum API features:</p>
         <ul>
             <li><code>POST /auth/register</code> and <code>POST /auth/login</code> (JWT)</li>
@@ -332,7 +437,7 @@ curl http://localhost:3000/files/FILE_ID/url</pre>
     </section>
 
     <section class="presentation">
-        <h2>Part 2 presentation (in class)</h2>
+        <h2>Part 3 presentation (in class)</h2>
         <p>5–8 minute demo covering:</p>
         <ul>
             <li>Register + login in the browser</li>
@@ -345,8 +450,8 @@ curl http://localhost:3000/files/FILE_ID/url</pre>
     </section>
 
     <section>
-        <h2>Part 2 project overview</h2>
-        <p>Apply Week 8 Session 2 patterns: auth context, protected routes, CRUD UI, FormData banner upload.</p>
+        <h2>Part 3 project overview</h2>
+        <p>Reuse Part 1 patterns: auth context, protected routes, CRUD UI. Add FormData banner upload for event images.</p>
 
         <h3>Tech stack</h3>
         <ul>
@@ -368,14 +473,14 @@ curl http://localhost:3000/files/FILE_ID/url</pre>
     </section>
 
     <section>
-        <h2>Part 2 — Backend prep (document in README)</h2>
+        <h2>Part 3 — Backend prep (document in README)</h2>
         <pre>app.use(cors({ origin: "http://localhost:5173" }));
 app.use("/uploads", express.static("uploads"));</pre>
         <p>Run Redis, API (<code>npm run dev</code>), worker (<code>npm run worker</code>), and frontend (<code>npm run dev</code>).</p>
     </section>
 
     <section>
-        <h2>Part 2 requirements</h2>
+        <h2>Part 3 requirements</h2>
         <table>
             <thead>
                 <tr>
@@ -413,7 +518,7 @@ app.use("/uploads", express.static("uploads"));</pre>
     </section>
 
     <section>
-        <h2>Part 2 checklist</h2>
+        <h2>Part 3 checklist</h2>
         <ul class="checklist">
             <li>Fresh <code>event-mgmt-web</code> repo (separate from API).</li>
             <li>CORS enabled on <code>event-mgmt-api</code>.</li>
@@ -427,7 +532,7 @@ app.use("/uploads", express.static("uploads"));</pre>
     </section>
 
     <section>
-        <h2>Part 2 demo flow</h2>
+        <h2>Part 3 demo flow</h2>
         <ol>
             <li>Register → login → dashboard</li>
             <li>Create draft → upload banner → publish</li>
@@ -437,22 +542,186 @@ app.use("/uploads", express.static("uploads"));</pre>
     </section>
 
     <section>
-        <h2>Part 2 stretch goals (optional)</h2>
+        <h2>Part 3 stretch goals (optional)</h2>
         <ul>
             <li>Note in README that second <code>GET /events</code> shows CACHE HIT in API logs</li>
             <li>Filter or search on public events list</li>
-            <li>Optimistic UI on publish</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Part 3 submission</h2>
+        <ul>
+            <li>Repository link (<code>event-mgmt-web</code>)</li>
+            <li>Screen recording or screenshots of the demo flow above</li>
+        </ul>
+    </section>
+
+    <!-- ========== CHALLENGE: PRESIGNED VENUE IMAGE ========== -->
+
+    <section class="challenge">
+        <h2>Challenge (Optional) — Presigned Venue Image Upload</h2>
+        <p>Extend <code>event-mgmt-api</code> and <code>event-mgmt-web</code> so organizers upload a <strong>venue photo</strong> directly to MinIO using a <strong>presigned PUT URL</strong>. This is separate from the required banner upload (Multer to disk). Requires Part 2 MinIO patterns and Part 3 frontend.</p>
+    </section>
+
+    <section>
+        <h2>Challenge — Backend requirements (<code>event-mgmt-api</code>)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Area</th>
+                    <th>Requirement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>MinIO</strong></td>
+                    <td>Reuse Part 2 patterns; bucket <code>event-venue-images</code>; env vars in <code>.env.example</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Model</strong></td>
+                    <td>Add <code>venueImageKey</code> (string, optional) on Event — separate from <code>bannerPath</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Upload URL</strong></td>
+                    <td><code>POST /events/:id/venue-image/upload-url</code> (auth) — body <code>{ contentType }</code>; returns <code>{ uploadUrl, objectKey, expiresIn }</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Confirm</strong></td>
+                    <td><code>PATCH /events/:id/venue-image</code> (auth) — body <code>{ objectKey }</code>; validates and saves to event</td>
+                </tr>
+                <tr>
+                    <td><strong>Display</strong></td>
+                    <td><code>GET /events/:id/venue-image/url</code> — presigned GET URL (60s TTL)</td>
+                </tr>
+                <tr>
+                    <td><strong>Security</strong></td>
+                    <td>Only event owner can request upload URL; MIME filter (jpeg/png only); document max size (e.g. 2 MB)</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Challenge — Step-by-step guide</h2>
+
+        <h3>Step 1 — MinIO config (copy from Part 2)</h3>
+        <pre># .env (add to event-mgmt-api)
+MINIO_ENDPOINT=http://localhost:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_VENUE_BUCKET=event-venue-images</pre>
+        <p>Create bucket <code>event-venue-images</code> in MinIO console. Reuse <code>src/config/minio.ts</code> from Part 2.</p>
+
+        <h3>Step 2 — Presigned PUT upload URL handler</h3>
+        <pre>import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { s3 } from "../config/minio.js";
+
+const allowed = ["image/jpeg", "image/png"];
+if (!allowed.includes(contentType)) return res.status(400).json({ error: "Invalid type" });
+
+const objectKey = `venues/${eventId}/${Date.now()}.jpg`;
+
+const uploadUrl = await getSignedUrl(
+  s3,
+  new PutObjectCommand({
+    Bucket: process.env.MINIO_VENUE_BUCKET!,
+    Key: objectKey,
+    ContentType: contentType,
+  }),
+  { expiresIn: 300 }
+);
+
+res.json({ uploadUrl, objectKey, expiresIn: 300 });</pre>
+
+        <h3>Step 3 — Confirm and display endpoints</h3>
+        <pre>// PATCH /events/:id/venue-image — save objectKey to event.venueImageKey
+// GET /events/:id/venue-image/url — presigned GET via GetObjectCommand</pre>
+
+        <h3>Step 4 — Frontend presigned upload flow (<code>event-mgmt-web</code>)</h3>
+        <pre>// 1. Request upload URL from API
+const { uploadUrl, objectKey } = await apiFetch(
+  `/events/${eventId}/venue-image/upload-url`,
+  { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contentType: file.type }) }
+).then(r => r.json());
+
+// 2. Upload directly to MinIO (no FormData to your API)
+await fetch(uploadUrl, {
+  method: "PUT",
+  body: file,
+  headers: { "Content-Type": file.type },
+});
+
+// 3. Confirm with API
+await apiFetch(`/events/${eventId}/venue-image`, {
+  method: "PATCH",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ objectKey }),
+});</pre>
+
+        <h3>Step 5 — Test with curl (backend verification)</h3>
+        <pre># Request presigned upload URL
+curl -X POST http://localhost:3000/events/EVENT_ID/venue-image/upload-url \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"contentType":"image/png"}'
+
+# PUT file to the uploadUrl from response
+curl -X PUT "PRESIGNED_UPLOAD_URL" \
+  -H "Content-Type: image/png" \
+  --data-binary @./venue.png
+
+# Confirm objectKey on event
+curl -X PATCH http://localhost:3000/events/EVENT_ID/venue-image \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"objectKey":"venues/EVENT_ID/1234567890.jpg"}'
+
+# Get display URL
+curl http://localhost:3000/events/EVENT_ID/venue-image/url</pre>
+    </section>
+
+    <section>
+        <h2>Challenge — Frontend requirements (<code>event-mgmt-web</code>)</h2>
+        <ul>
+            <li>Venue image file input on dashboard event form or detail view</li>
+            <li>Three-step presigned flow (request URL → PUT to MinIO → confirm PATCH) — no FormData to API for venue image</li>
+            <li>Show venue thumbnail on event card when <code>venueImageKey</code> exists (fetch display URL from API)</li>
+            <li>Document challenge setup in README under a "Challenge" section</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Challenge checklist</h2>
+        <ul class="checklist">
+            <li>MinIO bucket <code>event-venue-images</code> exists; object visible in console.</li>
+            <li><code>POST .../venue-image/upload-url</code> returns working presigned PUT URL.</li>
+            <li>File uploads directly to MinIO; confirm saves <code>venueImageKey</code> on event.</li>
+            <li><code>GET .../venue-image/url</code> returns presigned GET URL that displays the image.</li>
+            <li>Frontend venue image upload works end-to-end in browser.</li>
+            <li>Venue thumbnail visible on public event card.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Challenge submission (optional)</h2>
+        <ul>
+            <li>Screenshot of MinIO console showing venue object</li>
+            <li>Browser demo or curl log: request URL → PUT → confirm → display</li>
+            <li>Screenshot of venue image on public event card</li>
         </ul>
     </section>
 
     <section>
         <h2>Resources</h2>
         <ul>
-            <li><a href="../handson/class-1-handson.html">Class 1 hands-on</a> (Multer — in-class)</li>
+            <li><a href="../handson/class-1-handson.html">Class 1 hands-on</a> (Multer — in-class; Part 2 prerequisite)</li>
             <li><a href="../slides/session-1.html">Session 1 slides</a> (Multer + MinIO preview)</li>
-            <li><a href="../handson/class-2-handson.html">Class 2 hands-on</a> (Todo frontend patterns)</li>
+            <li><a href="../handson/class-2-handson.html">Class 2 hands-on</a> (Todo frontend — Part 1 prerequisite)</li>
             <li><a href="../slides/session-2.html">Session 2 slides</a></li>
-            <li><a href="../../week-7/assignment/week-7-assignment.html">Week 7 assignment</a> (backend prerequisite for Part 2)</li>
+            <li><a href="../../week-7/assignment/week-7-assignment.html">Week 7 assignment</a> (backend prerequisite for Part 3)</li>
         </ul>
     </section>
 </body>
