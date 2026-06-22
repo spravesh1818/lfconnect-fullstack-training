@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 10 - Session 2 - PRD, User Stories, and Ticketing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 10 - Session 2</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 2: PRD, User Stories, Task Breakdown, and Ticketing</h1>
+        <p>Learn how product work flows from a Product Requirements Document through epics, user stories, and acceptance criteria down to individual GitHub Issues a developer can pick up and implement.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>What is a PRD? Structure and purpose</li>
+            <li>User stories — format and examples</li>
+            <li>Epics → Stories → Tasks hierarchy</li>
+            <li>Acceptance criteria — Given / When / Then</li>
+            <li>Estimation techniques — story points and T-shirt sizing</li>
+            <li>Creating GitHub Issues (and Linear/Jira)</li>
+            <li>Ticketing anti-patterns</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Product Requirements Document</h1>
+        <p>A PRD describes what you are building, why, and for whom. It aligns product, engineering, and design before a line of code is written.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>PRD sections</h2>
+        <ul>
+            <li><strong>Overview</strong> — one paragraph summary. What is this feature?</li>
+            <li><strong>Problem statement</strong> — what pain does this solve? Whose problem is it?</li>
+            <li><strong>Goals</strong> — measurable outcomes. "Users can create a room in &lt;30 seconds."</li>
+            <li><strong>Non-goals</strong> — explicit scope limits. "Will not include video recording in v1."</li>
+            <li><strong>User stories</strong> — who needs what and why.</li>
+            <li><strong>Acceptance criteria</strong> — the bar for "done."</li>
+            <li><strong>Out of scope</strong> — things explicitly deferred.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Why PRDs matter for engineers</h2>
+        <ul>
+            <li><strong>Reduces back-and-forth</strong> — you know what to build before you start.</li>
+            <li><strong>Prevents scope creep</strong> — non-goals are written down and agreed.</li>
+            <li><strong>Basis for estimation</strong> — you can only estimate what is specified.</li>
+            <li><strong>Onboarding new team members</strong> — context is captured, not lost in Slack threads.</li>
+            <li><strong>Post-launch reference</strong> — what did we say this was supposed to do?</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>User Stories</h1>
+        <p>User stories capture requirements from the user's perspective — not the system's.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>User story format</h2>
+        <p>The classic three-part structure:</p>
+        <pre>
+As a [role],
+I want [action/goal],
+So that [benefit/outcome].</pre>
+        <p>Examples:</p>
+        <pre>
+As a meeting host,
+I want to create a named room,
+So that participants know where to join.
+
+As a participant,
+I want to see who is speaking,
+So that I can follow the conversation easily.</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Epic → Story → Task hierarchy</h2>
+        <ul>
+            <li><strong>Epic</strong> — a large body of work (multiple sprints). "User Authentication System."</li>
+            <li><strong>Story</strong> — a sprint-sized unit of user value. "As a user, I want to register with email so I can log in." Fits in one sprint.</li>
+            <li><strong>Task / Sub-task</strong> — technical steps inside a story. "Create UserEntity," "Build POST /auth/register," "Add bcrypt hashing," "Write integration test."</li>
+        </ul>
+        <p>Stories deliver user value. Tasks are how engineers break down implementation.</p>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Acceptance Criteria</h1>
+        <p>Acceptance criteria are the contract between the PO and developers. They define "done" for a specific story.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Given / When / Then format</h2>
+        <p>Structured AC is unambiguous and testable.</p>
+        <pre>
+Story: As a host, I want to create a room.
+
+Given I am logged in as a host,
+When I submit the "Create Room" form with a valid name,
+Then a new room is created and I see it in my room list.
+
+Given I am logged in as a host,
+When I submit the form with an empty name,
+Then I see an error: "Room name is required."
+
+Given I am NOT logged in,
+When I try to access the room creation page,
+Then I am redirected to the login page.</pre>
+    </div>
+
+    <div class="slide bg4">
+        <h2>What makes good AC</h2>
+        <ul>
+            <li><strong>Testable</strong> — a QA engineer or automated test can verify it directly.</li>
+            <li><strong>Specific</strong> — "user sees an error" is vague. "User sees 'Room name is required'" is specific.</li>
+            <li><strong>Covers happy and sad paths</strong> — what happens when input is invalid? When the user is not logged in?</li>
+            <li><strong>Written before development</strong> — not discovered during code review.</li>
+            <li><strong>Agreed by both PO and developers</strong> — both sides sign off before work begins.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 4</p>
+        <h1>Estimation</h1>
+        <p>Estimation is about relative complexity, not hours. It helps the team plan sustainable sprints.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Story points (Fibonacci)</h2>
+        <ul>
+            <li>Points measure <strong>complexity and uncertainty</strong>, not time.</li>
+            <li>Use the Fibonacci sequence: <strong>1, 2, 3, 5, 8, 13, 21</strong>. Gaps force deliberate comparison.</li>
+            <li><strong>1</strong> — trivial (fix a typo, update a constant)</li>
+            <li><strong>3</strong> — small feature with clear requirements</li>
+            <li><strong>5</strong> — medium feature with some unknowns</li>
+            <li><strong>8</strong> — complex or unfamiliar; consider splitting</li>
+            <li><strong>13+</strong> — too big; split before putting in a sprint</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Planning poker</h2>
+        <p>Synchronous estimation game to surface disagreements and build shared understanding.</p>
+        <ol>
+            <li>PO reads the story aloud</li>
+            <li>Team members silently pick a card (1, 2, 3, 5, 8, 13…)</li>
+            <li>Everyone reveals at the same time</li>
+            <li>Highest and lowest estimators explain their reasoning</li>
+            <li>Discuss, then re-vote until convergence</li>
+        </ol>
+        <p>Disagreements in estimates reveal missing requirements or different assumptions — valuable signal.</p>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 5</p>
+        <h1>Creating Tickets</h1>
+        <p>A well-written ticket is self-contained. A developer should be able to pick it up on Monday morning with no extra context-gathering.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Anatomy of a good GitHub Issue</h2>
+        <pre>
+Title: [feat] Create room endpoint — POST /rooms
+
+## User story
+As a host, I want to create a named room
+so that participants can join my meeting.
+
+## Acceptance criteria
+- [ ] POST /rooms with valid body creates room, returns 201
+- [ ] POST /rooms with empty name returns 400 "name required"
+- [ ] Unauthenticated request returns 401
+- [ ] Room is persisted in the database
+
+## Technical notes
+- Entity: Room (name, maxParticipants, hostId, createdAt)
+- Validate with class-validator DTOs
+- Tests: 1 happy path + 2 error cases
+
+Labels: feat, size:M
+Milestone: Sprint 1
+Estimate: 3 points</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Ticketing anti-patterns</h2>
+        <ul>
+            <li><strong>Monster tickets</strong> — "Build the entire auth system" is not a story. Split it.</li>
+            <li><strong>Vague titles</strong> — "Fix bug" tells no one what to fix. "Fix: room creation 500 when name is null" is actionable.</li>
+            <li><strong>No acceptance criteria</strong> — how will anyone know it's done?</li>
+            <li><strong>Technical tasks as user stories</strong> — "Refactor database schema" is a task, not a story. Fine to track, but not a story.</li>
+            <li><strong>Tickets that bypass discussion</strong> — if the requirements are unclear, write the ticket and have a refinement conversation before work starts.</li>
+        </ul>
+    </div>
+
+    <!-- Quiz -->
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 10 Session 2 Quiz</h1>
+        <p class="quiz-hint">8 questions on PRDs, user stories, and ticketing</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">What is the purpose of the "Non-goals" section in a PRD?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Non-goals explicitly state what is out of scope, preventing scope creep and setting clear expectations with stakeholders.">Explicitly state what is out of scope to prevent scope creep</button>
+            <button type="button" data-correct="false" data-explanation="Non-goals are about scope, not team availability.">List team members who are not assigned to the project</button>
+            <button type="button" data-correct="false" data-explanation="Risks belong in a risk register or separate section, not non-goals.">Document risks and blockers for the project</button>
+            <button type="button" data-correct="false" data-explanation="Non-goals define scope, not technical debt.">Track technical debt that won't be addressed</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">Complete the user story: "As a meeting host, I want to _____, so that _____."</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Good user stories follow the As a / I want / So that format, capturing the role, action, and benefit.">mute all participants, so that background noise does not disrupt the meeting</button>
+            <button type="button" data-correct="false" data-explanation="This describes an implementation detail (a database call), not a user-facing action.">call the database, so that rooms are created</button>
+            <button type="button" data-correct="false" data-explanation="This is a task description, not a user story.">implement WebSocket, so that latency is reduced</button>
+            <button type="button" data-correct="false" data-explanation="Using TypeORM is an implementation choice, not a user goal.">use TypeORM, so that the room entity is mapped</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">In the Epic → Story → Task hierarchy, which level fits in a single sprint?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Stories are sized to fit in one sprint. Epics span multiple sprints. Tasks are sub-components within a story.">Story</button>
+            <button type="button" data-correct="false" data-explanation="Epics are too large for a single sprint — they span multiple sprints.">Epic</button>
+            <button type="button" data-correct="false" data-explanation="Tasks live inside a story; they are not the unit of sprint commitment.">Task</button>
+            <button type="button" data-correct="false" data-explanation="Sprint is the time-box, not a hierarchy level within a backlog.">Sprint</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">What does "Given / When / Then" structure in acceptance criteria ensure?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Given/When/Then (Gherkin-style) makes AC concrete, testable, and unambiguous — it describes a specific starting state, action, and expected outcome.">Each criterion is testable and unambiguous</button>
+            <button type="button" data-correct="false" data-explanation="Given/When/Then is for writing clear AC, not for automated test tooling specifically.">The criteria can only be used with Cucumber or BDD tools</button>
+            <button type="button" data-correct="false" data-explanation="AC covers all paths; it's not for happy-path only.">Only the happy path is specified</button>
+            <button type="button" data-correct="false" data-explanation="AC should be written before development — not after.">Criteria are written by developers after implementation</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">In planning poker, what does a large spread in estimates (e.g., 1 vs 13) signal?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="A wide spread means people have very different mental models of the work — likely due to unclear requirements or different assumptions. Discuss, then re-estimate.">Different assumptions or unclear requirements need discussion</button>
+            <button type="button" data-correct="false" data-explanation="Planning poker is about surfacing disagreements, not measuring code quality.">The code is low quality</button>
+            <button type="button" data-correct="false" data-explanation="Story size is determined by the actual story, not the spread in estimates.">The story is automatically an epic</button>
+            <button type="button" data-correct="false" data-explanation="Choose the highest estimate as a risk management practice, but after discussion — not automatically.">Use the lowest estimate to stay agile</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">Which GitHub Issue title is best?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="This title is specific, includes a type prefix, and tells the reader exactly what the issue covers.">feat: POST /rooms — create a room with name and max participants</button>
+            <button type="button" data-correct="false" data-explanation="'Stuff' gives no information about what needs to be done.">Stuff</button>
+            <button type="button" data-correct="false" data-explanation="'Fix' with no context is meaningless — fix what? in which file? with what behaviour?">Fix</button>
+            <button type="button" data-correct="false" data-explanation="WIP is a draft status, not a meaningful ticket title.">WIP</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">When should acceptance criteria be written relative to development?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="AC must be agreed before development starts. Writing them first ensures the developer knows what done looks like and avoids rework.">Before development starts — during backlog refinement</button>
+            <button type="button" data-correct="false" data-explanation="Writing AC after development means the criteria are influenced by what was actually built, not what was needed.">After development, based on what was actually built</button>
+            <button type="button" data-correct="false" data-explanation="Waiting until code review is too late to catch scope misalignment.">During code review</button>
+            <button type="button" data-correct="false" data-explanation="AC are not retrospective notes — they define requirements before work begins.">In the Sprint Retrospective notes</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">What does a story point measure?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Story points measure relative complexity and uncertainty — not hours. A 5-point story is roughly twice as complex as a 3-pointer, regardless of who does it or how long it takes.">Relative complexity and uncertainty compared to other stories</button>
+            <button type="button" data-correct="false" data-explanation="Story points are deliberately not tied to hours to prevent false precision.">The exact number of hours the work will take</button>
+            <button type="button" data-correct="false" data-explanation="Lines of code is a meaningless metric; story points are not about code volume.">The number of lines of code to be written</button>
+            <button type="button" data-correct="false" data-explanation="A developer's seniority might influence how they estimate but story points measure the work, not the person.">How senior the developer needs to be to complete the work</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 10 Session 2</h1>
+        <p>Complete <a href="../handson/class-2-handson.html">Class 2 hands-on</a> (write a PRD and create GitHub Issues). Next session — <a href="session-3.html">Git branching strategies and GitHub Actions</a>.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

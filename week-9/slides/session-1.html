@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 9 - Session 1 - Webhooks and Stripe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 9 - Session 1</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 1: Webhooks and Stripe Integration</h1>
+        <p>Understand event-driven communication, then add a Stripe webhook endpoint to your API to receive and verify payment events.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>What is a webhook? Push vs. poll compared</li>
+            <li>Event-driven architecture and real-world uses</li>
+            <li>Stripe fundamentals — test mode, API keys, dashboard</li>
+            <li>Stripe CLI for local development</li>
+            <li>Core Stripe events and payload shape</li>
+            <li>Signature verification — why and how</li>
+            <li>Idempotency and the fast-ack pattern</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Webhooks</h1>
+        <p><strong>Polling:</strong> your server asks "anything new?" on a timer. Inefficient, delayed, expensive at scale.</p>
+        <p><strong>Webhook:</strong> the external service calls you the moment something happens. Push, not pull.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Push vs poll</h2>
+        <div class="comparison">
+            <article>
+                <h3>Polling</h3>
+                <ul>
+                    <li>Your code controls the schedule</li>
+                    <li>Hits the API every N seconds</li>
+                    <li>Wastes requests when nothing changed</li>
+                    <li>Delay = poll interval (up to minutes)</li>
+                    <li>Works without a public URL</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Webhooks</h3>
+                <ul>
+                    <li>Provider calls your endpoint</li>
+                    <li>Near-instant delivery</li>
+                    <li>Only fires when an event occurs</li>
+                    <li>Requires a publicly reachable URL</li>
+                    <li>Must verify the sender's signature</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Real-world webhook uses</h2>
+        <ul>
+            <li><strong>Stripe</strong> — payment succeeded, subscription cancelled, invoice created</li>
+            <li><strong>GitHub</strong> — push event triggers your CI pipeline</li>
+            <li><strong>Twilio</strong> — inbound SMS delivered to your handler</li>
+            <li><strong>Shopify</strong> — order fulfilled, inventory updated</li>
+            <li><strong>Clerk / Auth0</strong> — user created, email verified</li>
+            <li><strong>SendGrid</strong> — email opened, link clicked, bounced</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Stripe Fundamentals</h1>
+        <p>Stripe is the payments infrastructure. You integrate once; Stripe handles card processing, fraud, compliance, and reporting.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Key Stripe concepts</h2>
+        <ul>
+            <li><strong>Test mode</strong> — separate key set, fake cards, no real money. Always develop in test mode.</li>
+            <li><strong>Publishable key</strong> (<code>pk_test_…</code>) — safe in the browser. Used to tokenise card data.</li>
+            <li><strong>Secret key</strong> (<code>sk_test_…</code>) — server only. Never expose to clients or commit to git.</li>
+            <li><strong>Webhook secret</strong> (<code>whsec_…</code>) — used to verify incoming event signatures.</li>
+            <li><strong>PaymentIntent</strong> — Stripe's main object for a single payment attempt.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Stripe dashboard tour</h2>
+        <ul>
+            <li><strong>Developers &gt; API keys</strong> — copy your test secret key</li>
+            <li><strong>Developers &gt; Webhooks</strong> — register your endpoint URL and select events</li>
+            <li><strong>Developers &gt; Events</strong> — live log of all events sent to your endpoint</li>
+            <li><strong>Payments</strong> — list of PaymentIntents and their status</li>
+            <li><strong>Test card: <code>4242 4242 4242 4242</code></strong> — any future expiry, any CVC</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Stripe CLI for local dev</h2>
+        <p>Your localhost is not reachable by Stripe. The CLI creates a secure tunnel.</p>
+        <pre>
+# Install (macOS)
+brew install stripe/stripe-cli/stripe
+
+# Log in
+stripe login
+
+# Forward events to your local endpoint
+stripe listen --forward-to localhost:3000/webhooks/stripe
+
+# Trigger a test event manually
+stripe trigger payment_intent.succeeded</pre>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Receiving Events</h1>
+        <p>Stripe POSTs a JSON payload to your endpoint. Respond with <code>200</code> fast — processing happens after the response.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Stripe event shape</h2>
+        <pre>
+{
+  "id": "evt_1ABC…",
+  "type": "payment_intent.succeeded",
+  "data": {
+    "object": {
+      "id": "pi_1ABC…",
+      "amount": 5000,
+      "currency": "usd",
+      "metadata": { "orderId": "order_42" }
+    }
+  }
+}</pre>
+        <p>Use <code>event.type</code> to route. Use <code>event.data.object</code> for the payload. Use <code>metadata</code> to link back to your DB records.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Common events to handle</h2>
+        <ul>
+            <li><code>payment_intent.succeeded</code> — payment captured; fulfil the order</li>
+            <li><code>payment_intent.payment_failed</code> — notify user, retry logic</li>
+            <li><code>checkout.session.completed</code> — Checkout flow finished</li>
+            <li><code>invoice.paid</code> — subscription renewed</li>
+            <li><code>invoice.payment_failed</code> — subscription lapsed; downgrade access</li>
+            <li><code>customer.subscription.deleted</code> — cancel account features</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Signature verification</h2>
+        <p>Anyone can POST to your webhook URL. Always verify the request is really from Stripe.</p>
+        <pre>
+import Stripe from "stripe";
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+app.post("/webhooks/stripe",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    const sig = req.headers["stripe-signature"]!;
+    let event: Stripe.Event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET!
+      );
+    } catch {
+      return res.status(400).send("Signature invalid");
+    }
+    // handle event...
+    res.json({ received: true });
+  }
+);</pre>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Idempotency and the fast-ack pattern</h2>
+        <ul>
+            <li><strong>Ack fast</strong> — return <code>200</code> immediately. Move work to a background queue (BullMQ). Stripe retries if you take &gt;30 s.</li>
+            <li><strong>Idempotency</strong> — Stripe may deliver the same event more than once. Check if you've already processed <code>event.id</code> before acting.</li>
+            <li><strong>Retry schedule</strong> — Stripe retries failed deliveries over 3 days (up to ~15 attempts) with exponential backoff.</li>
+            <li><strong>Store event.id</strong> — mark events as processed in your DB. Skip duplicates.</li>
+        </ul>
+    </div>
+
+    <!-- Quiz -->
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 9 Session 1 Quiz</h1>
+        <p class="quiz-hint">8 questions on webhooks and Stripe</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">What is the main advantage of a webhook over polling?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Webhooks push events instantly when they occur; polling wastes requests checking repeatedly.">Near-instant delivery without repeated requests</button>
+            <button type="button" data-correct="false" data-explanation="Webhooks do require a publicly reachable URL; polling doesn't.">No public URL required</button>
+            <button type="button" data-correct="false" data-explanation="Polling is controlled by the receiver; webhooks are controlled by the sender.">The receiver controls the delivery schedule</button>
+            <button type="button" data-correct="false" data-explanation="Webhooks still need signature verification to be secure.">Webhooks are automatically secure without verification</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">Which Stripe key must never be exposed to the browser?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="The secret key (sk_test_…) grants full API access — server only, never in client code or committed to git.">Secret key (sk_test_…)</button>
+            <button type="button" data-correct="false" data-explanation="The publishable key is designed to be used in browsers to tokenise card data.">Publishable key (pk_test_…)</button>
+            <button type="button" data-correct="false" data-explanation="The webhook secret (whsec_…) is server-side but for signature verification, not the most privileged key.">Webhook signing secret (whsec_…)</button>
+            <button type="button" data-correct="false" data-explanation="Event IDs are not secret.">Event ID (evt_…)</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">What does the Stripe CLI command <code>stripe listen --forward-to</code> do?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="It creates a secure tunnel so Stripe can reach your localhost endpoint during development.">Tunnels Stripe events to your local server</button>
+            <button type="button" data-correct="false" data-explanation="stripe trigger is used for that.">Manually triggers a test payment event</button>
+            <button type="button" data-correct="false" data-explanation="That is done in the Stripe dashboard.">Registers a production webhook URL</button>
+            <button type="button" data-correct="false" data-explanation="The CLI is for development; it doesn't deploy anything.">Deploys your API to a cloud server</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">Why must you use <code>express.raw()</code> instead of <code>express.json()</code> on the webhook route?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="stripe.webhooks.constructEvent() needs the raw Buffer to verify the HMAC signature; parsing it as JSON first breaks verification.">Signature verification requires the raw request body</button>
+            <button type="button" data-correct="false" data-explanation="express.raw() does not improve performance significantly.">It is faster than JSON parsing</button>
+            <button type="button" data-correct="false" data-explanation="CORS is handled separately from body parsing.">It enables CORS for Stripe's servers</button>
+            <button type="button" data-correct="false" data-explanation="express.json() can also parse Stripe payloads; the issue is signature verification.">Stripe sends binary data, not JSON</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">What is the correct HTTP status to return immediately from a webhook handler?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="200 acknowledges receipt. Stripe retries on anything else. Heavy processing should go to a background queue.">200 OK</button>
+            <button type="button" data-correct="false" data-explanation="202 is acceptable but 200 is the standard ack used in all Stripe docs.">202 Accepted</button>
+            <button type="button" data-correct="false" data-explanation="201 means a resource was created; wrong for an event acknowledgement.">201 Created</button>
+            <button type="button" data-correct="false" data-explanation="204 means no content — Stripe expects a JSON body with received: true.">204 No Content</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">Which event fires when a subscription auto-renews successfully?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="invoice.paid fires each billing cycle when the subscription invoice is collected.">invoice.paid</button>
+            <button type="button" data-correct="false" data-explanation="payment_intent.succeeded covers one-time charges; subscription renewals use invoice.paid.">payment_intent.succeeded</button>
+            <button type="button" data-correct="false" data-explanation="checkout.session.completed is for initial Checkout purchases.">checkout.session.completed</button>
+            <button type="button" data-correct="false" data-explanation="customer.created fires when a Customer object is created, not on renewal.">customer.created</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">What is idempotency in the context of webhooks?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Stripe may deliver the same event more than once. Processing it multiple times must not cause duplicate side effects (double charges, double fulfilment).">Processing the same event multiple times produces the same result</button>
+            <button type="button" data-correct="false" data-explanation="Idempotency is about safe re-processing, not response speed.">Responding within 200 ms to avoid Stripe retries</button>
+            <button type="button" data-correct="false" data-explanation="Signature verification is about authenticity, not idempotency.">Verifying the HMAC signature on each request</button>
+            <button type="button" data-correct="false" data-explanation="Encryption and idempotency are different concepts.">Encrypting event payloads end-to-end</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">Where should you put the heavy business logic triggered by a webhook event?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Return 200 immediately and push work to a background queue (BullMQ, SQS). Stripe times out after 30 s and retries.">A background job queue, after acking 200</button>
+            <button type="button" data-correct="false" data-explanation="Doing heavy work synchronously risks timing out Stripe's 30-second window.">Synchronously inside the webhook handler before responding</button>
+            <button type="button" data-correct="false" data-explanation="The webhook endpoint must respond itself; redirecting adds a round trip.">In a separate HTTP endpoint that you redirect to</button>
+            <button type="button" data-correct="false" data-explanation="Client-side processing is impossible — webhooks are server-to-server.">On the client side via a WebSocket</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 9 Session 1</h1>
+        <p>Complete <a href="../handson/class-1-handson.html">Class 1 hands-on</a> (Stripe webhook endpoint). Next session — <a href="session-2.html">NestJS foundations</a>.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

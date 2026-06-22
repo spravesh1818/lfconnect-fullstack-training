@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 9 Class 2 hands-on - NestJS Scaffold and TypeORM Entities</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .troubleshooting {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff1f2;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 9 - Class 2 Lab</strong> -
+        <a href="../slides/session-2.html">Open session deck</a>
+        - NestJS CLI, modules, TypeORM entities for the meeting app
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 0 - Install NestJS CLI and create the project</h2>
+        <pre>
+# Install the CLI globally
+npm i -g @nestjs/cli
+
+# Scaffold a new project (choose npm when prompted)
+nest new meeting-app
+
+cd meeting-app
+npm run start:dev</pre>
+        <p>Visit <code>http://localhost:3000</code> — you should see <strong>"Hello World!"</strong>.</p>
+        <div class="done-when"><strong>Done when:</strong> the browser shows "Hello World!" and <code>npm run start:dev</code> is running in watch mode.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Explore the generated structure</h2>
+        <p>Open the project in your editor and find these files:</p>
+        <pre>
+src/
+├── app.controller.ts     # root GET / handler
+├── app.controller.spec.ts
+├── app.module.ts         # root module
+├── app.service.ts        # root service
+└── main.ts               # bootstrap (NestFactory.create)</pre>
+        <ul>
+            <li>Read <code>app.module.ts</code> — see how the controller and service are declared</li>
+            <li>Read <code>app.controller.ts</code> — notice <code>@Get()</code> decorator and constructor injection</li>
+            <li>Read <code>app.service.ts</code> — notice <code>@Injectable()</code></li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> you can explain to a partner what each file does and how they are connected.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Install TypeORM and Postgres dependencies</h2>
+        <pre>npm install @nestjs/typeorm typeorm pg</pre>
+        <p>Start a local Postgres database (Docker is the easiest way):</p>
+        <pre>
+docker run -d \
+  --name meeting-db \
+  -e POSTGRES_USER=meeting \
+  -e POSTGRES_PASSWORD=secret \
+  -e POSTGRES_DB=meeting_dev \
+  -p 5432:5432 \
+  postgres:16</pre>
+        <p>Create a <code>.env</code> file at the project root:</p>
+        <pre>
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=meeting
+DB_PASS=secret
+DB_NAME=meeting_dev</pre>
+        <p>Install config support:</p>
+        <pre>npm install @nestjs/config</pre>
+        <div class="done-when"><strong>Done when:</strong> <code>docker ps</code> shows the container running and <code>.env</code> exists.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Wire TypeORM in AppModule</h2>
+        <p>Update <code>src/app.module.ts</code>:</p>
+        <pre>
+import { Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: "postgres",
+        host: config.get("DB_HOST"),
+        port: +config.get("DB_PORT")!,
+        username: config.get("DB_USER"),
+        password: config.get("DB_PASS"),
+        database: config.get("DB_NAME"),
+        autoLoadEntities: true,
+        synchronize: true,   // dev only
+      }),
+    }),
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}</pre>
+        <div class="done-when"><strong>Done when:</strong> <code>npm run start:dev</code> starts with no errors and logs <code>TypeORM connected</code> (or no connection error).</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - Generate UsersModule and UserEntity</h2>
+        <pre>
+nest g module users
+nest g controller users --no-spec
+nest g service users --no-spec</pre>
+        <p>Create <code>src/users/entities/user.entity.ts</code>:</p>
+        <pre>
+import {
+  Entity, PrimaryGeneratedColumn, Column,
+  CreateDateColumn, UpdateDateColumn
+} from "typeorm";
+
+@Entity()
+export class User {
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
+
+  @Column({ unique: true })
+  email: string;
+
+  @Column()
+  displayName: string;
+
+  @Column()
+  passwordHash: string;
+
+  @Column({ nullable: true })
+  avatarUrl: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}</pre>
+        <p>Register the entity in <code>src/users/users.module.ts</code>:</p>
+        <pre>
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { User } from "./entities/user.entity";
+import { UsersController } from "./users.controller";
+import { UsersService } from "./users.service";
+
+@Module({
+  imports: [TypeOrmModule.forFeature([User])],
+  controllers: [UsersController],
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}</pre>
+        <p>Import <code>UsersModule</code> in <code>AppModule</code>.</p>
+        <div class="done-when"><strong>Done when:</strong> the server starts and you can see a <code>user</code> table in your Postgres database (<code>docker exec -it meeting-db psql -U meeting -d meeting_dev -c "\dt"</code>).</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 5 - Generate RoomsModule and RoomEntity</h2>
+        <pre>nest g resource rooms --no-spec</pre>
+        <p>Create <code>src/rooms/entities/room.entity.ts</code>:</p>
+        <pre>
+import {
+  Entity, PrimaryGeneratedColumn, Column,
+  ManyToOne, CreateDateColumn
+} from "typeorm";
+import { User } from "../../users/entities/user.entity";
+
+@Entity()
+export class Room {
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
+
+  @Column()
+  name: string;
+
+  @Column({ nullable: true })
+  description: string;
+
+  @Column({ default: 50 })
+  maxParticipants: number;
+
+  @ManyToOne(() => User, { nullable: true })
+  host: User;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}</pre>
+        <p>Register <code>Room</code> in <code>RoomsModule</code> and import <code>RoomsModule</code> in <code>AppModule</code>.</p>
+        <div class="done-when"><strong>Done when:</strong> server restarts and a <code>room</code> table appears in Postgres.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 6 - Add a basic findAll endpoint (stretch)</h2>
+        <p>In <code>src/rooms/rooms.service.ts</code>:</p>
+        <pre>
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Room } from "./entities/room.entity";
+
+@Injectable()
+export class RoomsService {
+  constructor(
+    @InjectRepository(Room)
+    private readonly roomRepo: Repository&lt;Room&gt;,
+  ) {}
+
+  findAll() {
+    return this.roomRepo.find({ relations: ["host"] });
+  }
+
+  create(data: Partial&lt;Room&gt;) {
+    const room = this.roomRepo.create(data);
+    return this.roomRepo.save(room);
+  }
+}</pre>
+        <p>In <code>rooms.controller.ts</code>, add <code>@Get()</code> and <code>@Post()</code> routes that call the service.</p>
+        <div class="done-when"><strong>Done when:</strong> <code>GET http://localhost:3000/rooms</code> returns an empty array <code>[]</code>.</div>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li><strong><code>connect ECONNREFUSED 127.0.0.1:5432</code></strong> — Postgres is not running. Start the Docker container.</li>
+            <li><strong><code>password authentication failed</code></strong> — credentials in <code>.env</code> don't match the Docker container. Re-check <code>DB_USER</code> and <code>DB_PASS</code>.</li>
+            <li><strong>Entity not found by TypeORM</strong> — you probably forgot to register it in the module's <code>TypeOrmModule.forFeature([Entity])</code> call.</li>
+            <li><strong><code>Cannot find module '../entities/user.entity'</code></strong> — check the relative import path. NestJS uses TypeScript paths.</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Practice:</strong> Add a <code>MeetingsModule</code> with a <code>Meeting</code> entity that has: <code>id</code>, <code>room</code> (ManyToOne → Room), <code>startedAt</code>, <code>endedAt</code> (nullable), <code>participantCount</code>.
+        <p style="margin-top: 0.75rem;">
+            <strong>Next:</strong> <a href="class-3-handson.html">Class 3 hands-on</a> — Git branching and PR workflow.
+        </p>
+    </div>
+</body>
+
+</html>

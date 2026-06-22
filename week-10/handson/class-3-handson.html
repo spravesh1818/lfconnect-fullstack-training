@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 10 Class 3 hands-on - Feature Branch, PR, and GitHub Actions CI</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .troubleshooting {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff1f2;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 10 - Class 3 Lab</strong> -
+        <a href="../slides/session-3.html">Open session deck</a>
+        - Add GitHub Actions CI, enable branch protection, work through a full PR cycle
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 0 - Add a test script to meeting-app</h2>
+        <p>GitHub Actions will run <code>npm test</code>. NestJS comes with Jest pre-configured. Verify it works locally first:</p>
+        <pre>
+cd meeting-app
+npm test</pre>
+        <p>The default NestJS scaffold has a passing test in <code>src/app.controller.spec.ts</code>. If tests fail, fix them before moving on.</p>
+        <p>Confirm the script exists in <code>package.json</code>:</p>
+        <pre>
+"scripts": {
+  "test": "jest",
+  "test:watch": "jest --watch",
+  "test:cov": "jest --coverage"
+}</pre>
+        <div class="done-when"><strong>Done when:</strong> <code>npm test</code> shows all tests passing locally.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Add a GitHub Actions CI workflow</h2>
+        <p>Create the workflow file:</p>
+        <pre>mkdir -p .github/workflows</pre>
+        <p>Create <code>.github/workflows/ci.yml</code>:</p>
+        <pre>
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test</pre>
+        <p>Commit and push to <code>main</code>:</p>
+        <pre>
+git add .github/workflows/ci.yml
+git commit -m "chore: add GitHub Actions CI workflow"
+git push</pre>
+        <div class="done-when"><strong>Done when:</strong> you can see the workflow running under Actions tab on GitHub and it shows a green checkmark.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Enable branch protection on main</h2>
+        <ol>
+            <li>Go to your repo → <strong>Settings → Branches</strong></li>
+            <li>Click <strong>Add branch protection rule</strong></li>
+            <li>Branch name pattern: <code>main</code></li>
+            <li>Check these options:
+                <ul>
+                    <li>[x] <strong>Require a pull request before merging</strong></li>
+                    <li>[x] <strong>Require approvals</strong> → 1 required</li>
+                    <li>[x] <strong>Require status checks to pass before merging</strong></li>
+                    <li>Search for and select your CI status check: <strong>Run tests</strong></li>
+                    <li>[x] <strong>Require branches to be up to date before merging</strong></li>
+                    <li>[x] <strong>Do not allow bypassing the above settings</strong></li>
+                </ul>
+            </li>
+            <li>Click <strong>Create</strong></li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> the branch protection rule shows on the Branches page and you can no longer push directly to main (you'll get a "protected branch" error).</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Implement a story via the full PR workflow</h2>
+        <p>Pick one of your Sprint 2 GitHub Issues. If you don't have one ready, use this one:</p>
+        <blockquote style="border-left: 4px solid #16a34a; padding: 0.5rem 1rem; background: #f0fdf4; margin: 0.75rem 0;">
+            <strong>Issue:</strong> feat: POST /rooms/:id/messages — send a text message to a room
+        </blockquote>
+        <p>Create a feature branch:</p>
+        <pre>git checkout main && git pull
+git checkout -b feat/room-messages-post</pre>
+        <p>Add a <code>Message</code> entity (<code>src/messages/entities/message.entity.ts</code>):</p>
+        <pre>
+import {
+  Entity, PrimaryGeneratedColumn, Column,
+  ManyToOne, CreateDateColumn
+} from "typeorm";
+import { Room } from "../../rooms/entities/room.entity";
+import { User } from "../../users/entities/user.entity";
+
+@Entity()
+export class Message {
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
+
+  @Column("text")
+  content: string;
+
+  @ManyToOne(() => Room, { onDelete: "CASCADE" })
+  room: Room;
+
+  @ManyToOne(() => User)
+  sender: User;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}</pre>
+        <p>Generate MessagesModule and wire everything up:</p>
+        <pre>nest g resource messages --no-spec</pre>
+        <p>Commit with conventional format:</p>
+        <pre>
+git add .
+git commit -m "feat(messages): add Message entity and MessagesModule"</pre>
+        <div class="done-when"><strong>Done when:</strong> the branch has at least one commit with a conventional message.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - Open a PR and watch CI run</h2>
+        <pre>git push -u origin feat/room-messages-post</pre>
+        <p>Open the PR on GitHub. Fill in the description template (use the one from Class 3 in Week 9). Link your issue with <code>Closes #N</code>.</p>
+        <p>Watch the <strong>Checks</strong> tab. Within ~2 minutes you should see the CI workflow run:</p>
+        <ul>
+            <li>Green checkmark = tests pass, PR can be merged (pending review)</li>
+            <li>Red X = tests failed — check the logs and fix before requesting review</li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> the PR has a green CI check and a filled-in description.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 5 - Simulate a merge conflict and resolve it</h2>
+        <p>Have a partner make a small change to <code>src/app.module.ts</code> directly on their branch (or you do it in a second terminal) and merge it to main first. Then update your branch:</p>
+        <pre>
+# On your feat/room-messages-post branch
+git fetch origin
+git merge origin/main</pre>
+        <p>If there is a conflict, Git will mark it in the file:</p>
+        <pre>
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+  imports: [TypeOrmModule.forRoot(...), UsersModule, RoomsModule],
+=======
+  imports: [TypeOrmModule.forRoot(...), UsersModule],
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; origin/main</pre>
+        <p>Edit the file to keep both changes (your MessagesModule and their changes). Remove all conflict markers. Then:</p>
+        <pre>
+git add src/app.module.ts
+git commit   # git pre-fills the merge commit message
+git push</pre>
+        <p>The PR updates automatically. CI reruns.</p>
+        <div class="done-when"><strong>Done when:</strong> the conflict is resolved, the branch is pushed, and CI is green again.</div>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li><strong>CI fails with "npm ci: missing package-lock.json"</strong> — commit <code>package-lock.json</code> to git. It should not be in <code>.gitignore</code>.</li>
+            <li><strong>Status check not appearing in branch protection</strong> — the workflow must have run at least once (push to main or open a PR) before it appears in the status check list. Push a test commit first.</li>
+            <li><strong><code>remote: error: GH006: Protected branch update failed</code></strong> — branch protection is working. Create a PR instead of pushing directly.</li>
+            <li><strong>Merge conflict markers left in file</strong> — if you commit while markers (<code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>) are still in the file, the app will fail to parse. Always check the whole conflict area before staging.</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Practice:</strong> Add a second job to the CI workflow that runs the linter:
+        <pre style="background:#0f172a; color:#e2e8f0; border-radius:6px; padding:0.75rem; font-size:0.83rem; margin-top:0.5rem;">
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run lint</pre>
+        <p style="margin-top: 0.75rem;">
+            <strong>Next:</strong> <a href="../assignment/week-10-assignment.html">Week 10 assignment</a> — PRD, sprint backlog, and Git workflow.
+        </p>
+    </div>
+</body>
+
+</html>

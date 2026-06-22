@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 10 Class 1 hands-on - Mock Sprint Planning Ceremony</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .backlog-item {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 0.6rem;
+            padding: 0.7rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #ffffff;
+        }
+
+        .backlog-item strong {
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .troubleshooting {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff1f2;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 10 - Class 1 Lab</strong> -
+        <a href="../slides/session-1.html">Open session deck</a>
+        - Run a mock sprint planning ceremony for the meeting app
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 0 - Assign roles</h2>
+        <p>Split into groups of 3–4. Assign Scrum roles for this exercise:</p>
+        <ul>
+            <li><strong>Product Owner</strong> — reads the sprint goal and presents backlog items. Answers "why" questions about requirements.</li>
+            <li><strong>Scrum Master</strong> — facilitates. Keeps time. Reminds the team of the process.</li>
+            <li><strong>Developers (1–2)</strong> — estimate, ask clarifying questions, and commit to stories.</li>
+        </ul>
+        <p>You have <strong>20 minutes</strong> for this entire exercise. The SM starts a timer now.</p>
+        <div class="done-when"><strong>Done when:</strong> roles are assigned and the timer is started.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Sprint goal</h2>
+        <p>The PO reads the sprint goal aloud:</p>
+        <blockquote style="border-left: 4px solid #0ea5e9; padding: 0.5rem 1rem; margin: 1rem 0; background: #f0f9ff;">
+            <strong>Sprint 1 Goal:</strong> "By the end of this sprint, a user can register, log in, and create a named meeting room via the meeting-app API."
+        </blockquote>
+        <p>Developers: ask any clarifying questions before estimation begins. Examples:</p>
+        <ul>
+            <li>"Should rooms require a name? What's the max length?"</li>
+            <li>"Is email verification required for registration?"</li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> the goal is read, questions are answered, and everyone agrees the goal is clear.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Estimate the backlog items (planning poker)</h2>
+        <p>Use the Fibonacci scale: <strong>1, 2, 3, 5, 8, 13</strong>. For each item below, everyone picks a number simultaneously (use fingers, sticky notes, or a planning poker app). Discuss and re-vote if there is a large spread.</p>
+    </div>
+
+    <div class="backlog-item">
+        <strong>Story 1: User registration</strong>
+        As a new user, I want to register with email and password, so that I have an account.
+        <br><em>AC: POST /auth/register creates user, returns JWT. Duplicate email returns 409.</em>
+        <br>Your estimate: ___
+    </div>
+
+    <div class="backlog-item">
+        <strong>Story 2: User login</strong>
+        As a registered user, I want to log in with email and password, so that I receive a JWT.
+        <br><em>AC: POST /auth/login returns JWT on valid credentials. Invalid credentials returns 401.</em>
+        <br>Your estimate: ___
+    </div>
+
+    <div class="backlog-item">
+        <strong>Story 3: Create a room</strong>
+        As a logged-in host, I want to create a named meeting room, so that participants have somewhere to join.
+        <br><em>AC: POST /rooms (auth required) creates room. Empty name returns 400.</em>
+        <br>Your estimate: ___
+    </div>
+
+    <div class="backlog-item">
+        <strong>Story 4: List rooms</strong>
+        As a user, I want to see all available rooms, so that I can choose which one to join.
+        <br><em>AC: GET /rooms returns array of rooms with host name.</em>
+        <br>Your estimate: ___
+    </div>
+
+    <div class="backlog-item">
+        <strong>Story 5: Get room by ID</strong>
+        As a user, I want to view a single room's details, so that I see capacity and description.
+        <br><em>AC: GET /rooms/:id returns room. 404 if not found.</em>
+        <br>Your estimate: ___
+    </div>
+
+    <div class="backlog-item">
+        <strong>Story 6: Delete a room (host only)</strong>
+        As a host, I want to delete a room I own, so that abandoned rooms don't clutter the list.
+        <br><em>AC: DELETE /rooms/:id deletes the room. 403 if requester is not the host.</em>
+        <br>Your estimate: ___
+    </div>
+
+    <div class="backlog-item">
+        <strong>Story 7: Add CI with GitHub Actions</strong>
+        As a team, we want a GitHub Actions workflow that runs tests on every PR, so that broken code can't merge.
+        <br><em>AC: .github/workflows/ci.yml runs npm test on PRs to main. Status check required to merge.</em>
+        <br>Your estimate: ___
+    </div>
+
+    <div class="backlog-item">
+        <strong>Story 8: Update room details</strong>
+        As a host, I want to update my room's name or description, so that I can correct mistakes.
+        <br><em>AC: PATCH /rooms/:id updates name/description. 403 if not the host.</em>
+        <br>Your estimate: ___
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Check capacity and commit to a sprint backlog</h2>
+        <p>Assume the team has <strong>2 developers</strong> for <strong>2 weeks</strong>. Typical capacity (at 70% focus factor): about <strong>20–24 story points</strong> per developer, so ~<strong>40–48 total</strong> for the team.</p>
+        <ol>
+            <li>Add up your estimates for Stories 1–8</li>
+            <li>Select stories to commit to, starting from Story 1 (highest priority first), until you reach your capacity</li>
+            <li>Write your sprint backlog:</li>
+        </ol>
+        <pre>
+Sprint 1 Backlog
+================
+[x] Story 1 - User registration     (__ pts)
+[x] Story 2 - User login            (__ pts)
+[x] Story 3 - Create a room         (__ pts)
+[ ] ...
+
+Total committed: __ points
+Sprint Goal: "By end of sprint, user can register, log in, and create a room."</pre>
+        <div class="done-when"><strong>Done when:</strong> the sprint backlog is committed to in writing with a total point count and sprint goal confirmed.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - Create a GitHub Project board</h2>
+        <ol>
+            <li>Go to your <code>meeting-app</code> GitHub repository</li>
+            <li>Click <strong>Projects → New project → Board</strong></li>
+            <li>Create three columns: <strong>Backlog</strong>, <strong>In Progress</strong>, <strong>Done</strong></li>
+            <li>Create a GitHub Issue for each committed story (from your sprint backlog)</li>
+            <li>Add each issue to the <strong>Backlog</strong> column</li>
+            <li>Label each issue with <code>sprint-1</code> and a size label (<code>S</code>, <code>M</code>, <code>L</code>)</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> the GitHub Project board has at least 4 issues in the Backlog column, each with a label and size.</div>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Common Scrum mistakes (watch for these)</h2>
+        <ul>
+            <li><strong>PO assigning estimates</strong> — only developers estimate. The PO clarifies requirements, not complexity.</li>
+            <li><strong>Committing to more than capacity</strong> — it feels productive but leads to missed goals and burnout.</li>
+            <li><strong>Skipping acceptance criteria</strong> — if you don't know what "done" looks like, you'll argue about it at the end of the sprint.</li>
+            <li><strong>No sprint goal</strong> — a list of stories without a goal is just a to-do list. The goal aligns the team when tradeoffs arise.</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Retro (5 min):</strong> Run a 1-sentence per person "Start / Stop / Continue" on how the sprint planning exercise went.
+        <ul>
+            <li><strong>Start:</strong> Something you'd do differently next time</li>
+            <li><strong>Stop:</strong> Something that slowed you down</li>
+            <li><strong>Continue:</strong> Something that worked well</li>
+        </ul>
+        <p style="margin-top: 0.75rem;">
+            <strong>Next:</strong> <a href="class-2-handson.html">Class 2 hands-on</a> — writing a PRD and creating GitHub Issues.
+        </p>
+    </div>
+</body>
+
+</html>

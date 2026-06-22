@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 10 Assignment - PRD, Sprint Backlog, and Git Workflow</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background: #f1f5f9;
+            color: #0f172a;
+            margin: 0;
+            padding: 1.5rem 1rem 3rem;
+        }
+
+        h1 {
+            max-width: 56rem;
+            margin: 0 auto 1.5rem;
+            padding: 1rem 1.25rem;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 8px;
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+        }
+
+        section {
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1.25rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.6rem;
+        }
+
+        h3 {
+            margin-bottom: 0.4rem;
+        }
+
+        code {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 0.05rem 0.35rem;
+            font-family: ui-monospace, Menlo, monospace;
+        }
+
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            font-family: ui-monospace, Menlo, monospace;
+        }
+
+        .deadline {
+            border-left: 5px solid #ef4444;
+            background: #fff1f2;
+        }
+
+        .presentation {
+            border-left: 5px solid #3b82f6;
+            background: #eff6ff;
+        }
+
+        ul.checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul.checklist li::before {
+            content: "☐ ";
+            color: #475569;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem 0.65rem;
+            text-align: left;
+        }
+
+        th {
+            background: #f8fafc;
+        }
+
+        blockquote {
+            border-left: 4px solid #8b5cf6;
+            padding: 0.5rem 1rem;
+            background: #faf5ff;
+            margin: 0.75rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Week 10 Assignment — PRD, Sprint Backlog &amp; Git Workflow</h1>
+
+    <section class="deadline">
+        <h2>Submission</h2>
+        <p>Deadline: <strong>Sunday, 11:59 PM</strong></p>
+        <ul>
+            <li><strong>Part 1 (PRD)</strong> — Link to a GitHub Issue, Notion page, or Google Doc containing your PRD</li>
+            <li><strong>Part 2 (Sprint Backlog)</strong> — Link to your GitHub Project board showing the Sprint 2 milestone issues</li>
+            <li><strong>Part 3 (Git workflow)</strong> — Link to the merged PR on GitHub (with CI passing)</li>
+            <li>All repos must be public or shared with the instructor</li>
+        </ul>
+    </section>
+
+    <section class="presentation">
+        <h2>In-class presentation (5 minutes)</h2>
+        <ul>
+            <li>Open your PRD and walk through the problem statement and 2 user stories (1 minute)</li>
+            <li>Show the GitHub Project board with Sprint 2 issues, labels, and milestone (1 minute)</li>
+            <li>Show the merged PR — scroll through the diff, point out the CI green check (2 minutes)</li>
+            <li>Explain one decision: why you scoped the PRD this way, or how you broke down a story into tasks (1 minute)</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Part 1 — Full PRD for a meeting-app feature</h2>
+        <p>Write a PRD for the following feature:</p>
+        <blockquote>
+            "Users of the meeting app need to be able to send text messages within a meeting room. Messages should appear in real time for all participants currently in the room, and late joiners should be able to scroll back through recent message history. The chat must show the sender's display name and the time each message was sent."
+        </blockquote>
+        <h3>PRD must include</h3>
+        <table>
+            <thead>
+                <tr><th>Section</th><th>Requirement</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Overview</td><td>1 paragraph summary of the feature</td></tr>
+                <tr><td>Problem statement</td><td>Who has this problem? What pain does chat solve?</td></tr>
+                <tr><td>Goals</td><td>2–3 measurable outcomes (e.g., "participant can send a message in &lt;2 s")</td></tr>
+                <tr><td>Non-goals</td><td>Minimum 2 explicit out-of-scopes (e.g., "no voice/video", "no file attachments v1")</td></tr>
+                <tr><td>User stories</td><td>Minimum 3 stories covering different roles (participant, host, late joiner)</td></tr>
+                <tr><td>Acceptance criteria</td><td>Given/When/Then for at least 2 stories covering happy + sad paths</td></tr>
+                <tr><td>Open questions</td><td>Minimum 1 unanswered question that needs a product decision</td></tr>
+            </tbody>
+        </table>
+        <h3>Format</h3>
+        <p>Write the PRD as a GitHub Issue titled <code>PRD: In-room text chat</code> in your <code>meeting-app</code> repo, or as a linked Notion/Google Doc. Use Markdown headings matching the sections above.</p>
+    </section>
+
+    <section>
+        <h2>Part 2 — Sprint 2 Backlog</h2>
+        <p>Break your PRD into a sprint backlog of <strong>6–8 GitHub Issues</strong> for Sprint 2. These should cover the implementation of the in-room chat feature.</p>
+
+        <h3>Issue requirements</h3>
+        <table>
+            <thead>
+                <tr><th>Field</th><th>Requirement</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Title</td><td>Format: <code>feat(scope): description</code> — specific and actionable</td></tr>
+                <tr><td>Body</td><td>User story + acceptance criteria (at least 2 Given/When/Then per issue)</td></tr>
+                <tr><td>Labels</td><td><code>feat</code> type label + size label (<code>size:S</code>, <code>size:M</code>, <code>size:L</code>)</td></tr>
+                <tr><td>Milestone</td><td>Assigned to "Sprint 2 - In-room chat" milestone</td></tr>
+                <tr><td>Estimate</td><td>Story point value written in the issue body or as a label</td></tr>
+                <tr><td>Board</td><td>All issues on the GitHub Project board in the Backlog column</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Suggested issue breakdown</h3>
+        <ul>
+            <li><code>feat(messages): Message entity — store content, roomId, senderId, createdAt</code></li>
+            <li><code>feat(messages): MessagesModule — NestJS module, controller, service scaffold</code></li>
+            <li><code>feat(messages): POST /rooms/:id/messages — send a message (auth required)</code></li>
+            <li><code>feat(messages): GET /rooms/:id/messages — list message history (paginated)</code></li>
+            <li><code>feat(messages): WebSocket gateway — broadcast messages in real time</code></li>
+            <li><code>feat(messages): Message DTO — validate content (non-empty, max 1000 chars)</code></li>
+            <li><code>test(messages): Integration tests for message send and list endpoints</code></li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Part 3 — Implement one ticket with full Git workflow</h2>
+        <p>Pick <strong>one issue</strong> from your Sprint 2 backlog and implement it using the full Git workflow practised in class.</p>
+
+        <h3>Required workflow steps</h3>
+        <table>
+            <thead>
+                <tr><th>Step</th><th>Requirement</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Branch</td><td>Feature branch named according to convention: <code>feat/messages-entity</code> (example)</td></tr>
+                <tr><td>Commits</td><td>At least 2 commits with conventional commit messages (<code>feat(scope): description</code>)</td></tr>
+                <tr><td>CI</td><td>GitHub Actions workflow runs on the PR — must show a green checkmark</td></tr>
+                <tr><td>PR description</td><td>What changed, why, how to test, link to issue (<code>Closes #N</code>)</td></tr>
+                <tr><td>Review</td><td>At least one code review comment (from a partner or instructor) addressed</td></tr>
+                <tr><td>Merge</td><td>PR merged into main via squash-and-merge after CI passes and review is approved</td></tr>
+                <tr><td>Cleanup</td><td>Feature branch deleted after merge</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Branch protection required</h3>
+        <p>Your <code>main</code> branch must have branch protection enabled with:</p>
+        <ul>
+            <li>PR required before merging</li>
+            <li>At least 1 approval required</li>
+            <li>CI status check required to pass</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Full checklist</h2>
+        <h3>Part 1 — PRD</h3>
+        <ul class="checklist">
+            <li>PRD has a title, overview, and problem statement</li>
+            <li>2–3 measurable goals written</li>
+            <li>Minimum 2 non-goals explicitly listed</li>
+            <li>3+ user stories in As a / I want / So that format</li>
+            <li>Given/When/Then acceptance criteria for at least 2 stories</li>
+            <li>At least 1 open question identified</li>
+        </ul>
+        <h3>Part 2 — Sprint Backlog</h3>
+        <ul class="checklist">
+            <li>6–8 GitHub Issues created in the meeting-app repo</li>
+            <li>Each issue has a user story and acceptance criteria</li>
+            <li>Each issue has a type label and a size label</li>
+            <li>"Sprint 2 - In-room chat" milestone created with a due date</li>
+            <li>All issues assigned to Sprint 2 milestone</li>
+            <li>All issues visible on the GitHub Project board (Backlog column)</li>
+            <li>Sprint goal written in the milestone description or as a pinned issue</li>
+        </ul>
+        <h3>Part 3 — Git Workflow</h3>
+        <ul class="checklist">
+            <li>Feature branch created from <code>main</code> with correct naming convention</li>
+            <li>At least 2 conventional commits on the branch</li>
+            <li>GitHub Actions CI workflow exists (<code>.github/workflows/ci.yml</code>)</li>
+            <li>PR opened with a description and issue link (<code>Closes #N</code>)</li>
+            <li>CI shows green checkmark on the PR</li>
+            <li>At least 1 review comment addressed</li>
+            <li>PR merged via squash-and-merge after CI passes</li>
+            <li>Feature branch deleted after merge</li>
+            <li>Branch protection enabled on <code>main</code></li>
+        </ul>
+    </section>
+</body>
+
+</html>

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 9 - Session 2 - NestJS, DI, TypeORM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 9 - Session 2</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 2: NestJS, DI, TypeORM, and Meeting App Scaffold</h1>
+        <p>Move from Express to NestJS — understand Dependency Injection, modules, and TypeORM, then scaffold the foundation of a Zoom-like meeting application.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Why NestJS? Express vs NestJS compared</li>
+            <li>Core concepts — modules, controllers, services</li>
+            <li>Dependency Injection deep dive</li>
+            <li>TypeORM with NestJS — entities and repositories</li>
+            <li>NestJS CLI walkthrough</li>
+            <li>Meeting app domain design</li>
+            <li>Scaffold — UsersModule, RoomsModule, MeetingsModule</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Why NestJS?</h1>
+        <p>Express is minimal and flexible. NestJS is opinionated and structured. The bigger your team and codebase, the more NestJS pays off.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Express vs NestJS</h2>
+        <div class="comparison">
+            <article>
+                <h3>Express</h3>
+                <ul>
+                    <li>No enforced structure</li>
+                    <li>You wire everything manually</li>
+                    <li>Lightweight, minimal overhead</li>
+                    <li>Great for small APIs and learning</li>
+                    <li>DI, testing patterns are DIY</li>
+                </ul>
+            </article>
+            <article>
+                <h3>NestJS</h3>
+                <ul>
+                    <li>Module-based architecture enforced</li>
+                    <li>Built-in DI container</li>
+                    <li>Decorators-first (<code>@Controller</code>, <code>@Injectable</code>)</li>
+                    <li>First-class TypeScript support</li>
+                    <li>Testing utilities built in</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg2">
+        <h2>NestJS is Angular for the backend</h2>
+        <ul>
+            <li>Both use <strong>modules</strong> to group related code</li>
+            <li>Both use <strong>decorators</strong> to declare metadata (<code>@Module</code>, <code>@Injectable</code>)</li>
+            <li>Both use a <strong>DI container</strong> — you declare what you need; the framework provides it</li>
+            <li>Both encourage <strong>separation of concerns</strong> — controllers handle HTTP, services hold logic</li>
+            <li>Under the hood NestJS runs on Express (or Fastify) — you can still use Express middleware</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Core Building Blocks</h1>
+        <p>Every NestJS app is built from <strong>modules</strong>, <strong>controllers</strong>, and <strong>services (providers)</strong>.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Modules</h2>
+        <p>A module groups everything related to one domain. Import what you need; export what others can use.</p>
+        <pre>
+@Module({
+  imports: [TypeOrmModule.forFeature([Room])],
+  controllers: [RoomsController],
+  providers: [RoomsService],
+  exports: [RoomsService],
+})
+export class RoomsModule {}</pre>
+        <p><code>AppModule</code> is the root — it imports all feature modules.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Controllers</h2>
+        <p>Handle HTTP requests. No business logic — delegate to the service.</p>
+        <pre>
+@Controller("rooms")
+export class RoomsController {
+  constructor(private readonly roomsService: RoomsService) {}
+
+  @Get()
+  findAll() {
+    return this.roomsService.findAll();
+  }
+
+  @Post()
+  create(@Body() dto: CreateRoomDto) {
+    return this.roomsService.create(dto);
+  }
+}</pre>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Services (Providers)</h2>
+        <p>Hold business logic. Decorated with <code>@Injectable()</code> so the DI container can manage them.</p>
+        <pre>
+@Injectable()
+export class RoomsService {
+  constructor(
+    @InjectRepository(Room)
+    private readonly roomRepo: Repository&lt;Room&gt;,
+  ) {}
+
+  findAll() {
+    return this.roomRepo.find();
+  }
+
+  create(dto: CreateRoomDto) {
+    const room = this.roomRepo.create(dto);
+    return this.roomRepo.save(room);
+  }
+}</pre>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Dependency Injection</h1>
+        <p>Instead of creating instances yourself, you declare what you need. NestJS's container creates and injects them.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>DI in plain terms</h2>
+        <div class="comparison">
+            <article>
+                <h3>Without DI</h3>
+                <pre style="font-size:0.78rem">
+class RoomsController {
+  private svc = new RoomsService(
+    new RoomsRepository()
+  );
+}</pre>
+                <ul>
+                    <li>Tight coupling</li>
+                    <li>Hard to test (can't swap)</li>
+                    <li>You manage lifetimes</li>
+                </ul>
+            </article>
+            <article>
+                <h3>With DI (NestJS)</h3>
+                <pre style="font-size:0.78rem">
+class RoomsController {
+  constructor(
+    private svc: RoomsService
+  ) {}
+}</pre>
+                <ul>
+                    <li>Decoupled — just declare the type</li>
+                    <li>Easy to mock in tests</li>
+                    <li>Container manages lifetime</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Provider scopes</h2>
+        <ul>
+            <li><strong>Singleton (default)</strong> — one instance shared across the entire app. Fine for stateless services.</li>
+            <li><strong>Request</strong> — new instance per HTTP request. Use when you need per-request state (e.g., current user).</li>
+            <li><strong>Transient</strong> — new instance every time it is injected. Rare.</li>
+        </ul>
+        <p>Default singleton is correct for 95 % of services. Only change scope when you have a reason.</p>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 4</p>
+        <h1>TypeORM with NestJS</h1>
+        <p>TypeORM is the most popular ORM for NestJS. Entities are TypeScript classes decorated to map to database tables.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Entity definition</h2>
+        <pre>
+@Entity()
+export class Room {
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
+
+  @Column()
+  name: string;
+
+  @Column({ nullable: true })
+  description: string;
+
+  @Column({ default: 50 })
+  maxParticipants: number;
+
+  @ManyToOne(() => User, user => user.hostedRooms)
+  host: User;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}</pre>
+    </div>
+
+    <div class="slide bg1">
+        <h2>TypeORM module setup</h2>
+        <pre>
+// app.module.ts
+@Module({
+  imports: [
+    TypeOrmModule.forRoot({
+      type: "postgres",
+      host: process.env.DB_HOST,
+      port: 5432,
+      username: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      database: process.env.DB_NAME,
+      autoLoadEntities: true,
+      synchronize: true,   // dev only
+    }),
+    UsersModule,
+    RoomsModule,
+    MeetingsModule,
+  ],
+})
+export class AppModule {}</pre>
+        <p>Set <code>synchronize: false</code> in production; use migrations instead.</p>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 5</p>
+        <h1>NestJS CLI</h1>
+        <p>The CLI generates boilerplate so you can focus on logic, not wiring.</p>
+        <pre>
+# Install globally
+npm i -g @nestjs/cli
+
+# New project
+nest new meeting-app
+
+# Generate a module
+nest g module rooms
+
+# Generate controller + service in one
+nest g resource users   # prompts for REST / GraphQL
+
+# Useful flags
+--no-spec    # skip test file
+--flat       # no subfolder</pre>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Meeting app domain</h2>
+        <p>We are building a Zoom-like application. Three core domains for now:</p>
+        <ul>
+            <li><strong>Users</strong> — register, login, profile. Entity: <code>id, email, displayName, passwordHash, avatarUrl, createdAt</code></li>
+            <li><strong>Rooms</strong> — persistent meeting rooms. Entity: <code>id, name, description, maxParticipants, host (User), createdAt</code></li>
+            <li><strong>Meetings</strong> — a live session in a Room. Entity: <code>id, room (Room), startedAt, endedAt, participantCount</code></li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Generated project structure</h2>
+        <pre>
+meeting-app/
+├── src/
+│   ├── app.module.ts
+│   ├── main.ts
+│   ├── users/
+│   │   ├── users.module.ts
+│   │   ├── users.controller.ts
+│   │   ├── users.service.ts
+│   │   └── entities/user.entity.ts
+│   ├── rooms/
+│   │   ├── rooms.module.ts
+│   │   ├── rooms.controller.ts
+│   │   ├── rooms.service.ts
+│   │   └── entities/room.entity.ts
+│   └── meetings/
+│       ├── meetings.module.ts
+│       └── entities/meeting.entity.ts
+├── .env
+└── package.json</pre>
+    </div>
+
+    <!-- Quiz -->
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 9 Session 2 Quiz</h1>
+        <p class="quiz-hint">8 questions on NestJS, DI, and TypeORM</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">What decorator marks a NestJS class as injectable into other classes?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="@Injectable() registers the class with the NestJS DI container so it can be injected into controllers or other services.">@Injectable()</button>
+            <button type="button" data-correct="false" data-explanation="@Controller() declares an HTTP route handler, not an injectable provider.">@Controller()</button>
+            <button type="button" data-correct="false" data-explanation="@Module() groups related code but is not what makes a class injectable.">@Module()</button>
+            <button type="button" data-correct="false" data-explanation="@Component() is an Angular decorator for UI components, not used in NestJS.">@Component()</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">Where should business logic live in the NestJS architecture?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Services hold domain logic. Controllers only handle HTTP concerns (parse request, call service, return response).">In a Service class</button>
+            <button type="button" data-correct="false" data-explanation="Controllers handle HTTP routing only — no business logic.">Directly inside the Controller method</button>
+            <button type="button" data-correct="false" data-explanation="Entity files define the DB schema, not business logic.">In the Entity file</button>
+            <button type="button" data-correct="false" data-explanation="main.ts is the app bootstrap — it never holds domain logic.">In main.ts</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">What TypeORM decorator maps a TypeScript class to a database table?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="@Entity() tells TypeORM this class represents a table in the database.">@Entity()</button>
+            <button type="button" data-correct="false" data-explanation="@Column() marks a property as a database column, not the whole class as a table.">@Column()</button>
+            <button type="button" data-correct="false" data-explanation="@Table() is not a TypeORM decorator.">@Table()</button>
+            <button type="button" data-correct="false" data-explanation="@Injectable() is a NestJS DI decorator, not TypeORM.">@Injectable()</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">What is the default provider scope in NestJS?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Singleton — one instance shared across the entire application lifetime. This is correct for stateless services.">Singleton</button>
+            <button type="button" data-correct="false" data-explanation="Request scope creates a new instance per HTTP request. It is not the default.">Request</button>
+            <button type="button" data-correct="false" data-explanation="Transient creates a new instance every injection. Not the default.">Transient</button>
+            <button type="button" data-correct="false" data-explanation="Session scope is not a NestJS provider scope.">Session</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">Which CLI command generates a complete module with controller, service, and DTO files?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="nest g resource generates the full module scaffold including controller, service, DTOs, and optionally tests.">nest g resource rooms</button>
+            <button type="button" data-correct="false" data-explanation="nest g module creates only the module file — no controller or service.">nest g module rooms</button>
+            <button type="button" data-correct="false" data-explanation="nest g controller creates only the controller file.">nest g controller rooms</button>
+            <button type="button" data-correct="false" data-explanation="nest g service creates only the service file.">nest g service rooms</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">Why should <code>synchronize: true</code> be disabled in production?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="synchronize: true auto-runs DDL on startup, which can drop columns or tables unintentionally. In production use explicit migrations.">It can drop or alter tables automatically, causing data loss</button>
+            <button type="button" data-correct="false" data-explanation="Performance is not the main concern here.">It makes the app start up slower</button>
+            <button type="button" data-correct="false" data-explanation="TypeORM does not require authentication to use synchronize.">It requires admin DB credentials to run</button>
+            <button type="button" data-correct="false" data-explanation="synchronize works with any relational DB, not just SQLite.">It only works with SQLite databases</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">How does NestJS inject <code>RoomsService</code> into <code>RoomsController</code>?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Constructor injection: you list the dependency as a typed constructor parameter. NestJS reads the TypeScript type and resolves the correct instance from its container.">Constructor injection — typed parameter in the constructor</button>
+            <button type="button" data-correct="false" data-explanation="Property injection is possible but not the standard pattern in NestJS.">Property injection via @Inject() on a class field</button>
+            <button type="button" data-correct="false" data-explanation="Singleton imports do not flow through modules; they are resolved by the DI container.">Direct import of the singleton at the top of the file</button>
+            <button type="button" data-correct="false" data-explanation="NestJS does not use React context.">React context API provided by AppModule</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">What decorator injects a TypeORM repository into a NestJS service?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="@InjectRepository(Entity) is the correct decorator from @nestjs/typeorm to inject a typed repository.">@InjectRepository(Room)</button>
+            <button type="button" data-correct="false" data-explanation="@Inject() is a generic DI decorator, not specific to TypeORM repositories.">@Inject(Room)</button>
+            <button type="button" data-correct="false" data-explanation="@Repository() is a TypeORM decorator for custom repositories, not for injection.">@Repository(Room)</button>
+            <button type="button" data-correct="false" data-explanation="@Entity() marks a class as a DB table, not a repository injection.">@Entity(Room)</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 9 Session 2</h1>
+        <p>Complete <a href="../handson/class-2-handson.html">Class 2 hands-on</a> (NestJS scaffold + TypeORM entities). Next session — <a href="session-3.html">SDLC and Scrum basics</a>.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

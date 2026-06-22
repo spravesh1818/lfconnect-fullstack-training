@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 9 - Session 3 - SDLC, Scrum, and Git Patterns</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 9 - Session 3</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 3: SDLC, Scrum Basics, and Git Collaboration</h1>
+        <p>Understand how software teams plan, build, and ship — from the Software Development Lifecycle through Agile/Scrum to Git branching patterns used on real teams.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Software Development Lifecycle (SDLC) phases</li>
+            <li>Waterfall vs Agile — the tradeoffs</li>
+            <li>Scrum roles, artifacts, and events (overview)</li>
+            <li>Git collaboration — feature branch model</li>
+            <li>Branch naming conventions</li>
+            <li>Pull request workflow and etiquette</li>
+            <li>GitHub Issues and Projects for lightweight PM</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Software Development Lifecycle</h1>
+        <p>The SDLC is the structured process a team follows to plan, create, test, and deliver software.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>SDLC phases</h2>
+        <ul>
+            <li><strong>Plan</strong> — define scope, timeline, and resources. What are we building and why?</li>
+            <li><strong>Design</strong> — architecture, data models, API contracts, UI wireframes.</li>
+            <li><strong>Develop</strong> — write code, following agreed patterns and standards.</li>
+            <li><strong>Test</strong> — unit, integration, end-to-end, and UAT.</li>
+            <li><strong>Deploy</strong> — release to staging, then production. CI/CD automates this.</li>
+            <li><strong>Maintain</strong> — monitor, fix bugs, apply patches, iterate.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Waterfall vs Agile</h2>
+        <div class="comparison">
+            <article>
+                <h3>Waterfall</h3>
+                <ul>
+                    <li>Sequential phases, each fully complete before the next</li>
+                    <li>Requirements locked at the start</li>
+                    <li>Long delivery cycle (months to years)</li>
+                    <li>High cost of late changes</li>
+                    <li>Works well when requirements are very stable (hardware, compliance)</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Agile</h3>
+                <ul>
+                    <li>Iterative — deliver working software in short sprints</li>
+                    <li>Requirements evolve with feedback</li>
+                    <li>Ship every 1–4 weeks</li>
+                    <li>Changes welcome; the process absorbs them</li>
+                    <li>Best for most software products</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Scrum</h1>
+        <p>Scrum is the most widely adopted Agile framework. It structures teamwork around short, time-boxed sprints with clear roles, artifacts, and ceremonies.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Scrum roles</h2>
+        <ul>
+            <li><strong>Product Owner (PO)</strong> — owns the product backlog. Prioritises work based on business value and customer feedback. Decides what to build.</li>
+            <li><strong>Scrum Master (SM)</strong> — facilitates the process. Removes blockers. Protects the team from distractions. Does not manage the team.</li>
+            <li><strong>Developers</strong> — the people doing the work (engineers, designers, QA). Self-organising — they decide how to do the work.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Scrum artifacts</h2>
+        <ul>
+            <li><strong>Product Backlog</strong> — ordered list of everything the product needs. Managed by the PO. Never truly empty.</li>
+            <li><strong>Sprint Backlog</strong> — subset of the product backlog committed to for one sprint. Owned by the developers.</li>
+            <li><strong>Increment</strong> — the sum of all completed backlog items at the end of a sprint. Must meet the Definition of Done.</li>
+            <li><strong>Definition of Done (DoD)</strong> — shared checklist that every increment must pass (tests passing, code reviewed, deployed to staging, etc.).</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Scrum events (overview)</h2>
+        <ul>
+            <li><strong>Sprint</strong> — 1–4 week cycle that produces a shippable increment. Time-boxed and never extended.</li>
+            <li><strong>Sprint Planning</strong> — team selects backlog items and creates a sprint goal. Capacity-driven.</li>
+            <li><strong>Daily Standup</strong> — 15-minute sync: what did I do, what will I do, any blockers?</li>
+            <li><strong>Sprint Review</strong> — demo increment to stakeholders. Collect feedback.</li>
+            <li><strong>Sprint Retrospective</strong> — team reflects: what worked, what didn't, what to change.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Git Collaboration Patterns</h1>
+        <p>On a team, everyone works in isolation on branches and merges through pull requests. Code review is built into the flow.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Feature branch model</h2>
+        <ul>
+            <li><code>main</code> is always deployable. No one pushes directly to it.</li>
+            <li>Every piece of work gets its own branch, created from <code>main</code>.</li>
+            <li>When the work is done, open a Pull Request to merge back into <code>main</code>.</li>
+            <li>The PR is reviewed, discussed, and approved before merging.</li>
+            <li>Delete the branch after merge to keep the repo clean.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Branch naming conventions</h2>
+        <p>Consistent names make it obvious who owns a branch and what it contains.</p>
+        <pre>
+# Format: type/short-description
+feat/user-authentication
+feat/room-join-flow
+fix/stripe-signature-verify
+chore/upgrade-nestjs-10
+docs/add-api-readme
+refactor/rooms-service-extract
+
+# Optionally prefix with ticket number
+feat/MEET-42-user-authentication</pre>
+        <p>Types: <code>feat</code> (new feature), <code>fix</code> (bug), <code>chore</code> (tooling/deps), <code>docs</code>, <code>refactor</code>, <code>test</code>.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>PR workflow and etiquette</h2>
+        <ul>
+            <li><strong>Keep PRs small</strong> — under 400 lines is reviewable; over 1000 lines rarely gets reviewed well.</li>
+            <li><strong>Write a description</strong> — what changed, why, how to test it. Link the ticket.</li>
+            <li><strong>Self-review first</strong> — read your own diff before requesting review.</li>
+            <li><strong>Reviews are about the code, not the person</strong> — be specific, suggest don't demand.</li>
+            <li><strong>Respond to every comment</strong> — either resolve it or explain your reasoning.</li>
+            <li><strong>Don't merge your own PR</strong> without at least one approval (unless solo project).</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>GitHub Issues and Projects</h2>
+        <ul>
+            <li><strong>Issues</strong> — the atomic unit of work. A bug, a feature, a task. Give each a clear title, description, and acceptance criteria.</li>
+            <li><strong>Labels</strong> — categorise by type (<code>bug</code>, <code>feature</code>, <code>chore</code>) and size (<code>S</code>, <code>M</code>, <code>L</code>).</li>
+            <li><strong>Milestones</strong> — group issues into a sprint or release.</li>
+            <li><strong>Projects</strong> — Kanban board: <em>Backlog → In Progress → In Review → Done</em>. Drag cards as work moves.</li>
+            <li><strong>Link issues to PRs</strong> — use <code>Closes #42</code> in the PR description to auto-close the issue on merge.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Conventional commits</h2>
+        <p>A standard format for commit messages that machines and humans can both read.</p>
+        <pre>
+# Format: type(scope): description
+feat(rooms): add create room endpoint
+fix(auth): correct token expiry check
+chore(deps): upgrade nestjs to 10.3
+docs(readme): add local dev instructions
+refactor(users): extract password hash helper
+test(rooms): add integration test for findAll</pre>
+        <p>Enables automatic changelogs and semantic versioning. Used by most open-source projects.</p>
+    </div>
+
+    <!-- Quiz -->
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 9 Session 3 Quiz</h1>
+        <p class="quiz-hint">8 questions on SDLC, Scrum, and Git</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">What is the correct order of SDLC phases?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Plan → Design → Develop → Test → Deploy → Maintain is the standard SDLC sequence.">Plan, Design, Develop, Test, Deploy, Maintain</button>
+            <button type="button" data-correct="false" data-explanation="Testing before development makes no sense — you need code to test.">Plan, Test, Develop, Design, Deploy, Maintain</button>
+            <button type="button" data-correct="false" data-explanation="Deployment comes after testing, not before.">Develop, Deploy, Test, Plan, Design, Maintain</button>
+            <button type="button" data-correct="false" data-explanation="Design must come before development, not after.">Plan, Develop, Design, Test, Deploy, Maintain</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">Who owns the Product Backlog in Scrum?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="The Product Owner prioritises and maintains the backlog. They represent the business and customer needs.">Product Owner</button>
+            <button type="button" data-correct="false" data-explanation="The Scrum Master facilitates ceremonies and removes blockers — does not own the backlog.">Scrum Master</button>
+            <button type="button" data-correct="false" data-explanation="Developers own the Sprint Backlog (what they commit to per sprint), not the Product Backlog.">The development team collectively</button>
+            <button type="button" data-correct="false" data-explanation="Engineering managers are not a Scrum role.">Engineering Manager</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">What is the purpose of the Sprint Retrospective?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="The Retrospective is the team's time to inspect their process — what worked, what didn't, and what one thing to improve next sprint.">Reflect on the team's process and identify improvements</button>
+            <button type="button" data-correct="false" data-explanation="Demonstrating the product to stakeholders is the Sprint Review, not the Retrospective.">Demo the increment to stakeholders</button>
+            <button type="button" data-correct="false" data-explanation="Planning the next sprint's work is Sprint Planning.">Plan which backlog items to pick for the next sprint</button>
+            <button type="button" data-correct="false" data-explanation="Bug reporting happens during testing; the Retro is about process.">Report bugs found during the sprint</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">In the feature branch model, where should <code>main</code> always be?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="main is the production branch — it must always be in a deployable state. No one pushes directly to it.">Always deployable — no direct pushes</button>
+            <button type="button" data-correct="false" data-explanation="main should never contain broken or in-progress work.">The integration branch where all WIP merges</button>
+            <button type="button" data-correct="false" data-explanation="A staging branch is separate from main in Gitflow; in GitHub Flow, main is production.">Only used for staging deployments</button>
+            <button type="button" data-correct="false" data-explanation="main is not a development sandbox.">Where developers push experimental changes</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">Which branch name follows the conventional feature branch pattern?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="feat/room-join-flow follows the type/description convention — readable and machine-parseable.">feat/room-join-flow</button>
+            <button type="button" data-correct="false" data-explanation="Room is too vague and has no type prefix.">Room</button>
+            <button type="button" data-correct="false" data-explanation="dev-branch is meaningless — it tells you nothing about what the branch contains.">dev-branch</button>
+            <button type="button" data-correct="false" data-explanation="my-changes gives no information about the purpose or scope of the work.">my-changes</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">What does <code>Closes #42</code> in a PR description do on GitHub?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="GitHub automatically closes Issue #42 when the PR merges into the default branch. Keeps the board tidy without manual effort.">Automatically closes Issue #42 when the PR merges</button>
+            <button type="button" data-correct="false" data-explanation="Closing an issue does not delete it — it stays in the history.">Deletes Issue #42 from the repository</button>
+            <button type="button" data-correct="false" data-explanation="The issue does not close immediately on PR open — only on merge.">Closes Issue #42 as soon as the PR is opened</button>
+            <button type="button" data-correct="false" data-explanation="This is a standard GitHub keyword — no plugin needed.">Installs the GitHub Projects plugin</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">What is the Daily Standup's time box?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="15 minutes maximum. It's a sync, not a problem-solving session. Park detailed discussions for after.">15 minutes</button>
+            <button type="button" data-correct="false" data-explanation="5 minutes is too short for even a small team to cover three questions each.">5 minutes</button>
+            <button type="button" data-correct="false" data-explanation="30 minutes is a meeting, not a standup. If it takes 30 minutes something is wrong.">30 minutes</button>
+            <button type="button" data-correct="false" data-explanation="1 hour is far too long for a daily sync.">1 hour</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">What is the main difference between the Sprint Review and Sprint Retrospective?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Review inspects the product (what was built); Retrospective inspects the process (how the team worked).">Review is about the product; Retrospective is about the process</button>
+            <button type="button" data-correct="false" data-explanation="Both happen at the end of the sprint; the Review is not mid-sprint.">Review happens mid-sprint; Retrospective at the end</button>
+            <button type="button" data-correct="false" data-explanation="Stakeholders attend the Review, not the Retrospective (which is for the team only).">Retrospective includes stakeholders; Review is team-only</button>
+            <button type="button" data-correct="false" data-explanation="Both are Scrum events — neither is optional.">The Review is optional; the Retrospective is mandatory</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 9 Session 3</h1>
+        <p>Complete <a href="../handson/class-3-handson.html">Class 3 hands-on</a> (Git branching workflow). Review the <a href="../assignment/week-9-assignment.html">Week 9 assignment</a> — three parts covering Stripe, NestJS, and sprint planning.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

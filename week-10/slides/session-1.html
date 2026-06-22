@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 10 - Session 1 - Scrum Ceremonies and Sprints</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 10 - Session 1</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 1: Scrum Ceremonies, Sprints, and Team Rituals</h1>
+        <p>Go deep on how Scrum ceremonies work in practice — sprint planning, daily standups, reviews, and retrospectives — including anti-patterns that slow teams down.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Sprint anatomy — goal, cadence, and time-boxing</li>
+            <li>Sprint Planning in detail — capacity and backlog refinement</li>
+            <li>Daily Standup — format, purpose, and anti-patterns</li>
+            <li>Sprint Review — demoing to stakeholders</li>
+            <li>Sprint Retrospective — formats and action items</li>
+            <li>Velocity, burndown, and team metrics</li>
+            <li>Definition of Done vs Acceptance Criteria</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>The Sprint</h1>
+        <p>A sprint is a short, time-boxed period (typically 2 weeks) during which the team builds a potentially shippable product increment.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Sprint anatomy</h2>
+        <ul>
+            <li><strong>Duration:</strong> 1–4 weeks. Most teams use 2-week sprints. Never extended mid-sprint.</li>
+            <li><strong>Sprint Goal:</strong> a single, clear objective for the sprint. Every backlog item selected serves this goal.</li>
+            <li><strong>Time-boxing:</strong> the sprint ends on schedule even if all items are not done. Unfinished work goes back to the backlog.</li>
+            <li><strong>No-scope-change rule:</strong> do not add work mid-sprint unless something is removed. Protect the team's focus.</li>
+            <li><strong>Cadence:</strong> same days each sprint. Predictability builds trust and planning muscle.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Backlog refinement</h2>
+        <p>Ongoing work, not a ceremony — the PO and team groom backlog items before they enter a sprint.</p>
+        <ul>
+            <li>Break large items into sprint-sized stories</li>
+            <li>Write acceptance criteria so "done" is unambiguous</li>
+            <li>Estimate complexity (story points or T-shirt sizes)</li>
+            <li>Remove items that are no longer relevant</li>
+            <li>Target: top 2 sprints of backlog always "ready" (estimated and acceptance-criteria written)</li>
+        </ul>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Sprint Planning</h1>
+        <p>The team selects backlog items they can complete and commits to a sprint goal. This is a planning meeting, not a status update.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Running Sprint Planning</h2>
+        <ol>
+            <li><strong>PO presents the sprint goal</strong> — why this sprint matters and what success looks like.</li>
+            <li><strong>Team reviews capacity</strong> — who is on holiday? Any interviews? Realistic developer-days available.</li>
+            <li><strong>Select stories</strong> — pull from the top of the product backlog until capacity is full.</li>
+            <li><strong>Break stories into tasks</strong> — each story decomposed into implementation sub-tasks (usually &lt;1 day each).</li>
+            <li><strong>Confirm sprint goal</strong> — the team agrees they can achieve it with what was selected.</li>
+        </ol>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Capacity planning</h2>
+        <ul>
+            <li><strong>Velocity</strong> — the team's average story points completed per sprint (from the last 3 sprints).</li>
+            <li><strong>Never plan to 100% capacity</strong> — unplanned bugs, meetings, and reviews consume 20–30 % of time.</li>
+            <li><strong>Focus factor:</strong> <code>velocity ÷ available dev-days</code>. Typical range: 0.6–0.7.</li>
+            <li><strong>New team?</strong> Start with a conservative commitment and calibrate after 3–4 sprints.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Daily Standup</h1>
+        <p>A 15-minute daily sync for the development team to inspect progress toward the sprint goal and adapt the day's plan.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Three questions (classic format)</h2>
+        <ul>
+            <li><strong>What did I complete since the last standup?</strong></li>
+            <li><strong>What will I work on today?</strong></li>
+            <li><strong>Do I have any blockers?</strong></li>
+        </ul>
+        <p>Keep answers short. Blockers are surfaced here, not solved here — take the discussion offline after the standup ends.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Standup anti-patterns</h2>
+        <ul>
+            <li><strong>Status report to the manager</strong> — it's for the team, not management. SM facilitates; managers listen only.</li>
+            <li><strong>Problem-solving during standup</strong> — "let's debug that now" kills the time-box. Park it.</li>
+            <li><strong>Skipping blockers</strong> — if you're blocked, say so. Unblocking teammates is the SM's job.</li>
+            <li><strong>Not updating the board</strong> — the board should reflect reality before the standup starts.</li>
+            <li><strong>Too long</strong> — if it's consistently 30+ minutes, restructure. Split large teams.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 4</p>
+        <h1>Sprint Review and Retrospective</h1>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Sprint Review</h2>
+        <ul>
+            <li><strong>Goal:</strong> inspect the increment and adapt the product backlog based on feedback.</li>
+            <li><strong>Who attends:</strong> the entire Scrum team plus stakeholders (PM, design, sales, customers).</li>
+            <li><strong>Format:</strong> demo working software (not slides). Walk through the sprint goal and what was completed.</li>
+            <li><strong>Outcome:</strong> updated product backlog reflecting new priorities based on feedback.</li>
+            <li><strong>Time-box:</strong> 4 hours for a 4-week sprint; 2 hours for 2-week sprints.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Sprint Retrospective</h2>
+        <p>Internal team ceremony — no stakeholders. Inspect the process, not the product.</p>
+        <ul>
+            <li><strong>What went well?</strong> (keep doing these things)</li>
+            <li><strong>What could be improved?</strong> (experiment next sprint)</li>
+            <li><strong>Action items:</strong> 1–3 specific, owned improvements. Not a wish list — commitments.</li>
+        </ul>
+        <p>Popular format: <strong>Start / Stop / Continue</strong> — what should we start, stop, and keep doing?</p>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 5</p>
+        <h1>Team Metrics</h1>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Velocity and burndown</h2>
+        <ul>
+            <li><strong>Velocity</strong> — story points completed per sprint. Stabilises after 3–4 sprints. Use for forecasting, not pressure.</li>
+            <li><strong>Burndown chart</strong> — daily: total remaining story points vs. ideal straight line to zero. A burndown that flattens means blocked work or scope creep.</li>
+            <li><strong>Burnup chart</strong> — shows total scope and completed work. Better for visualising scope changes.</li>
+            <li><strong>Use metrics to improve</strong>, not as a management tool to compare individuals. Story points measure complexity, not output or speed.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Definition of Done vs Acceptance Criteria</h2>
+        <div class="comparison">
+            <article>
+                <h3>Definition of Done</h3>
+                <ul>
+                    <li>Applies to every item</li>
+                    <li>Set by the team</li>
+                    <li>Examples: tests pass, code reviewed, deployed to staging, no critical linting errors</li>
+                    <li>The quality bar — same every sprint</li>
+                </ul>
+            </article>
+            <article>
+                <h3>Acceptance Criteria</h3>
+                <ul>
+                    <li>Specific to one story</li>
+                    <li>Set by the Product Owner</li>
+                    <li>Examples: user can log in with email; error shows if email is invalid</li>
+                    <li>The feature spec — different every story</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <!-- Quiz -->
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 10 Session 1 Quiz</h1>
+        <p class="quiz-hint">8 questions on Scrum ceremonies and sprints</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">What happens when the sprint end date arrives and some stories are not done?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="The sprint ends as scheduled. Incomplete items go back to the product backlog for the PO to re-prioritise. Sprints are never extended.">The sprint ends and incomplete items return to the backlog</button>
+            <button type="button" data-correct="false" data-explanation="Sprints must never be extended — time-boxing is a core Scrum principle.">The sprint is extended until all items are complete</button>
+            <button type="button" data-correct="false" data-explanation="The Scrum Master does not decide what ships — the PO and team do.">The Scrum Master decides which stories to cut</button>
+            <button type="button" data-correct="false" data-explanation="Marking incomplete items as done would be dishonest and defeats the purpose of the DoD.">Incomplete items are marked as done and shipped anyway</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">What is the primary purpose of the Sprint Review?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="The Sprint Review exists to inspect the increment and gather stakeholder feedback that updates the product backlog.">Inspect the increment and collect feedback to update the backlog</button>
+            <button type="button" data-correct="false" data-explanation="Retrospective is for process reflection — the Review is about the product.">Reflect on the team's process and identify improvements</button>
+            <button type="button" data-correct="false" data-explanation="Sprint Planning is where the next sprint is planned, not the Review.">Plan the work for the next sprint</button>
+            <button type="button" data-correct="false" data-explanation="Standups surface blockers daily; the Review is about the product increment.">Report individual blockers to the Scrum Master</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">Why should you not plan a sprint to 100% of team capacity?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Unplanned work (bugs, meetings, code reviews, questions) consumes 20–30% of time. Over-committing leads to missed sprint goals and burnout.">Unplanned work, meetings, and reviews consume 20–30% of time</button>
+            <button type="button" data-correct="false" data-explanation="Scrum does not require developers to have free time for unrelated work.">Developers need free time for personal side projects</button>
+            <button type="button" data-correct="false" data-explanation="Velocity is a measure of output, not a guide to underwork deliberately.">Velocity decreases if the team works too hard</button>
+            <button type="button" data-correct="false" data-explanation="Scrum does not reserve capacity specifically for the Scrum Master.">The Scrum Master needs 30% of capacity for ceremonies</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">The Daily Standup surfaced a critical blocker. What should happen next?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Surface the blocker in the standup, then take the discussion offline immediately after with only the people who can help resolve it.">Park it and address it right after the standup with relevant people</button>
+            <button type="button" data-correct="false" data-explanation="Solving blockers during the standup violates the 15-minute time-box and wastes time for attendees not involved.">Solve it immediately during the standup</button>
+            <button type="button" data-correct="false" data-explanation="Waiting until Sprint Planning means the blocker persists for days or weeks.">Wait until Sprint Planning to discuss it</button>
+            <button type="button" data-correct="false" data-explanation="A blocker is a problem to solve now, not to note for a future meeting.">Add it to the retrospective notes</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">What distinguishes the Definition of Done from Acceptance Criteria?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="The DoD is the team's universal quality bar for every item. Acceptance Criteria are story-specific conditions set by the Product Owner.">DoD is the team's quality bar for every item; AC is story-specific</button>
+            <button type="button" data-correct="false" data-explanation="Both are written before development starts — AC before the sprint, DoD updated periodically.">DoD is written after a story is complete; AC before it starts</button>
+            <button type="button" data-correct="false" data-explanation="Acceptance Criteria are set by the Product Owner (representing the customer), not developers.">AC is set by the development team; DoD by the Product Owner</button>
+            <button type="button" data-correct="false" data-explanation="DoD applies to every item; it is not just for bugs.">DoD only applies to bug fixes; AC only for features</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">What does a flat burndown chart during a sprint typically indicate?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="A flat line means remaining work is not decreasing — likely because work is blocked or new scope was added without removing other items.">Work is blocked or scope was added mid-sprint</button>
+            <button type="button" data-correct="false" data-explanation="Ideal progress shows a steady downward slope. Flat is not ideal.">The team is making ideal progress</button>
+            <button type="button" data-correct="false" data-explanation="A flat burndown means stories are not being completed, not that estimates were perfect.">Story point estimates were perfectly accurate</button>
+            <button type="button" data-correct="false" data-explanation="The Scrum Master's workload is not reflected in the burndown chart.">The Scrum Master has too many ceremonies scheduled</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">Who attends the Sprint Retrospective?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="The Retrospective is for the Scrum team only — SM, PO, and developers. No external stakeholders. It's a safe space for honest process discussion.">The Scrum team only — SM, PO, and developers</button>
+            <button type="button" data-correct="false" data-explanation="Stakeholders attend the Sprint Review, not the Retrospective.">The Scrum team plus all stakeholders</button>
+            <button type="button" data-correct="false" data-explanation="Developers only would exclude the SM and PO who are part of the team.">Only the developers — no SM or PO</button>
+            <button type="button" data-correct="false" data-explanation="The engineering manager is not a Scrum role and typically does not attend Retros.">The Scrum team plus the engineering manager</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">What is velocity used for in Scrum?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Velocity (average story points per sprint) is used for sprint planning and forecasting release dates — not to compare developers or set targets.">Forecasting how much work the team can complete per sprint</button>
+            <button type="button" data-correct="false" data-explanation="Using velocity to rank developers breaks psychological safety and destroys trust.">Ranking individual developer performance</button>
+            <button type="button" data-correct="false" data-explanation="Velocity tracks completed work, not bugs.">Tracking the number of bugs fixed per sprint</button>
+            <button type="button" data-correct="false" data-explanation="Retrospective outcomes are not tied to velocity.">Deciding the Retrospective action items</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 10 Session 1</h1>
+        <p>Complete <a href="../handson/class-1-handson.html">Class 1 hands-on</a> (mock sprint planning ceremony). Next session — <a href="session-2.html">PRD, user stories, and ticketing</a>.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

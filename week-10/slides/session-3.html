@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 10 - Session 3 - Git Branching Strategies and GitHub Actions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="session-deck-theme.css" />
+</head>
+
+<body>
+    <header>
+        <div class="header-brand-lockup">
+            <img src="https://leapfrogconnect.co/svg/header_logo.svg" alt="" aria-hidden="true" />
+        </div>
+        <span class="header-meta">Week 10 - Session 3</span>
+    </header>
+
+    <div class="slide active bg1">
+        <h1>Class 3: Git Branching Strategies, PR Workflow, and GitHub Actions</h1>
+        <p>Compare real-world branching strategies, master merge conflict resolution, and add automated CI to your pull request workflow with GitHub Actions.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Session Agenda</h2>
+        <ol>
+            <li>Branching strategies — Gitflow, GitHub Flow, trunk-based</li>
+            <li>Conventional commits revisited</li>
+            <li>Merge vs squash vs rebase — the tradeoffs</li>
+            <li>Resolving merge conflicts step by step</li>
+            <li>Branch protection rules</li>
+            <li>GitHub Actions — workflow YAML anatomy</li>
+            <li>CI: run tests on every PR</li>
+            <li>Quiz (8 questions)</li>
+        </ol>
+    </div>
+
+    <div class="slide bg2">
+        <p class="part-kicker">Part 1</p>
+        <h1>Branching Strategies</h1>
+        <p>A branching strategy is a team agreement about how code flows from development to production. Pick one and be consistent.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Three main strategies</h2>
+        <div class="comparison">
+            <article>
+                <h3>Gitflow</h3>
+                <ul>
+                    <li><code>main</code> + <code>develop</code> + <code>release/*</code> + <code>hotfix/*</code></li>
+                    <li>Structured release cycles</li>
+                    <li>Good for versioned software (apps, packages)</li>
+                    <li>Heavier — more merges, more branches</li>
+                </ul>
+            </article>
+            <article>
+                <h3>GitHub Flow</h3>
+                <ul>
+                    <li><code>main</code> + feature branches</li>
+                    <li>Feature branches merge directly to main</li>
+                    <li>Deploy from main continuously</li>
+                    <li>Simple — good for web apps / SaaS</li>
+                </ul>
+            </article>
+        </div>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Trunk-based development</h2>
+        <ul>
+            <li>Everyone commits to <code>main</code> (or very short-lived branches — hours, not days)</li>
+            <li>Feature flags hide incomplete work from users</li>
+            <li>Requires strong CI — every commit must be deployable</li>
+            <li>Used at Google, Meta, and high-velocity SaaS teams</li>
+            <li><strong>When to use:</strong> mature CI/CD, experienced team, feature-flagging infrastructure</li>
+        </ul>
+        <p><strong>For most student teams:</strong> GitHub Flow is the right default.</p>
+    </div>
+
+    <div class="slide bg3">
+        <p class="part-kicker">Part 2</p>
+        <h1>Merge Strategies</h1>
+        <p>How a PR's commits land on <code>main</code> affects history readability. Pick based on your team's preference.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Merge vs squash vs rebase</h2>
+        <ul>
+            <li><strong>Merge commit</strong> — preserves all commits from the branch plus a merge commit. Full history, can look noisy.</li>
+            <li><strong>Squash and merge</strong> — collapses all branch commits into one on main. Clean linear history; detail is in the PR, not git log.</li>
+            <li><strong>Rebase and merge</strong> — replays branch commits on top of main without a merge commit. Linear history with full commit granularity. Rewrites SHA — avoid on shared branches.</li>
+        </ul>
+        <p>Most teams pick squash or merge and enforce it with GitHub branch settings.</p>
+    </div>
+
+    <div class="slide bg3">
+        <h2>Resolving merge conflicts</h2>
+        <ol>
+            <li><strong>Fetch main:</strong> <code>git fetch origin && git checkout main && git pull</code></li>
+            <li><strong>Switch to your branch:</strong> <code>git checkout feat/room-join</code></li>
+            <li><strong>Merge main into your branch:</strong> <code>git merge main</code></li>
+            <li><strong>Open conflicting files</strong> — look for <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> markers</li>
+            <li><strong>Edit to keep the correct code</strong> — remove all markers</li>
+            <li><strong>Stage resolved files:</strong> <code>git add .</code></li>
+            <li><strong>Commit:</strong> <code>git commit</code> (Git pre-fills the merge message)</li>
+            <li><strong>Push:</strong> <code>git push</code> — the PR updates automatically</li>
+        </ol>
+    </div>
+
+    <div class="slide bg4">
+        <p class="part-kicker">Part 3</p>
+        <h1>Branch Protection Rules</h1>
+        <p>Protect <code>main</code> from accidental force pushes and unreviewed code.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>Recommended protection settings</h2>
+        <ul>
+            <li><strong>Require pull request before merging</strong> — no direct pushes to main</li>
+            <li><strong>Require approvals: 1</strong> — at least one teammate must review</li>
+            <li><strong>Require status checks to pass</strong> — CI must be green before merge</li>
+            <li><strong>Require branches to be up to date</strong> — prevents merging stale code</li>
+            <li><strong>Do not allow force pushes</strong> — protects history</li>
+        </ul>
+        <p>Set in GitHub → Settings → Branches → Add branch protection rule.</p>
+    </div>
+
+    <div class="slide bg4">
+        <h2>PR best practices (checklist)</h2>
+        <ul>
+            <li>Keep PRs under 400 lines — reviewable in one sitting</li>
+            <li>One logical change per PR — easy to revert if needed</li>
+            <li>Write a description: what changed, why, how to test</li>
+            <li>Link the issue: <code>Closes #42</code></li>
+            <li>Self-review your diff before requesting review</li>
+            <li>Respond to every comment — resolve or explain</li>
+            <li>Do not merge until CI is green and you have an approval</li>
+        </ul>
+    </div>
+
+    <div class="slide bg1">
+        <p class="part-kicker">Part 4</p>
+        <h1>GitHub Actions</h1>
+        <p>GitHub Actions is a CI/CD platform built into GitHub. Workflows are YAML files in <code>.github/workflows/</code> that run on events like push or pull_request.</p>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Workflow anatomy</h2>
+        <pre>
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test</pre>
+    </div>
+
+    <div class="slide bg1">
+        <h2>Key GitHub Actions concepts</h2>
+        <ul>
+            <li><strong>Workflow</strong> — a YAML file triggered by an event (push, PR, schedule, manual)</li>
+            <li><strong>Job</strong> — a set of steps that run on one runner. Jobs run in parallel by default.</li>
+            <li><strong>Step</strong> — a single command or reusable action (<code>uses:</code> or <code>run:</code>)</li>
+            <li><strong>Runner</strong> — a VM that executes the job (<code>ubuntu-latest</code>, <code>macos-latest</code>, <code>windows-latest</code>)</li>
+            <li><strong>Actions</strong> — pre-built steps from the GitHub Marketplace (<code>actions/checkout</code>, <code>actions/setup-node</code>)</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Adding a Postgres service for integration tests</h2>
+        <pre>
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: meeting_test
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/meeting_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci
+      - run: npm test</pre>
+    </div>
+
+    <!-- Quiz -->
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Week 10 Session 3 Quiz</h1>
+        <p class="quiz-hint">8 questions on branching, PRs, and GitHub Actions</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 8</h2>
+        <p class="question">Which branching strategy is simplest and most suitable for most web SaaS teams?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="GitHub Flow — main is always deployable, feature branches merge directly to main via PR. Simple and effective for continuous deployment.">GitHub Flow (main + feature branches)</button>
+            <button type="button" data-correct="false" data-explanation="Gitflow has a more complex branch structure (develop, release, hotfix) suited to versioned software with scheduled releases.">Gitflow (main + develop + release + hotfix)</button>
+            <button type="button" data-correct="false" data-explanation="Trunk-based development requires mature CI/CD and feature flags — high overhead for most teams.">Trunk-based development (commits directly to main)</button>
+            <button type="button" data-correct="false" data-explanation="One branch for all developers would mean constant conflicts with no isolation.">A single shared development branch</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 8</h2>
+        <p class="question">What does "squash and merge" do to a PR's commits?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Squash and merge collapses all commits from the PR into a single commit on main, keeping history clean and readable.">Collapses all PR commits into one commit on main</button>
+            <button type="button" data-correct="false" data-explanation="Merge commit preserves all commits plus adds a merge commit. Squash does not do this.">Preserves every commit with an added merge commit</button>
+            <button type="button" data-correct="false" data-explanation="Rebase and merge replays commits linearly; squash collapses them.">Replays commits on top of main without a merge commit</button>
+            <button type="button" data-correct="false" data-explanation="Squash does not delete the branch — that is a separate action.">Deletes the feature branch automatically</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 8</h2>
+        <p class="question">After merging <code>main</code> into your feature branch to resolve conflicts, what is the correct next step?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="After resolving conflict markers, stage the files with git add, then commit. The PR will automatically update when you push.">git add the resolved files, then git commit and git push</button>
+            <button type="button" data-correct="false" data-explanation="You cannot open a new PR from the same branch. The existing PR updates when you push.">Open a new PR to replace the conflicting one</button>
+            <button type="button" data-correct="false" data-explanation="git reset --hard would discard your work — the opposite of what you want.">git reset --hard to undo the conflict</button>
+            <button type="button" data-correct="false" data-explanation="Deleting and re-creating the branch loses your work and doesn't resolve the conflict.">Delete the branch and start over</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 8</h2>
+        <p class="question">What does <code>on: pull_request: branches: [main]</code> do in a GitHub Actions workflow?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="This trigger fires the workflow whenever a PR targets the main branch — typically used for CI that must pass before merging.">Triggers the workflow on PRs targeting main</button>
+            <button type="button" data-correct="false" data-explanation="This does not close PRs — it triggers a workflow run.">Automatically closes all PRs to main</button>
+            <button type="button" data-correct="false" data-explanation="The trigger fires on any PR to main, not just those from main itself.">Only runs when pushing directly to main</button>
+            <button type="button" data-correct="false" data-explanation="Deployment steps would be a separate job or workflow. This trigger just starts the workflow.">Deploys main to production on every PR</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 5 of 8</h2>
+        <p class="question">Why should you enable "Require status checks to pass" in branch protection?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="This setting prevents merging a PR that breaks CI (failed tests, linting errors) — ensuring main is always green.">Prevents merging code that breaks CI tests</button>
+            <button type="button" data-correct="false" data-explanation="Branch protection does not affect repository public/private visibility.">Makes the repository private</button>
+            <button type="button" data-correct="false" data-explanation="Status checks are about CI, not deployments.">Automatically deploys every PR to production</button>
+            <button type="button" data-correct="false" data-explanation="Branch protection protects main — it does not delete feature branches.">Deletes feature branches after they fail tests</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 6 of 8</h2>
+        <p class="question">What is a GitHub Actions <em>runner</em>?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="A runner is the VM (ubuntu-latest, macos-latest, windows-latest) that executes the workflow's jobs and steps.">A virtual machine that executes the workflow's jobs</button>
+            <button type="button" data-correct="false" data-explanation="A runner is not a developer role.">A GitHub employee who reviews workflows manually</button>
+            <button type="button" data-correct="false" data-explanation="A runner is not a branch — it's an execution environment.">A special branch where CI changes are tested</button>
+            <button type="button" data-correct="false" data-explanation="A runner executes the workflow; it does not review PRs.">A bot that auto-approves pull requests</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 7 of 8</h2>
+        <p class="question">What does <code>npm ci</code> do differently from <code>npm install</code> in CI?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="npm ci installs exact versions from package-lock.json and errors if lock file is missing or out of sync — reproducible, deterministic builds.">Installs exact versions from package-lock.json; errors on mismatches</button>
+            <button type="button" data-correct="false" data-explanation="npm ci installs more reliably; it does not run tests.">Runs all tests automatically after installation</button>
+            <button type="button" data-correct="false" data-explanation="npm ci removes node_modules first for a clean install, making it slower not faster.">Is faster because it skips the lock file entirely</button>
+            <button type="button" data-correct="false" data-explanation="npm ci requires a lock file; it doesn't generate one.">Generates a fresh package-lock.json from scratch</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 8 of 8</h2>
+        <p class="question">In trunk-based development, how is incomplete feature work hidden from users?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Feature flags (also called feature toggles) wrap incomplete code so it is deployed but not visible or active for users until the flag is enabled.">Feature flags toggle incomplete code off for users</button>
+            <button type="button" data-correct="false" data-explanation="Long-lived branches are the Gitflow approach, not trunk-based.">Long-lived feature branches that are never merged</button>
+            <button type="button" data-correct="false" data-explanation="A staging-only branch defeats the purpose of trunk-based development.">A separate staging branch that never reaches production</button>
+            <button type="button" data-correct="false" data-explanation="Environment variables for secrets, not feature hiding.">Environment variables that hide production secrets</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg1">
+        <h1>End of Week 10 Session 3</h1>
+        <p>Complete <a href="../handson/class-3-handson.html">Class 3 hands-on</a> (feature branch, PR, and CI). Review the <a href="../assignment/week-10-assignment.html">Week 10 assignment</a> — PRD, sprint backlog, and Git workflow.</p>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="true">
+        <div class="progress"></div>
+    </div>
+    <div class="slide-counter" aria-live="polite"></div>
+
+    <script>
+        const slides = document.querySelectorAll(".slide");
+        const progress = document.querySelector(".progress");
+        const slideCounter = document.querySelector(".slide-counter");
+        let current = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle("active", index === current);
+            });
+            progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+            slideCounter.textContent = `${current + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" || event.key === " ") current += 1;
+            if (event.key === "ArrowLeft") current -= 1;
+            current = Math.max(0, Math.min(slides.length - 1, current));
+            updateSlides();
+        });
+
+        document.querySelectorAll(".quiz").forEach(quizSlide => {
+            const feedback = quizSlide.querySelector(".quiz-feedback");
+            const buttons = quizSlide.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", () => {
+                    buttons.forEach(item => item.classList.remove("is-correct", "is-wrong"));
+                    const isCorrect = button.dataset.correct === "true";
+                    button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                    feedback.className = `quiz-feedback ${isCorrect ? "ok" : "bad"}`;
+                    feedback.textContent = `${isCorrect ? "Correct." : "Not quite."} ${button.dataset.explanation}`;
+                });
+            });
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

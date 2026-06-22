@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 9 Class 1 hands-on - Stripe Webhook Endpoint</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .troubleshooting {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff1f2;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 9 - Class 1 Lab</strong> -
+        <a href="../slides/session-1.html">Open session deck</a>
+        - Add a Stripe webhook endpoint to the event-mgmt-api
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 0 - Prerequisite check</h2>
+        <p>We are adding Stripe webhooks to the <code>event-mgmt-api</code> from Week 7. Confirm it runs first.</p>
+        <ul>
+            <li>[ ] <code>npm run dev</code> starts without errors</li>
+            <li>[ ] <code>GET /health</code> returns <code>{ status: "ok" }</code></li>
+            <li>[ ] MongoDB connects (or PostgreSQL, depending on your setup)</li>
+            <li>[ ] Auth routes work: <code>POST /auth/register</code> and <code>POST /auth/login</code></li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> the API starts and you can register and log in.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Install Stripe CLI and create a test account</h2>
+        <ol>
+            <li>Create a Stripe account at <strong>stripe.com</strong> (free, test mode only needed)</li>
+            <li>Install the Stripe CLI:</li>
+        </ol>
+        <pre>
+# macOS
+brew install stripe/stripe-cli/stripe
+
+# Windows (scoop)
+scoop bucket add stripe https://github.com/stripe/scoop-stripe-cli.git
+scoop install stripe</pre>
+        <ol start="3">
+            <li>Log in to the CLI:</li>
+        </ol>
+        <pre>stripe login</pre>
+        <ol start="4">
+            <li>Copy your <strong>test secret key</strong> from the Stripe dashboard (Developers → API keys) into <code>.env</code>:</li>
+        </ol>
+        <pre>
+STRIPE_SECRET_KEY=sk_test_…
+STRIPE_WEBHOOK_SECRET=  # leave blank for now, fill after exercise 3</pre>
+        <div class="done-when"><strong>Done when:</strong> <code>stripe login</code> completes and you have a secret key in <code>.env</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Install the Stripe Node SDK</h2>
+        <pre>npm install stripe</pre>
+        <p>Create <code>src/stripe/stripe.ts</code> (or <code>src/lib/stripe.ts</code>):</p>
+        <pre>
+import Stripe from "stripe";
+
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2024-04-10",
+});</pre>
+        <div class="done-when"><strong>Done when:</strong> the file exists and the app still compiles (<code>npm run dev</code> starts without errors).</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Create the webhook route</h2>
+        <p>Create <code>src/webhooks/stripe.router.ts</code>:</p>
+        <pre>
+import { Router, raw } from "express";
+import Stripe from "stripe";
+import { stripe } from "../stripe/stripe";
+
+export const stripeRouter = Router();
+
+stripeRouter.post(
+  "/webhooks/stripe",
+  raw({ type: "application/json" }),   // MUST be raw, not json()
+  async (req, res) => {
+    const sig = req.headers["stripe-signature"];
+    let event: Stripe.Event;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig as string,
+        process.env.STRIPE_WEBHOOK_SECRET!
+      );
+    } catch (err) {
+      console.error("Webhook signature verification failed:", err);
+      return res.status(400).send("Signature invalid");
+    }
+
+    console.log("Received Stripe event:", event.type);
+
+    switch (event.type) {
+      case "payment_intent.succeeded": {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        console.log("Payment succeeded:", pi.id, "amount:", pi.amount);
+        // TODO: update your DB here
+        break;
+      }
+      default:
+        console.log("Unhandled event type:", event.type);
+    }
+
+    res.json({ received: true });
+  }
+);</pre>
+        <p>Register the router in <code>src/app.ts</code> <strong>before</strong> any <code>express.json()</code> middleware:</p>
+        <pre>
+import { stripeRouter } from "./webhooks/stripe.router";
+
+// Register webhook route FIRST (needs raw body)
+app.use(stripeRouter);
+
+// Then register JSON middleware for the rest
+app.use(express.json());</pre>
+        <div class="done-when"><strong>Done when:</strong> the server starts and the <code>/webhooks/stripe</code> route exists (you can confirm with <code>curl -X POST http://localhost:3000/webhooks/stripe</code> — expect 400 "Signature invalid", which is correct).</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - Forward events with Stripe CLI</h2>
+        <p>In a new terminal window, start the Stripe CLI forwarder:</p>
+        <pre>stripe listen --forward-to localhost:3000/webhooks/stripe</pre>
+        <p>The CLI will print a <strong>webhook signing secret</strong> (<code>whsec_…</code>). Copy it into <code>.env</code>:</p>
+        <pre>STRIPE_WEBHOOK_SECRET=whsec_…</pre>
+        <p>Restart your server, then trigger a test event:</p>
+        <pre>stripe trigger payment_intent.succeeded</pre>
+        <div class="done-when"><strong>Done when:</strong> your server logs show <code>Received Stripe event: payment_intent.succeeded</code> and the CLI shows <code>200 OK</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 5 - Handle the event in your DB (stretch)</h2>
+        <p>In the <code>payment_intent.succeeded</code> case, update a record in your database. For example, if you have an <code>Event</code> model with a <code>paymentStatus</code> field:</p>
+        <pre>
+case "payment_intent.succeeded": {
+  const pi = event.data.object as Stripe.PaymentIntent;
+  const eventId = pi.metadata?.eventId;
+  if (eventId) {
+    await Event.findByIdAndUpdate(eventId, {
+      paymentStatus: "paid"
+    });
+    console.log("Marked event", eventId, "as paid");
+  }
+  break;
+}</pre>
+        <p>Use <code>pi.metadata</code> to carry your own data. Set metadata when creating the PaymentIntent (not needed today — just log for now).</p>
+        <div class="done-when"><strong>Done when:</strong> the handler logs the metadata and (optionally) updates a DB record.</div>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li><strong><code>No signatures found matching the expected signature for payload</code></strong> — you are using <code>express.json()</code> on the webhook route. The webhook route must use <code>express.raw()</code>. Check that the raw middleware is applied before <code>express.json()</code>.</li>
+            <li><strong><code>stripe: command not found</code></strong> — the CLI is not installed or not on your PATH. Follow the install instructions above.</li>
+            <li><strong>CLI shows <code>[400]</code></strong> — check your server logs. Usually a missing webhook secret or body parser issue.</li>
+            <li><strong>Server restarts but CLI still says old whsec_</strong> — the CLI signing secret is session-specific. If you stop and restart <code>stripe listen</code>, it gives a new secret. Update <code>.env</code> and restart the server.</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Practice:</strong> Try triggering different event types and add handlers for them:
+        <ul>
+            <li><code>stripe trigger checkout.session.completed</code></li>
+            <li><code>stripe trigger invoice.paid</code></li>
+            <li><code>stripe trigger payment_intent.payment_failed</code></li>
+        </ul>
+        <p style="margin-top: 0.75rem;">
+            <strong>Next:</strong> <a href="class-2-handson.html">Class 2 hands-on</a> — NestJS scaffold and TypeORM entities.
+        </p>
+    </div>
+</body>
+
+</html>

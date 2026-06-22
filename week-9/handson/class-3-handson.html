@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 9 Class 3 hands-on - Git Branching and PR Workflow</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .troubleshooting {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff1f2;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 9 - Class 3 Lab</strong> -
+        <a href="../slides/session-3.html">Open session deck</a>
+        - Feature branches, conventional commits, PR workflow on meeting-app
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 0 - Push meeting-app to GitHub</h2>
+        <p>If your <code>meeting-app</code> is not on GitHub yet:</p>
+        <ol>
+            <li>Go to <strong>github.com</strong> → New repository → name it <code>meeting-app</code></li>
+            <li>Push your local repo:</li>
+        </ol>
+        <pre>
+cd meeting-app
+git init           # if not already a git repo
+git add .
+git commit -m "chore: initial NestJS scaffold"
+git remote add origin https://github.com/YOUR_USERNAME/meeting-app.git
+git branch -M main
+git push -u origin main</pre>
+        <div class="done-when"><strong>Done when:</strong> <code>github.com/YOUR_USERNAME/meeting-app</code> shows your code.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Create a feature branch</h2>
+        <p>You are going to add a <code>GET /rooms/:id</code> endpoint. First, create a branch:</p>
+        <pre>
+git checkout -b feat/rooms-get-by-id</pre>
+        <p>Add the endpoint to <code>src/rooms/rooms.service.ts</code>:</p>
+        <pre>
+findOne(id: string) {
+  return this.roomRepo.findOne({
+    where: { id },
+    relations: ["host"],
+  });
+}</pre>
+        <p>And in <code>src/rooms/rooms.controller.ts</code>:</p>
+        <pre>
+import { Get, Param } from "@nestjs/common";
+
+@Get(":id")
+findOne(@Param("id") id: string) {
+  return this.roomsService.findOne(id);
+}</pre>
+        <div class="done-when"><strong>Done when:</strong> <code>GET http://localhost:3000/rooms/&lt;some-uuid&gt;</code> returns a room or null.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Commit with conventional commit format</h2>
+        <pre>
+git add src/rooms/rooms.service.ts src/rooms/rooms.controller.ts
+git commit -m "feat(rooms): add GET /rooms/:id endpoint"</pre>
+        <p>Convention: <code>type(scope): short description</code></p>
+        <ul>
+            <li><code>feat</code> — new feature</li>
+            <li><code>fix</code> — bug fix</li>
+            <li><code>chore</code> — tooling, deps, config</li>
+            <li><code>refactor</code> — code change without behaviour change</li>
+            <li><code>docs</code> — documentation only</li>
+            <li><code>test</code> — adding or fixing tests</li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> <code>git log --oneline</code> shows a commit with the correct conventional format.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Push the branch and open a PR</h2>
+        <pre>git push -u origin feat/rooms-get-by-id</pre>
+        <p>Go to your GitHub repository. GitHub will show a banner: <strong>"Compare &amp; pull request"</strong>. Click it.</p>
+        <p>Fill in the PR description using this template:</p>
+        <pre>
+## What changed
+Added `GET /rooms/:id` endpoint that returns a single room by UUID,
+including the host relation.
+
+## Why
+Needed by the frontend to display room details.
+
+## How to test
+1. Create a room via `POST /rooms`
+2. Copy the returned id
+3. `GET /rooms/{id}` should return the room with host populated
+
+## Checklist
+- [x] Server starts without errors
+- [x] GET /rooms/:id returns room or null
+- [ ] Tests added (stretch goal)</pre>
+        <div class="done-when"><strong>Done when:</strong> the PR is open on GitHub with a title and description filled in.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - Review a partner's PR</h2>
+        <p>Swap GitHub usernames with a partner. Go to their repository and review their PR.</p>
+        <ol>
+            <li>Click the <strong>Files changed</strong> tab</li>
+            <li>Add at least one inline comment — either a question, a suggestion, or a note</li>
+            <li>Click <strong>Review changes</strong> → select <strong>Comment</strong> → <strong>Submit review</strong></li>
+        </ol>
+        <p>Good review comments:</p>
+        <ul>
+            <li>Ask a clarifying question: "What happens if the id is not a valid UUID?"</li>
+            <li>Suggest an improvement: "Consider returning 404 instead of null when not found."</li>
+            <li>Note something good: "Clean separation — service handles the DB call, controller just delegates."</li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> you have left at least one comment on a partner's PR and they have left one on yours.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 5 - Respond to review and merge (stretch)</h2>
+        <p>Read the comment on your PR. If you agree:</p>
+        <ol>
+            <li>Make the change on your branch (e.g., add a 404 response)</li>
+            <li>Commit and push</li>
+            <li>Resolve the comment thread on GitHub</li>
+            <li>Merge the PR into main (squash and merge recommended)</li>
+            <li>Delete the branch after merging</li>
+        </ol>
+        <pre>
+# After merging, clean up locally
+git checkout main
+git pull
+git branch -d feat/rooms-get-by-id</pre>
+        <div class="done-when"><strong>Done when:</strong> the PR is merged, the branch is deleted, and your local main is up to date.</div>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li><strong><code>error: src refspec feat/rooms-get-by-id does not match any</code></strong> — you haven't committed anything on the branch yet. Make at least one commit first.</li>
+            <li><strong>GitHub doesn't show "Compare &amp; pull request"</strong> — push the branch first (<code>git push -u origin feat/rooms-get-by-id</code>), then refresh the repo page.</li>
+            <li><strong>Can't review your own PR</strong> — GitHub restricts self-reviews on some accounts. Use a partner's PR or add a second GitHub account as a collaborator to test the flow.</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Practice:</strong> Create a second feature branch (<code>feat/rooms-delete</code>), add a <code>DELETE /rooms/:id</code> endpoint, open a PR, and go through the full review cycle again.
+        <p style="margin-top: 0.75rem;">
+            <strong>Next:</strong> <a href="../assignment/week-9-assignment.html">Week 9 assignment</a> — Stripe webhooks, NestJS scaffold, and sprint plan.
+        </p>
+    </div>
+</body>
+
+</html>

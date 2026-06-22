@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 9 Assignment - Stripe Webhooks, NestJS Scaffold, and Sprint Plan</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background: #f1f5f9;
+            color: #0f172a;
+            margin: 0;
+            padding: 1.5rem 1rem 3rem;
+        }
+
+        h1 {
+            max-width: 56rem;
+            margin: 0 auto 1.5rem;
+            padding: 1rem 1.25rem;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 8px;
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+        }
+
+        section {
+            max-width: 56rem;
+            margin: 0 auto 1rem;
+            padding: 1.25rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.6rem;
+        }
+
+        h3 {
+            margin-bottom: 0.4rem;
+        }
+
+        code {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 0.05rem 0.35rem;
+            font-family: ui-monospace, Menlo, monospace;
+        }
+
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            font-family: ui-monospace, Menlo, monospace;
+        }
+
+        .deadline {
+            border-left: 5px solid #ef4444;
+            background: #fff1f2;
+        }
+
+        .presentation {
+            border-left: 5px solid #3b82f6;
+            background: #eff6ff;
+        }
+
+        ul.checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul.checklist li::before {
+            content: "☐ ";
+            color: #475569;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem 0.65rem;
+            text-align: left;
+        }
+
+        th {
+            background: #f8fafc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Week 9 Assignment — Stripe Webhooks, NestJS Scaffold &amp; Sprint Plan</h1>
+
+    <section class="deadline">
+        <h2>Submission</h2>
+        <p>Deadline: <strong>Sunday, 11:59 PM</strong></p>
+        <ul>
+            <li>Submit three GitHub links: <strong>event-mgmt-api</strong> (Part 1), <strong>meeting-app</strong> (Part 2), and <strong>GitHub Project board</strong> (Part 3)</li>
+            <li>All repos must be public or shared with the instructor</li>
+            <li>Include a short <code>README.md</code> in each repo describing setup steps</li>
+        </ul>
+    </section>
+
+    <section class="presentation">
+        <h2>In-class presentation (5 minutes)</h2>
+        <ul>
+            <li>Start the Stripe CLI forwarder (<code>stripe listen --forward-to …</code>)</li>
+            <li>Trigger <code>stripe trigger payment_intent.succeeded</code> and show the server log</li>
+            <li>Show the GitHub Project board with Sprint 1 backlog items and point estimates</li>
+            <li>Briefly explain one decision you made (e.g., why you put the webhook route before <code>express.json()</code>)</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Part 1 — Stripe Webhook Integration</h2>
+        <p>Add Stripe webhook support to your <strong>event-mgmt-api</strong> from Week 7.</p>
+        <h3>Tech stack</h3>
+        <ul>
+            <li>Existing Week 7 <code>event-mgmt-api</code> (Node.js + Express + TypeScript)</li>
+            <li>Stripe Node.js SDK (<code>npm install stripe</code>)</li>
+            <li>Stripe CLI for local testing</li>
+        </ul>
+        <h3>Suggested folder additions</h3>
+        <pre>
+event-mgmt-api/
+└── src/
+    ├── stripe/
+    │   └── stripe.ts          # Stripe client singleton
+    └── webhooks/
+        └── stripe.router.ts   # POST /webhooks/stripe handler</pre>
+
+        <h3>Requirements</h3>
+        <table>
+            <thead>
+                <tr><th>Area</th><th>Requirement</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Route</td><td><code>POST /webhooks/stripe</code> registered before <code>express.json()</code></td></tr>
+                <tr><td>Body parser</td><td>Route uses <code>express.raw({ type: "application/json" })</code></td></tr>
+                <tr><td>Signature</td><td>Verify with <code>stripe.webhooks.constructEvent()</code>; return 400 on failure</td></tr>
+                <tr><td>payment_intent.succeeded</td><td>Log the PaymentIntent ID and amount; attempt a DB update using <code>pi.metadata</code></td></tr>
+                <tr><td>Fast ack</td><td>Return <code>{ received: true }</code> with status 200 before any slow DB work</td></tr>
+                <tr><td>Unhandled events</td><td>Log the event type; don't crash</td></tr>
+                <tr><td>Environment</td><td><code>STRIPE_SECRET_KEY</code> and <code>STRIPE_WEBHOOK_SECRET</code> in <code>.env</code> (not committed)</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Part 2 — NestJS Meeting App Scaffold</h2>
+        <p>Build the initial scaffold for a Zoom-like meeting application using NestJS, TypeORM, and PostgreSQL.</p>
+        <h3>Tech stack</h3>
+        <ul>
+            <li>NestJS (<code>@nestjs/core</code>, <code>@nestjs/common</code>)</li>
+            <li>TypeORM + <code>pg</code> (PostgreSQL)</li>
+            <li><code>@nestjs/config</code> for environment variables</li>
+        </ul>
+        <h3>Required folder structure</h3>
+        <pre>
+meeting-app/
+├── src/
+│   ├── app.module.ts
+│   ├── main.ts
+│   ├── users/
+│   │   ├── users.module.ts
+│   │   ├── users.controller.ts
+│   │   ├── users.service.ts
+│   │   └── entities/user.entity.ts
+│   ├── rooms/
+│   │   ├── rooms.module.ts
+│   │   ├── rooms.controller.ts
+│   │   ├── rooms.service.ts
+│   │   └── entities/room.entity.ts
+│   └── meetings/
+│       ├── meetings.module.ts
+│       └── entities/meeting.entity.ts
+├── .env
+├── .env.example
+└── package.json</pre>
+
+        <h3>Requirements</h3>
+        <table>
+            <thead>
+                <tr><th>Area</th><th>Requirement</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>UserEntity</td><td><code>id (uuid), email (unique), displayName, passwordHash, createdAt, updatedAt</code></td></tr>
+                <tr><td>RoomEntity</td><td><code>id (uuid), name, description (nullable), maxParticipants (default 50), host (ManyToOne → User), createdAt</code></td></tr>
+                <tr><td>MeetingEntity</td><td><code>id (uuid), room (ManyToOne → Room), startedAt, endedAt (nullable), participantCount (default 0)</code></td></tr>
+                <tr><td>TypeORM</td><td>Connected to local PostgreSQL; <code>synchronize: true</code> (dev only); tables auto-created on start</td></tr>
+                <tr><td>Rooms CRUD</td><td><code>GET /rooms</code> (list), <code>GET /rooms/:id</code> (find one), <code>POST /rooms</code> (create) — minimum required</td></tr>
+                <tr><td>DI pattern</td><td>Service injected into controller via constructor; repository injected into service with <code>@InjectRepository</code></td></tr>
+                <tr><td>Config</td><td>DB credentials via <code>@nestjs/config</code> + <code>.env</code>; <code>.env.example</code> committed with placeholder values</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Part 3 — Sprint Plan on GitHub Projects</h2>
+        <p>Create a Sprint 1 plan for the <code>meeting-app</code> using GitHub Issues and Projects.</p>
+        <h3>Requirements</h3>
+        <table>
+            <thead>
+                <tr><th>Area</th><th>Requirement</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>GitHub Project</td><td>Board with at least 3 columns: Backlog, In Progress, Done</td></tr>
+                <tr><td>Issues</td><td>Minimum 5 GitHub Issues covering the meeting-app features</td></tr>
+                <tr><td>Issue format</td><td>Each issue has: title, user story, acceptance criteria, size label (S/M/L), and milestone</td></tr>
+                <tr><td>Milestone</td><td>"Sprint 1" milestone created with a due date</td></tr>
+                <tr><td>Sprint goal</td><td>Written as a pinned issue or project description: one sentence goal for Sprint 1</td></tr>
+                <tr><td>Estimates</td><td>Each issue labelled with a size: <code>size:S</code> (1-2pts), <code>size:M</code> (3-5pts), <code>size:L</code> (8pts)</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Full checklist</h2>
+        <h3>Part 1 — Stripe Webhooks</h3>
+        <ul class="checklist">
+            <li>Stripe SDK installed; client initialised from <code>STRIPE_SECRET_KEY</code> env var</li>
+            <li><code>POST /webhooks/stripe</code> registered before <code>express.json()</code></li>
+            <li>Uses <code>express.raw()</code> body parser on the webhook route</li>
+            <li>Signature verified with <code>stripe.webhooks.constructEvent()</code></li>
+            <li>Returns 400 with descriptive message on invalid signature</li>
+            <li>Handles <code>payment_intent.succeeded</code> — logs PI id and amount</li>
+            <li>Returns <code>{ received: true }</code> with 200 on success</li>
+            <li>Stripe CLI shows 200 when you run <code>stripe trigger payment_intent.succeeded</code></li>
+            <li><code>.env</code> has both <code>STRIPE_SECRET_KEY</code> and <code>STRIPE_WEBHOOK_SECRET</code></li>
+            <li><code>.env</code> is in <code>.gitignore</code></li>
+        </ul>
+        <h3>Part 2 — NestJS Scaffold</h3>
+        <ul class="checklist">
+            <li><code>npm run start:dev</code> starts without errors</li>
+            <li>TypeORM connects to PostgreSQL on startup</li>
+            <li><code>user</code>, <code>room</code>, and <code>meeting</code> tables auto-created</li>
+            <li><code>GET /rooms</code> returns empty array or list of rooms</li>
+            <li><code>GET /rooms/:id</code> returns a room or 404</li>
+            <li><code>POST /rooms</code> creates a room and returns it</li>
+            <li>Services injected via constructor (no <code>new ServiceClass()</code>)</li>
+            <li>Repositories injected with <code>@InjectRepository(Entity)</code></li>
+            <li><code>.env.example</code> committed with placeholder DB values</li>
+        </ul>
+        <h3>Part 3 — Sprint Plan</h3>
+        <ul class="checklist">
+            <li>GitHub Project board created with Backlog / In Progress / Done columns</li>
+            <li>5+ GitHub Issues created for meeting-app features</li>
+            <li>Each issue has a user story and acceptance criteria in the body</li>
+            <li>Each issue has a size label (<code>size:S</code>, <code>size:M</code>, or <code>size:L</code>)</li>
+            <li>Sprint 1 milestone created with a due date</li>
+            <li>All issues assigned to the Sprint 1 milestone</li>
+            <li>Sprint goal written as project description or pinned issue</li>
+        </ul>
+    </section>
+</body>
+
+</html>
