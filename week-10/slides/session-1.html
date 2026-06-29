@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 10 - Session 1 - Scrum Ceremonies and Sprints</title>
+    <title>Week 10 - Session 1 - Auth and Guards (with Scrum recap)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="session-deck-theme.css" />
@@ -19,182 +19,335 @@
     </header>
 
     <div class="slide active bg1">
-        <h1>Class 1: Scrum Ceremonies, Sprints, and Team Rituals</h1>
-        <p>Go deep on how Scrum ceremonies work in practice — sprint planning, daily standups, reviews, and retrospectives — including anti-patterns that slow teams down.</p>
+        <h1>Class 1: Authentication and Authorization Guards</h1>
+        <p>Secure the meeting-app API: hash passwords, issue and verify JWTs, and lock routes down with NestJS guards and role-based access. We close with a short Scrum recap before the Class 2 ceremonies deep-dive.</p>
     </div>
 
     <div class="slide bg1">
         <h2>Session Agenda</h2>
         <ol>
-            <li>Sprint anatomy — goal, cadence, and time-boxing</li>
-            <li>Sprint Planning in detail — capacity and backlog refinement</li>
-            <li>Daily Standup — format, purpose, and anti-patterns</li>
-            <li>Sprint Review — demoing to stakeholders</li>
-            <li>Sprint Retrospective — formats and action items</li>
-            <li>Velocity, burndown, and team metrics</li>
-            <li>Definition of Done vs Acceptance Criteria</li>
-            <li>Quiz (8 questions)</li>
+            <li>Authentication vs Authorization — and where JWT fits</li>
+            <li>The JSON Web Token — anatomy and password hashing</li>
+            <li>Authentication in NestJS — login, signing, Passport strategy</li>
+            <li>Guards — <code>AuthGuard</code>, role-based access, <code>RolesGuard</code> + <code>@Roles</code></li>
+            <li>Scrum recap — ceremonies, sprint mechanics, DoD vs AC</li>
+            <li>Quizzes (4 Auth + 3 Scrum recap questions)</li>
         </ol>
     </div>
 
+    <!-- Part 1: Authentication and Authorization -->
     <div class="slide bg2">
         <p class="part-kicker">Part 1</p>
-        <h1>The Sprint</h1>
-        <p>A sprint is a short, time-boxed period (typically 2 weeks) during which the team builds a potentially shippable product increment.</p>
+        <h1>Authentication and Authorization</h1>
+        <p>Anyone can hit the meeting-app routes today. By the end of this session, only logged-in users can act, and only a room's host can delete it.</p>
     </div>
 
     <div class="slide bg2">
-        <h2>Sprint anatomy</h2>
-        <ul>
-            <li><strong>Duration:</strong> 1–4 weeks. Most teams use 2-week sprints. Never extended mid-sprint.</li>
-            <li><strong>Sprint Goal:</strong> a single, clear objective for the sprint. Every backlog item selected serves this goal.</li>
-            <li><strong>Time-boxing:</strong> the sprint ends on schedule even if all items are not done. Unfinished work goes back to the backlog.</li>
-            <li><strong>No-scope-change rule:</strong> do not add work mid-sprint unless something is removed. Protect the team's focus.</li>
-            <li><strong>Cadence:</strong> same days each sprint. Predictability builds trust and planning muscle.</li>
-        </ul>
+        <h2>Authentication vs Authorization</h2>
+        <div class="comparison">
+            <article>
+                <h3>Authentication (authn)</h3>
+                <ul>
+                    <li><strong>Question:</strong> "Who are you?"</li>
+                    <li>Proves identity — email + password, then a token</li>
+                    <li>Happens once at login</li>
+                    <li>Fails with <code>401 Unauthorized</code></li>
+                </ul>
+            </article>
+            <article>
+                <h3>Authorization (authz)</h3>
+                <ul>
+                    <li><strong>Question:</strong> "What are you allowed to do?"</li>
+                    <li>Checks permissions — roles, ownership</li>
+                    <li>Happens on every protected request</li>
+                    <li>Fails with <code>403 Forbidden</code></li>
+                </ul>
+            </article>
+        </div>
+        <p>Authn comes first; authz only makes sense once you know who the caller is.</p>
     </div>
 
     <div class="slide bg2">
-        <h2>Backlog refinement</h2>
-        <p>Ongoing work, not a ceremony — the PO and team groom backlog items before they enter a sprint.</p>
+        <h2>Sessions vs tokens (why JWT)</h2>
         <ul>
-            <li>Break large items into sprint-sized stories</li>
-            <li>Write acceptance criteria so "done" is unambiguous</li>
-            <li>Estimate complexity (story points or T-shirt sizes)</li>
-            <li>Remove items that are no longer relevant</li>
-            <li>Target: top 2 sprints of backlog always "ready" (estimated and acceptance-criteria written)</li>
+            <li><strong>Session cookies:</strong> server stores session state, sends an opaque ID. Simple, but the server must remember every session — harder to scale across many API instances.</li>
+            <li><strong>JWT (JSON Web Token):</strong> the server signs a token containing the claims. It stores nothing — it just verifies the signature on each request. <strong>Stateless</strong>, which fits a horizontally-scaled API.</li>
+            <li><strong>Trade-off:</strong> a JWT can't be revoked before it expires. Keep access tokens short-lived (e.g. 15–60 min); use refresh tokens for longer sessions.</li>
         </ul>
     </div>
 
+    <!-- Part 2: The JWT -->
     <div class="slide bg3">
         <p class="part-kicker">Part 2</p>
-        <h1>Sprint Planning</h1>
-        <p>The team selects backlog items they can complete and commits to a sprint goal. This is a planning meeting, not a status update.</p>
+        <h1>The JSON Web Token</h1>
     </div>
 
     <div class="slide bg3">
-        <h2>Running Sprint Planning</h2>
-        <ol>
-            <li><strong>PO presents the sprint goal</strong> — why this sprint matters and what success looks like.</li>
-            <li><strong>Team reviews capacity</strong> — who is on holiday? Any interviews? Realistic developer-days available.</li>
-            <li><strong>Select stories</strong> — pull from the top of the product backlog until capacity is full.</li>
-            <li><strong>Break stories into tasks</strong> — each story decomposed into implementation sub-tasks (usually &lt;1 day each).</li>
-            <li><strong>Confirm sprint goal</strong> — the team agrees they can achieve it with what was selected.</li>
-        </ol>
-    </div>
+        <h2>JWT anatomy</h2>
+        <p>Three Base64URL parts joined by dots: <code>header.payload.signature</code></p>
+        <pre>// header  — algorithm + type
+{ "alg": "HS256", "typ": "JWT" }
 
-    <div class="slide bg3">
-        <h2>Capacity planning</h2>
+// payload — claims (NEVER put secrets here; it's only encoded, not encrypted)
+{ "sub": "42", "email": "ada@x.io", "role": "host", "iat": 1719500000, "exp": 1719503600 }
+
+// signature = HMAC_SHA256( base64url(header) + "." + base64url(payload), SECRET )</pre>
         <ul>
-            <li><strong>Velocity</strong> — the team's average story points completed per sprint (from the last 3 sprints).</li>
-            <li><strong>Never plan to 100% capacity</strong> — unplanned bugs, meetings, and reviews consume 20–30 % of time.</li>
-            <li><strong>Focus factor:</strong> <code>velocity ÷ available dev-days</code>. Typical range: 0.6–0.7.</li>
-            <li><strong>New team?</strong> Start with a conservative commitment and calibrate after 3–4 sprints.</li>
+            <li>The payload is <strong>readable by anyone</strong> — only the signature is secret. Don't store passwords or sensitive data in it.</li>
+            <li>The server trusts the token because only it knows <code>SECRET</code> and can reproduce the signature.</li>
+            <li><code>exp</code> is the expiry timestamp — the guard rejects expired tokens automatically.</li>
         </ul>
     </div>
 
+    <div class="slide bg3">
+        <h2>Never store passwords — hash them</h2>
+        <p>On register, hash the password with <strong>bcrypt</strong>. On login, compare the candidate against the stored hash. The plaintext is never saved.</p>
+        <pre>import * as bcrypt from 'bcrypt';
+
+// register
+const hash = await bcrypt.hash(dto.password, 10); // 10 = salt rounds
+await this.users.create({ email: dto.email, password: hash });
+
+// login
+const ok = await bcrypt.compare(dto.password, user.password);
+if (!ok) throw new UnauthorizedException('Invalid credentials');</pre>
+        <ul>
+            <li><strong>Salt</strong> is built into the hash — two identical passwords produce different hashes.</li>
+            <li>bcrypt is deliberately slow, which makes brute-forcing the stored hashes expensive.</li>
+        </ul>
+    </div>
+
+    <!-- Part 3: Authentication in NestJS -->
     <div class="slide bg4">
         <p class="part-kicker">Part 3</p>
-        <h1>Daily Standup</h1>
-        <p>A 15-minute daily sync for the development team to inspect progress toward the sprint goal and adapt the day's plan.</p>
+        <h1>Authentication in NestJS</h1>
+        <p>Validate credentials, then sign and return a JWT the client sends back on every future request.</p>
     </div>
 
     <div class="slide bg4">
-        <h2>Three questions (classic format)</h2>
-        <ul>
-            <li><strong>What did I complete since the last standup?</strong></li>
-            <li><strong>What will I work on today?</strong></li>
-            <li><strong>Do I have any blockers?</strong></li>
-        </ul>
-        <p>Keep answers short. Blockers are surfaced here, not solved here — take the discussion offline after the standup ends.</p>
+        <h2>Login — issuing the token</h2>
+        <pre>// auth.service.ts
+async login(dto: LoginDto) {
+  const user = await this.users.findByEmail(dto.email);
+  if (!user || !(await bcrypt.compare(dto.password, user.password)))
+    throw new UnauthorizedException('Invalid credentials');
+
+  const payload = { sub: user.id, email: user.email, role: user.role };
+  return { access_token: await this.jwt.signAsync(payload) };
+}</pre>
+        <p>The client stores <code>access_token</code> and sends it as <code>Authorization: Bearer &lt;token&gt;</code> on protected routes.</p>
     </div>
 
     <div class="slide bg4">
-        <h2>Standup anti-patterns</h2>
-        <ul>
-            <li><strong>Status report to the manager</strong> — it's for the team, not management. SM facilitates; managers listen only.</li>
-            <li><strong>Problem-solving during standup</strong> — "let's debug that now" kills the time-box. Park it.</li>
-            <li><strong>Skipping blockers</strong> — if you're blocked, say so. Unblocking teammates is the SM's job.</li>
-            <li><strong>Not updating the board</strong> — the board should reflect reality before the standup starts.</li>
-            <li><strong>Too long</strong> — if it's consistently 30+ minutes, restructure. Split large teams.</li>
-        </ul>
+        <h2>The Passport JWT strategy</h2>
+        <p>The strategy tells NestJS <em>how</em> to find and verify the token. Its <code>validate()</code> return value becomes <code>request.user</code>.</p>
+        <pre>// jwt.strategy.ts
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor() {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: process.env.JWT_SECRET,
+    });
+  }
+  // payload = the decoded, signature-verified JWT
+  validate(payload: any) {
+    return { userId: payload.sub, email: payload.email, role: payload.role };
+  }
+}</pre>
     </div>
 
+    <!-- Part 4: Guards and RBAC -->
     <div class="slide bg1">
         <p class="part-kicker">Part 4</p>
-        <h1>Sprint Review and Retrospective</h1>
+        <h1>Guards — the authorization layer</h1>
+        <p>A <strong>guard</strong> is a class with a <code>canActivate()</code> method. It runs before the route handler and decides — true lets the request through, false (or a thrown exception) blocks it.</p>
     </div>
 
     <div class="slide bg1">
-        <h2>Sprint Review</h2>
+        <h2>Where guards sit in the request lifecycle</h2>
+        <pre>Request
+  → Middleware
+  → Guards          ← canActivate(): allow or reject (401/403)
+  → Interceptors / Pipes
+  → Route handler (controller method)
+  → Response</pre>
         <ul>
-            <li><strong>Goal:</strong> inspect the increment and adapt the product backlog based on feedback.</li>
-            <li><strong>Who attends:</strong> the entire Scrum team plus stakeholders (PM, design, sales, customers).</li>
-            <li><strong>Format:</strong> demo working software (not slides). Walk through the sprint goal and what was completed.</li>
-            <li><strong>Outcome:</strong> updated product backlog reflecting new priorities based on feedback.</li>
-            <li><strong>Time-box:</strong> 4 hours for a 4-week sprint; 2 hours for 2-week sprints.</li>
+            <li>Guards run <strong>after</strong> middleware but <strong>before</strong> the handler — so a blocked request never touches your business logic.</li>
+            <li>They have access to the full execution context: the request, the handler, and its metadata (decorators).</li>
+            <li>Order: authentication guard first (is there a valid user?), then authorization guards (is that user allowed?).</li>
         </ul>
     </div>
 
     <div class="slide bg1">
-        <h2>Sprint Retrospective</h2>
-        <p>Internal team ceremony — no stakeholders. Inspect the process, not the product.</p>
-        <ul>
-            <li><strong>What went well?</strong> (keep doing these things)</li>
-            <li><strong>What could be improved?</strong> (experiment next sprint)</li>
-            <li><strong>Action items:</strong> 1–3 specific, owned improvements. Not a wish list — commitments.</li>
-        </ul>
-        <p>Popular format: <strong>Start / Stop / Continue</strong> — what should we start, stop, and keep doing?</p>
+        <h2><code>AuthGuard</code> — require a logged-in user</h2>
+        <p><code>AuthGuard('jwt')</code> runs the JWT strategy. No valid token → <code>401</code>. Valid token → <code>request.user</code> is populated.</p>
+        <pre>// rooms.controller.ts
+@UseGuards(AuthGuard('jwt'))
+@Post()
+create(@Req() req, @Body() dto: CreateRoomDto) {
+  // req.user came from JwtStrategy.validate()
+  return this.rooms.create(dto, req.user.userId);
+}</pre>
+        <p>Apply it per-route, per-controller (<code>@UseGuards</code> on the class), or globally with <code>APP_GUARD</code>.</p>
     </div>
 
     <div class="slide bg2">
+        <h2>Role-Based Access Control</h2>
+        <p>Authentication tells you the user is logged in. RBAC decides whether <em>this</em> user may perform <em>this</em> action — without it, every authenticated user can do everything.</p>
+        <ul>
+            <li>Attach a <code>role</code> to each user (<code>guest</code>, <code>host</code>, <code>admin</code>) and put it in the JWT payload.</li>
+            <li>Tag sensitive routes with the role they require; a guard enforces the rule.</li>
+        </ul>
+    </div>
+
+    <div class="slide bg2">
+        <h2>A custom <code>RolesGuard</code> + <code>@Roles</code> decorator</h2>
+        <pre>// roles.decorator.ts
+export const Roles = (...roles: string[]) => SetMetadata('roles', roles);
+
+// roles.guard.ts
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+  canActivate(ctx: ExecutionContext): boolean {
+    const required = this.reflector.get&lt;string[]&gt;('roles', ctx.getHandler());
+    if (!required) return true;                 // no @Roles → open to any authed user
+    const { user } = ctx.switchToHttp().getRequest();
+    return required.includes(user.role);        // false → 403 Forbidden
+  }
+}</pre>
+        <p>The decorator <em>tags</em> a route with required roles; the guard <em>reads</em> the tag with <code>Reflector</code> and checks <code>request.user</code>.</p>
+    </div>
+
+    <div class="slide bg2">
+        <h2>Putting it together on meeting-app</h2>
+        <pre>@Controller('rooms')
+@UseGuards(AuthGuard('jwt'), RolesGuard) // authn first, then authz
+export class RoomsController {
+
+  @Get()                       // any logged-in user
+  findAll() { /* ... */ }
+
+  @Delete(':id')
+  @Roles('host')               // only hosts reach the handler
+  remove(@Param('id') id: string, @Req() req) {
+    return this.rooms.remove(id, req.user.userId); // also check ownership
+  }
+}</pre>
+        <ul>
+            <li><strong>Role</strong> ≠ <strong>ownership.</strong> "is a host" is RBAC; "is the host of <em>this</em> room" is an ownership check inside the service — do both.</li>
+        </ul>
+    </div>
+
+    <!-- Part 5: Scrum recap -->
+    <div class="slide bg3">
         <p class="part-kicker">Part 5</p>
-        <h1>Team Metrics</h1>
+        <h1>Scrum recap</h1>
+        <p>A fast refresher before Class 2 goes deep on ceremonies. The auth stories above are exactly the kind of work you'll plan into a sprint.</p>
     </div>
 
-    <div class="slide bg2">
-        <h2>Velocity and burndown</h2>
+    <div class="slide bg3">
+        <h2>The four ceremonies at a glance</h2>
         <ul>
-            <li><strong>Velocity</strong> — story points completed per sprint. Stabilises after 3–4 sprints. Use for forecasting, not pressure.</li>
-            <li><strong>Burndown chart</strong> — daily: total remaining story points vs. ideal straight line to zero. A burndown that flattens means blocked work or scope creep.</li>
-            <li><strong>Burnup chart</strong> — shows total scope and completed work. Better for visualising scope changes.</li>
-            <li><strong>Use metrics to improve</strong>, not as a management tool to compare individuals. Story points measure complexity, not output or speed.</li>
+            <li><strong>Sprint Planning</strong> — team selects backlog items it can complete and commits to a sprint goal. Never plan to 100% capacity (~0.6–0.7 focus factor).</li>
+            <li><strong>Daily Standup</strong> — 15-min sync: done / doing / blockers. Surface blockers here, solve them after.</li>
+            <li><strong>Sprint Review</strong> — demo working software to stakeholders; adapt the backlog from feedback.</li>
+            <li><strong>Sprint Retrospective</strong> — team-only; inspect the process. Start / Stop / Continue with 1–3 owned action items.</li>
         </ul>
     </div>
 
-    <div class="slide bg2">
-        <h2>Definition of Done vs Acceptance Criteria</h2>
+    <div class="slide bg3">
+        <h2>Sprint mechanics + Definition of Done vs Acceptance Criteria</h2>
+        <ul>
+            <li><strong>Time-boxing:</strong> the sprint ends on schedule; unfinished work returns to the backlog. No mid-sprint scope creep.</li>
+            <li><strong>Velocity:</strong> avg story points per sprint — for forecasting, never to rank individuals.</li>
+        </ul>
         <div class="comparison">
             <article>
                 <h3>Definition of Done</h3>
                 <ul>
-                    <li>Applies to every item</li>
-                    <li>Set by the team</li>
-                    <li>Examples: tests pass, code reviewed, deployed to staging, no critical linting errors</li>
-                    <li>The quality bar — same every sprint</li>
+                    <li>Applies to every item; set by the team</li>
+                    <li>The quality bar — tests pass, reviewed, deployed</li>
+                    <li>Same every sprint</li>
                 </ul>
             </article>
             <article>
                 <h3>Acceptance Criteria</h3>
                 <ul>
-                    <li>Specific to one story</li>
-                    <li>Set by the Product Owner</li>
-                    <li>Examples: user can log in with email; error shows if email is invalid</li>
-                    <li>The feature spec — different every story</li>
+                    <li>Specific to one story; set by the PO</li>
+                    <li>The feature spec — e.g. "invalid email shows an error"</li>
+                    <li>Different every story</li>
                 </ul>
             </article>
         </div>
     </div>
 
-    <!-- Quiz -->
+    <!-- Auth Quiz (main round) -->
     <div class="slide bg-quiz quiz-segment">
         <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
         <h1 class="quiz-round-title">Week 10 Session 1 Quiz</h1>
-        <p class="quiz-hint">8 questions on Scrum ceremonies and sprints</p>
+        <p class="quiz-hint">4 questions on authentication, JWT, and NestJS guards</p>
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 1 of 8</h2>
+        <h2>Question 1 of 4</h2>
+        <p class="question">A request fails with <code>403 Forbidden</code> (not 401). What does that tell you?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="401 means 'not authenticated' (no/invalid token). 403 means 'authenticated, but not allowed' — the user is known but lacks permission for this action.">The user is authenticated but not authorized for this action</button>
+            <button type="button" data-correct="false" data-explanation="A missing or invalid token returns 401 Unauthorized, not 403.">The token is missing or invalid</button>
+            <button type="button" data-correct="false" data-explanation="A non-existent resource returns 404, not 403.">The requested resource does not exist</button>
+            <button type="button" data-correct="false" data-explanation="An expired token is an authentication failure — 401, handled by AuthGuard.">The JWT has expired</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 2 of 4</h2>
+        <p class="question">Why should you never store sensitive data in a JWT payload?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="The payload is only Base64URL-encoded, not encrypted. Anyone holding the token can decode and read it. Only the signature is protected by the secret.">The payload is only encoded, not encrypted — anyone can read it</button>
+            <button type="button" data-correct="false" data-explanation="The signature secures integrity (detects tampering); it does not hide the payload contents.">The signature encrypts the payload but can be brute-forced</button>
+            <button type="button" data-correct="false" data-explanation="Payload size affects request size but is not the security reason.">A large payload makes the token too slow to verify</button>
+            <button type="button" data-correct="false" data-explanation="Expiry limits the token's lifetime but does not make the payload unreadable.">The exp claim deletes the payload after it expires</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 3 of 4</h2>
+        <p class="question">In a NestJS Passport JWT strategy, what does the <code>validate()</code> return value become?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="Whatever validate() returns is attached to the request as request.user, so downstream guards and handlers can read the authenticated identity.">request.user — available to guards and the route handler</button>
+            <button type="button" data-correct="false" data-explanation="validate() does not mint tokens; the auth service signs the JWT at login.">The new JWT sent back to the client</button>
+            <button type="button" data-correct="false" data-explanation="The strategy verifies the existing signature; it does not create the secret.">The JWT signing secret</button>
+            <button type="button" data-correct="false" data-explanation="The HTTP status is set by guards/exceptions, not by the strategy's return value.">The HTTP response status code</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 4 of 4</h2>
+        <p class="question">A route has <code>@UseGuards(AuthGuard('jwt'), RolesGuard)</code> and <code>@Roles('host')</code>. A logged-in user with role <code>guest</code> calls it. What happens?</p>
+        <div class="quiz-actions quiz-actions--stacked">
+            <button type="button" data-correct="true" data-explanation="AuthGuard passes (valid token), but RolesGuard sees the required role 'host' is not in the user's roles and returns false → 403 Forbidden. The handler never runs.">AuthGuard passes, RolesGuard rejects — 403, handler never runs</button>
+            <button type="button" data-correct="false" data-explanation="A valid token means authentication succeeds, so it is not a 401.">AuthGuard rejects it with 401 because the role is wrong</button>
+            <button type="button" data-correct="false" data-explanation="Guards run before the handler precisely so unauthorized requests never reach business logic.">The handler runs, then NestJS rejects the response</button>
+            <button type="button" data-correct="false" data-explanation="Guards are not skipped; both run in the order listed.">Both guards are skipped because the user is logged in</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+    </div>
+
+    <!-- Scrum recap quiz -->
+    <div class="slide bg-quiz quiz-segment">
+        <p class="quiz-show-eyebrow">Who Wants To Be a Full Stack Engineer</p>
+        <h1 class="quiz-round-title">Scrum Recap Round</h1>
+        <p class="quiz-hint">3 questions on sprint mechanics — full ceremonies deep-dive is Class 2</p>
+    </div>
+
+    <div class="slide bg-quiz quiz">
+        <h2>Question 1 of 3</h2>
         <p class="question">What happens when the sprint end date arrives and some stories are not done?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="true" data-explanation="The sprint ends as scheduled. Incomplete items go back to the product backlog for the PO to re-prioritise. Sprints are never extended.">The sprint ends and incomplete items return to the backlog</button>
@@ -206,19 +359,7 @@
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 2 of 8</h2>
-        <p class="question">What is the primary purpose of the Sprint Review?</p>
-        <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="The Sprint Review exists to inspect the increment and gather stakeholder feedback that updates the product backlog.">Inspect the increment and collect feedback to update the backlog</button>
-            <button type="button" data-correct="false" data-explanation="Retrospective is for process reflection — the Review is about the product.">Reflect on the team's process and identify improvements</button>
-            <button type="button" data-correct="false" data-explanation="Sprint Planning is where the next sprint is planned, not the Review.">Plan the work for the next sprint</button>
-            <button type="button" data-correct="false" data-explanation="Standups surface blockers daily; the Review is about the product increment.">Report individual blockers to the Scrum Master</button>
-        </div>
-        <p class="quiz-feedback" aria-live="polite"></p>
-    </div>
-
-    <div class="slide bg-quiz quiz">
-        <h2>Question 3 of 8</h2>
+        <h2>Question 2 of 3</h2>
         <p class="question">Why should you not plan a sprint to 100% of team capacity?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="true" data-explanation="Unplanned work (bugs, meetings, code reviews, questions) consumes 20–30% of time. Over-committing leads to missed sprint goals and burnout.">Unplanned work, meetings, and reviews consume 20–30% of time</button>
@@ -230,19 +371,7 @@
     </div>
 
     <div class="slide bg-quiz quiz">
-        <h2>Question 4 of 8</h2>
-        <p class="question">The Daily Standup surfaced a critical blocker. What should happen next?</p>
-        <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="Surface the blocker in the standup, then take the discussion offline immediately after with only the people who can help resolve it.">Park it and address it right after the standup with relevant people</button>
-            <button type="button" data-correct="false" data-explanation="Solving blockers during the standup violates the 15-minute time-box and wastes time for attendees not involved.">Solve it immediately during the standup</button>
-            <button type="button" data-correct="false" data-explanation="Waiting until Sprint Planning means the blocker persists for days or weeks.">Wait until Sprint Planning to discuss it</button>
-            <button type="button" data-correct="false" data-explanation="A blocker is a problem to solve now, not to note for a future meeting.">Add it to the retrospective notes</button>
-        </div>
-        <p class="quiz-feedback" aria-live="polite"></p>
-    </div>
-
-    <div class="slide bg-quiz quiz">
-        <h2>Question 5 of 8</h2>
+        <h2>Question 3 of 3</h2>
         <p class="question">What distinguishes the Definition of Done from Acceptance Criteria?</p>
         <div class="quiz-actions quiz-actions--stacked">
             <button type="button" data-correct="true" data-explanation="The DoD is the team's universal quality bar for every item. Acceptance Criteria are story-specific conditions set by the Product Owner.">DoD is the team's quality bar for every item; AC is story-specific</button>
@@ -253,45 +382,9 @@
         <p class="quiz-feedback" aria-live="polite"></p>
     </div>
 
-    <div class="slide bg-quiz quiz">
-        <h2>Question 6 of 8</h2>
-        <p class="question">What does a flat burndown chart during a sprint typically indicate?</p>
-        <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="A flat line means remaining work is not decreasing — likely because work is blocked or new scope was added without removing other items.">Work is blocked or scope was added mid-sprint</button>
-            <button type="button" data-correct="false" data-explanation="Ideal progress shows a steady downward slope. Flat is not ideal.">The team is making ideal progress</button>
-            <button type="button" data-correct="false" data-explanation="A flat burndown means stories are not being completed, not that estimates were perfect.">Story point estimates were perfectly accurate</button>
-            <button type="button" data-correct="false" data-explanation="The Scrum Master's workload is not reflected in the burndown chart.">The Scrum Master has too many ceremonies scheduled</button>
-        </div>
-        <p class="quiz-feedback" aria-live="polite"></p>
-    </div>
-
-    <div class="slide bg-quiz quiz">
-        <h2>Question 7 of 8</h2>
-        <p class="question">Who attends the Sprint Retrospective?</p>
-        <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="The Retrospective is for the Scrum team only — SM, PO, and developers. No external stakeholders. It's a safe space for honest process discussion.">The Scrum team only — SM, PO, and developers</button>
-            <button type="button" data-correct="false" data-explanation="Stakeholders attend the Sprint Review, not the Retrospective.">The Scrum team plus all stakeholders</button>
-            <button type="button" data-correct="false" data-explanation="Developers only would exclude the SM and PO who are part of the team.">Only the developers — no SM or PO</button>
-            <button type="button" data-correct="false" data-explanation="The engineering manager is not a Scrum role and typically does not attend Retros.">The Scrum team plus the engineering manager</button>
-        </div>
-        <p class="quiz-feedback" aria-live="polite"></p>
-    </div>
-
-    <div class="slide bg-quiz quiz">
-        <h2>Question 8 of 8</h2>
-        <p class="question">What is velocity used for in Scrum?</p>
-        <div class="quiz-actions quiz-actions--stacked">
-            <button type="button" data-correct="true" data-explanation="Velocity (average story points per sprint) is used for sprint planning and forecasting release dates — not to compare developers or set targets.">Forecasting how much work the team can complete per sprint</button>
-            <button type="button" data-correct="false" data-explanation="Using velocity to rank developers breaks psychological safety and destroys trust.">Ranking individual developer performance</button>
-            <button type="button" data-correct="false" data-explanation="Velocity tracks completed work, not bugs.">Tracking the number of bugs fixed per sprint</button>
-            <button type="button" data-correct="false" data-explanation="Retrospective outcomes are not tied to velocity.">Deciding the Retrospective action items</button>
-        </div>
-        <p class="quiz-feedback" aria-live="polite"></p>
-    </div>
-
     <div class="slide bg1">
         <h1>End of Week 10 Session 1</h1>
-        <p>Complete <a href="../handson/class-1-handson.html">Class 1 hands-on</a> (mock sprint planning ceremony). Next session — <a href="session-2.html">PRD, user stories, and ticketing</a>.</p>
+        <p>Complete <a href="../handson/class-1-handson.html">Class 1 hands-on</a> — secure the meeting-app with JWT auth and a host-only guard, then a mock sprint planning warm-up. Next session — <a href="session-2.html">PRD, user stories, and ticketing</a>.</p>
     </div>
 
     <div class="progress-wrap" aria-hidden="true">

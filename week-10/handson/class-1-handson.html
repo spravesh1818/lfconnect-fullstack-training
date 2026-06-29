@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 10 Class 1 hands-on - Mock Sprint Planning Ceremony</title>
+    <title>Week 10 Class 1 hands-on - Auth Guards (+ Sprint Planning warm-up)</title>
     <style>
         .lab-banner {
             font-family: system-ui, sans-serif;
@@ -92,11 +92,120 @@
     <div class="lab-banner">
         <strong>Week 10 - Class 1 Lab</strong> -
         <a href="../slides/session-1.html">Open session deck</a>
-        - Run a mock sprint planning ceremony for the meeting app
+        - Part A: secure the meeting-app API with JWT auth and a host-only guard. Part B: a short sprint planning
+        warm-up.
+    </div>
+
+    <div class="lab-banner" style="background: #14532d;">
+        <strong>Part A - Secure the API</strong> - Implement auth on your <code>meeting-app</code> NestJS repo. Work on
+        a feature branch.
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 0 - Assign roles</h2>
+        <h2>Exercise 1 - Install auth dependencies</h2>
+        <pre>npm i @nestjs/passport passport passport-jwt @nestjs/jwt bcrypt
+npm i -D @types/passport-jwt @types/bcrypt</pre>
+        <p>Add a <code>JWT_SECRET</code> to your <code>.env</code> (any long random string) and register
+            <code>JwtModule</code> with it in your <code>AuthModule</code>.</p>
+        <div class="done-when"><strong>Done when:</strong> the packages install and the app still boots with
+            <code>npm run start:dev</code>.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Hash passwords on register, verify on login</h2>
+        <ol>
+            <li>In <code>POST /auth/register</code>, hash the password with <code>bcrypt.hash(password, 10)</code>
+                before saving the user.</li>
+            <li>In <code>POST /auth/login</code>, look up the user, then <code>bcrypt.compare()</code> the candidate
+                password. On mismatch throw <code>UnauthorizedException</code>.</li>
+            <li>On success, sign a JWT and return <code>{ access_token }</code>:</li>
+        </ol>
+        <pre>const payload = { sub: user.id, email: user.email, role: user.role };
+return { access_token: await this.jwt.signAsync(payload) };</pre>
+        <div class="done-when"><strong>Done when:</strong> registering then logging in returns an
+            <code>access_token</code>, and a wrong password returns <code>401</code>. Confirm the stored password is a
+            bcrypt hash, never plaintext.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - JWT strategy + AuthGuard</h2>
+        <ol>
+            <li>Create <code>JwtStrategy</code> extending <code>PassportStrategy(Strategy)</code>. Extract the token
+                with <code>ExtractJwt.fromAuthHeaderAsBearerToken()</code>, set <code>secretOrKey</code> from your env,
+                and have <code>validate()</code> return <code>{ userId, email, role }</code>.</li>
+            <li>Protect room creation with the guard:</li>
+        </ol>
+        <pre>@UseGuards(AuthGuard('jwt'))
+@Post()
+create(@Req() req, @Body() dto: CreateRoomDto) {
+  return this.rooms.create(dto, req.user.userId);
+}</pre>
+        <div class="done-when"><strong>Done when:</strong> <code>POST /rooms</code> with no token returns
+            <code>401</code>, and with <code>Authorization: Bearer &lt;token&gt;</code> it creates a room.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - RolesGuard + @Roles for host-only delete</h2>
+        <ol>
+            <li>Create the decorator: <code>export const Roles = (...roles: string[]) =&gt; SetMetadata('roles',
+                    roles);</code></li>
+            <li>Create <code>RolesGuard</code> implementing <code>CanActivate</code>. Read the required roles with
+                <code>Reflector</code>; if none are set, allow; otherwise check <code>request.user.role</code>.</li>
+            <li>Apply both guards and the role to delete:</li>
+        </ol>
+        <pre>@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles('host')
+@Delete(':id')
+remove(@Param('id') id: string, @Req() req) {
+  // also verify req.user.userId owns this room (ownership ≠ role)
+  return this.rooms.remove(id, req.user.userId);
+}</pre>
+        <div class="done-when"><strong>Done when:</strong> a <code>guest</code> token gets <code>403</code> on delete,
+            a <code>host</code> token succeeds, and deleting a room you don't own is also rejected by the ownership
+            check.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 5 - Verify with curl</h2>
+        <pre># 1. log in, capture the token
+TOKEN=$(curl -s -X POST localhost:3000/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"ada@x.io","password":"secret"}' | jq -r .access_token)
+
+# 2. protected route without token → 401
+curl -i -X POST localhost:3000/rooms -H 'Content-Type: application/json' -d '{"name":"Standup"}'
+
+# 3. with token → 201
+curl -i -X POST localhost:3000/rooms \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"name":"Standup"}'</pre>
+        <div class="done-when"><strong>Done when:</strong> you have reproduced 401 (no token), 201 (valid token), and
+            403 (wrong role on delete) from the command line.</div>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Common auth mistakes (watch for these)</h2>
+        <ul>
+            <li><strong>Storing plaintext passwords</strong> — always hash with bcrypt; never log or return the
+                password field.</li>
+            <li><strong>Putting secrets in the JWT payload</strong> — the payload is readable by anyone. It is for
+                identity claims only.</li>
+            <li><strong>Confusing 401 and 403</strong> — no/invalid token is 401 (authn); valid token but wrong role is
+                403 (authz).</li>
+            <li><strong>Guard order</strong> — list <code>AuthGuard</code> before <code>RolesGuard</code> so
+                <code>request.user</code> exists when the role check runs.</li>
+            <li><strong>Role check without ownership check</strong> — "is a host" lets any host delete any room. Also
+                verify the caller owns this specific room.</li>
+        </ul>
+    </div>
+
+    <div class="lab-banner" style="margin-top: 2rem; background: #334155;">
+        <strong>Part B - Sprint planning warm-up</strong> - A quick ceremony rehearsal. The full ceremonies deep-dive
+        is Class 2.
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 6 - Assign roles</h2>
         <p>Split into groups of 3–4. Assign Scrum roles for this exercise:</p>
         <ul>
             <li><strong>Product Owner</strong> — reads the sprint goal and presents backlog items. Answers "why" questions about requirements.</li>
@@ -108,7 +217,7 @@
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 1 - Sprint goal</h2>
+        <h2>Exercise 7 - Sprint goal</h2>
         <p>The PO reads the sprint goal aloud:</p>
         <blockquote style="border-left: 4px solid #0ea5e9; padding: 0.5rem 1rem; margin: 1rem 0; background: #f0f9ff;">
             <strong>Sprint 1 Goal:</strong> "By the end of this sprint, a user can register, log in, and create a named meeting room via the meeting-app API."
@@ -122,7 +231,7 @@
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 2 - Estimate the backlog items (planning poker)</h2>
+        <h2>Exercise 8 - Estimate the backlog items (planning poker)</h2>
         <p>Use the Fibonacci scale: <strong>1, 2, 3, 5, 8, 13</strong>. For each item below, everyone picks a number simultaneously (use fingers, sticky notes, or a planning poker app). Discuss and re-vote if there is a large spread.</p>
     </div>
 
@@ -155,38 +264,17 @@
     </div>
 
     <div class="backlog-item">
-        <strong>Story 5: Get room by ID</strong>
-        As a user, I want to view a single room's details, so that I see capacity and description.
-        <br><em>AC: GET /rooms/:id returns room. 404 if not found.</em>
-        <br>Your estimate: ___
-    </div>
-
-    <div class="backlog-item">
-        <strong>Story 6: Delete a room (host only)</strong>
+        <strong>Story 5: Delete a room (host only)</strong>
         As a host, I want to delete a room I own, so that abandoned rooms don't clutter the list.
         <br><em>AC: DELETE /rooms/:id deletes the room. 403 if requester is not the host.</em>
         <br>Your estimate: ___
     </div>
 
-    <div class="backlog-item">
-        <strong>Story 7: Add CI with GitHub Actions</strong>
-        As a team, we want a GitHub Actions workflow that runs tests on every PR, so that broken code can't merge.
-        <br><em>AC: .github/workflows/ci.yml runs npm test on PRs to main. Status check required to merge.</em>
-        <br>Your estimate: ___
-    </div>
-
-    <div class="backlog-item">
-        <strong>Story 8: Update room details</strong>
-        As a host, I want to update my room's name or description, so that I can correct mistakes.
-        <br><em>AC: PATCH /rooms/:id updates name/description. 403 if not the host.</em>
-        <br>Your estimate: ___
-    </div>
-
     <div class="exercise-instructions">
-        <h2>Exercise 3 - Check capacity and commit to a sprint backlog</h2>
+        <h2>Exercise 9 - Check capacity and commit to a sprint backlog</h2>
         <p>Assume the team has <strong>2 developers</strong> for <strong>2 weeks</strong>. Typical capacity (at 70% focus factor): about <strong>20–24 story points</strong> per developer, so ~<strong>40–48 total</strong> for the team.</p>
         <ol>
-            <li>Add up your estimates for Stories 1–8</li>
+            <li>Add up your estimates for Stories 1–5</li>
             <li>Select stories to commit to, starting from Story 1 (highest priority first), until you reach your capacity</li>
             <li>Write your sprint backlog:</li>
         </ol>
@@ -204,7 +292,7 @@ Sprint Goal: "By end of sprint, user can register, log in, and create a room."</
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 4 - Create a GitHub Project board</h2>
+        <h2>Exercise 10 - Create a GitHub Project board</h2>
         <ol>
             <li>Go to your <code>meeting-app</code> GitHub repository</li>
             <li>Click <strong>Projects → New project → Board</strong></li>
@@ -227,7 +315,7 @@ Sprint Goal: "By end of sprint, user can register, log in, and create a room."</
     </div>
 
     <div class="practice-shell">
-        <strong>Retro (5 min):</strong> Run a 1-sentence per person "Start / Stop / Continue" on how the sprint planning exercise went.
+        <strong>Retro (5 min):</strong> Run a 1-sentence per person "Start / Stop / Continue" on how the lab went.
         <ul>
             <li><strong>Start:</strong> Something you'd do differently next time</li>
             <li><strong>Stop:</strong> Something that slowed you down</li>
