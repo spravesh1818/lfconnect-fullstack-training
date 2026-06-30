@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Week 10 Class 2 hands-on - Write a PRD and Create GitHub Issues</title>
+    <title>Week 10 Class 2 hands-on - Dockerize and Deploy meeting-app</title>
     <style>
         .lab-banner {
             font-family: system-ui, sans-serif;
@@ -51,7 +51,7 @@
             font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         }
 
-        .prd-template {
+        .file-template {
             font-family: system-ui, sans-serif;
             max-width: 60rem;
             margin: 0 auto 1rem;
@@ -87,136 +87,139 @@
     <div class="lab-banner">
         <strong>Week 10 - Class 2 Lab</strong> -
         <a href="../slides/session-2.html">Open session deck</a>
-        - Write a PRD and break it into GitHub Issues for the meeting app
+        - Dockerize the meeting-app backend and deploy the full stack to a public URL
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 0 - Read the feature brief</h2>
-        <p>You have been given the following one-paragraph feature description by your product manager:</p>
-        <blockquote style="border-left: 4px solid #8b5cf6; padding: 0.6rem 1rem; background: #faf5ff; margin: 0.75rem 0; border-radius: 0 6px 6px 0;">
-            "We need a chat feature for meeting rooms. When a host creates a room, participants who join should be able to send text messages visible to everyone in the room in real time. Messages should show the sender's display name and timestamp. Message history should be stored so that late joiners can scroll back and see what was discussed. We are not building video or audio in this feature."
-        </blockquote>
-        <p>Your job: turn this brief into a proper PRD.</p>
-        <div class="done-when"><strong>Done when:</strong> you have read the brief and can summarise it back in one sentence without looking.</div>
-    </div>
-
-    <div class="prd-template">
-        <strong>PRD Template — copy this into a GitHub Issue, Notion page, or Google Doc</strong>
-        <pre style="background:#1e3a5f; color:#e2e8f0; border-radius:6px; padding:0.75rem; margin-top:0.75rem; font-size:0.82rem;">
-# PRD: In-Room Text Chat
-
-## Overview
-[One paragraph — what is this feature?]
-
-## Problem statement
-[What problem does this solve? Whose pain is it?]
-
-## Goals
-- [ ] [Measurable outcome 1]
-- [ ] [Measurable outcome 2]
-
-## Non-goals
-- [What is explicitly NOT in scope?]
-- [e.g., "No voice or video in this PRD"]
-
-## User stories
-As a [role], I want [action], so that [benefit].
-1. As a participant, I want to...
-2. As a host, I want to...
-
-## Acceptance criteria
-[Given / When / Then for each story]
-
-## Out of scope / future work
-- [Deferred ideas]
-
-## Open questions
-- [Anything that needs a decision before work starts]</pre>
+        <h2>Goal</h2>
+        <p>By the end of this lab your NestJS <code>meeting-app</code> backend runs on <strong>Render</strong> and your React frontend runs on <strong>Netlify</strong> — both on the public internet. You will be able to send a friend a URL and have them use your app.</p>
+        <p><strong>Prerequisites:</strong> Docker Desktop installed and running, a GitHub account with your <code>meeting-app</code> repo pushed, and free accounts on <a href="https://render.com">render.com</a> and <a href="https://netlify.com">netlify.com</a> (both sign in with GitHub).</p>
+        <div class="done-when"><strong>Done when:</strong> you can open your Netlify URL on your phone (off Wi-Fi) and log in successfully against the live Render backend.</div>
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 1 - Write the PRD (15 minutes)</h2>
-        <p>Fill in the PRD template above for the in-room chat feature. Work individually or in pairs. Focus on:</p>
-        <ul>
-            <li><strong>At least 3 user stories</strong> (host, participant, late joiner)</li>
-            <li><strong>Clear acceptance criteria</strong> using Given / When / Then for at least 2 stories</li>
-            <li><strong>Non-goals</strong> — what are you explicitly not building?</li>
-            <li><strong>1–2 open questions</strong> — things that are unclear from the brief</li>
-        </ul>
-        <p>Example open questions:</p>
-        <ul>
-            <li>"How many messages should be stored per room? Is there a limit?"</li>
-            <li>"Should messages be deleted when the room is deleted?"</li>
-            <li>"Can participants see messages from before they joined?"</li>
-        </ul>
-        <div class="done-when"><strong>Done when:</strong> your PRD has an overview, 3+ user stories, acceptance criteria for 2+ stories, and at least 1 non-goal.</div>
-    </div>
-
-    <div class="exercise-instructions">
-        <h2>Exercise 2 - Break the PRD into GitHub Issues</h2>
-        <p>Go to your <code>meeting-app</code> GitHub repository → Issues → New Issue. Create <strong>4–6 issues</strong> covering the chat feature. Each issue should have:</p>
+        <h2>Exercise 1 - Make the backend deploy-ready</h2>
+        <p>Add a <code>Dockerfile</code> and <code>.dockerignore</code> to the root of <code>meeting-app</code>, and update <code>main.ts</code> to read the port from the environment.</p>
+        <ol>
+            <li>Create <code>Dockerfile</code> and <code>.dockerignore</code> from the templates below.</li>
+            <li>Edit <code>src/main.ts</code> so the last line listens on the host's port and all interfaces:</li>
+        </ol>
         <pre>
-Title: [type]: short, specific description
+// src/main.ts
+app.enableCors();
+await app.listen(process.env.PORT ?? 3000, '0.0.0.0');</pre>
+        <div class="done-when"><strong>Done when:</strong> both files exist at the repo root and <code>main.ts</code> uses <code>process.env.PORT</code> and <code>'0.0.0.0'</code>.</div>
+    </div>
 
-## User story
-As a..., I want..., so that...
+    <div class="file-template">
+        <strong>Dockerfile</strong> — copy to the root of <code>meeting-app</code>
+        <pre style="background:#1e3a5f; color:#e2e8f0; border-radius:6px; padding:0.75rem; margin-top:0.75rem; font-size:0.82rem;">
+# ---- Stage 1: build ----
+FROM node:20-slim AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-## Acceptance criteria
-- [ ] Given... When... Then...
-- [ ] Given... When... Then...
-
-## Technical notes
-(optional: data model hints, libs, approach)
-
-Labels: feat  size:M
-Milestone: Sprint 2
-</pre>
-        <p>Suggested issue breakdown for chat:</p>
-        <ul>
-            <li><code>feat: Message entity — store messages with roomId, userId, content, timestamp</code></li>
-            <li><code>feat: POST /rooms/:id/messages — send a message to a room</code></li>
-            <li><code>feat: GET /rooms/:id/messages — retrieve message history</code></li>
-            <li><code>feat: WebSocket gateway — real-time message broadcast to room participants</code></li>
-            <li><code>feat: Message DTO — validate content length, sanitise input</code></li>
-        </ul>
-        <div class="done-when"><strong>Done when:</strong> 4+ GitHub Issues exist with acceptance criteria and a label assigned.</div>
+# ---- Stage 2: runtime ----
+FROM node:20-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY --from=builder /app/dist ./dist
+EXPOSE 3000
+CMD ["node", "dist/main.js"]</pre>
+        <strong style="display:block; margin-top:0.75rem;">.dockerignore</strong>
+        <pre style="background:#1e3a5f; color:#e2e8f0; border-radius:6px; padding:0.75rem; margin-top:0.5rem; font-size:0.82rem;">
+node_modules
+dist
+.git
+.env
+*.log
+Dockerfile
+.dockerignore</pre>
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 3 - Create a Sprint 2 milestone and link issues</h2>
-        <ol>
-            <li>Go to <strong>Issues → Milestones → New milestone</strong></li>
-            <li>Name it <strong>"Sprint 2 - In-room chat"</strong> with a due date 2 weeks from today</li>
-            <li>Edit each chat issue and assign it to the Sprint 2 milestone</li>
-            <li>Open your GitHub Project board and add the issues to the <strong>Backlog</strong> column</li>
-        </ol>
-        <div class="done-when"><strong>Done when:</strong> all chat issues are linked to the Sprint 2 milestone and visible on the project board.</div>
+        <h2>Exercise 2 - Build and run the container locally</h2>
+        <p>Prove the image works <em>before</em> deploying. From the <code>meeting-app</code> folder:</p>
+        <pre>
+docker build -t meeting-api .
+docker run -p 3000:3000 --env-file .env meeting-api</pre>
+        <p>Open <code>http://localhost:3000</code> (or hit an endpoint like <code>http://localhost:3000/auth/login</code> with Postman). You should get the same responses as <code>npm run start</code> — but now from inside a container.</p>
+        <div class="done-when"><strong>Done when:</strong> <code>docker build</code> finishes with no errors and the container responds on <code>localhost:3000</code>.</div>
     </div>
 
     <div class="exercise-instructions">
-        <h2>Exercise 4 - Present your PRD (5 minutes, stretch)</h2>
-        <p>Take turns (2 minutes each group) presenting your PRD to the class. Cover:</p>
+        <h2>Exercise 3 - Deploy the backend to Render</h2>
         <ol>
-            <li>The problem statement in one sentence</li>
-            <li>Your 3 user stories (read them out)</li>
-            <li>One open question you identified</li>
+            <li>Commit and push the <code>Dockerfile</code>, <code>.dockerignore</code>, and <code>main.ts</code> changes to GitHub.</li>
+            <li>On Render: <strong>New → Web Service</strong> → connect your <code>meeting-app</code> repo.</li>
+            <li>Render auto-detects the Dockerfile and selects the <strong>Docker</strong> runtime. Choose the <strong>Free</strong> instance type.</li>
+            <li>Under <strong>Environment</strong>, add your secrets — <code>JWT_SECRET</code> and any others your app reads. <em>Do not add <code>PORT</code></em>; Render injects it.</li>
+            <li>Click <strong>Create Web Service</strong> and watch the build log. When it says <em>"Live"</em>, copy the <code>https://&lt;name&gt;.onrender.com</code> URL.</li>
         </ol>
-        <p>The rest of the class: listen for missing acceptance criteria, unclear non-goals, or open questions not raised.</p>
-        <div class="done-when"><strong>Done when:</strong> each group has presented and received at least one piece of feedback from the class.</div>
+        <div class="done-when"><strong>Done when:</strong> the Render dashboard shows "Live" and your <code>onrender.com</code> URL responds (allow ~40s for the first cold start).</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - Add a Postgres database</h2>
+        <ol>
+            <li>On Render: <strong>New → PostgreSQL</strong> → Free plan → Create.</li>
+            <li>Open the database and copy the <strong>Internal Database URL</strong>.</li>
+            <li>Go to your web service → Environment → set <code>DATABASE_URL</code> to that Internal URL → Save. Render redeploys automatically.</li>
+            <li>Check the logs to confirm the app connects to the database with no errors.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> the backend redeploys cleanly and an endpoint that touches the DB (e.g. register/login) works against the live URL.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 5 - Deploy the frontend to Netlify</h2>
+        <ol>
+            <li>On Netlify: <strong>Add new site → Import an existing project</strong> → pick your frontend repo.</li>
+            <li><strong>Build command:</strong> <code>npm run build</code> &nbsp; <strong>Publish directory:</strong> <code>dist</code> (Vite) or <code>build</code> (Create-React-App).</li>
+            <li>Under <strong>Environment variables</strong>, add <code>VITE_API_URL</code> = your Render backend URL.</li>
+            <li>Add a file <code>public/_redirects</code> to your frontend repo with this one line, then push:</li>
+        </ol>
+        <pre>
+/*    /index.html   200</pre>
+        <p>Make sure your frontend reads the API base from the env var, not a hard-coded localhost:</p>
+        <pre>
+const API = import.meta.env.VITE_API_URL;</pre>
+        <div class="done-when"><strong>Done when:</strong> your <code>your-site.netlify.app</code> URL loads the app and refreshing on an inner route does not 404.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 6 - Connect them with CORS, end to end</h2>
+        <ol>
+            <li>In <code>meeting-app</code> <code>src/main.ts</code>, allow your Netlify origin:</li>
+        </ol>
+        <pre>
+app.enableCors({
+  origin: 'https://your-site.netlify.app',
+  credentials: true,
+});</pre>
+        <ol start="2">
+            <li>Commit and push — Render redeploys the backend.</li>
+            <li>Open your Netlify site, register/log in, and perform a real action (create a room). Watch it hit the live backend in the Network tab.</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> you complete a full login + action from the deployed frontend with no CORS errors in the console.</div>
     </div>
 
     <div class="troubleshooting">
-        <h2>Common PRD mistakes to avoid</h2>
+        <h2>Common deployment problems</h2>
         <ul>
-            <li><strong>Solution-first writing</strong> — "We will use WebSockets" is implementation. The PRD should say "Messages appear in real time" — the how is for engineers to decide.</li>
-            <li><strong>Missing the "so that"</strong> — a user story without a benefit is just a task. The benefit tells you how important the story is.</li>
-            <li><strong>Acceptance criteria that are vague</strong> — "messages appear" is not testable. "Messages from the last 100 exchanges load within 2s" is testable.</li>
-            <li><strong>No non-goals</strong> — without explicit scope limits, every meeting becomes a negotiation about what's included.</li>
+            <li><strong>App builds but Render shows "no open ports detected"</strong> — you hard-coded the port. Use <code>process.env.PORT</code> and bind to <code>'0.0.0.0'</code>.</li>
+            <li><strong>"Blocked by CORS policy" in the browser, but Postman works</strong> — Postman ignores CORS. Enable CORS on the backend for your exact Netlify origin (no trailing slash), then redeploy.</li>
+            <li><strong>Refresh on <code>/dashboard</code> gives 404 on Netlify</strong> — missing <code>_redirects</code> file in <code>public/</code>, or wrong publish directory.</li>
+            <li><strong>First request after a break is very slow</strong> — free Render services spin down when idle; that's an expected cold start, not a bug.</li>
+            <li><strong>Frontend still calls localhost in production</strong> — you didn't read <code>VITE_API_URL</code>, or you set it after the build (env vars must be present at build time, so trigger a redeploy).</li>
         </ul>
     </div>
 
     <div class="practice-shell">
-        <strong>Practice:</strong> Swap PRDs with another group and do a "PRD review" — add comments or questions to their document, just like a code review but for requirements.
+        <strong>Practice / stretch:</strong> Add a custom subdomain on Netlify, or set up a UptimeRobot ping every 10 minutes to keep your free Render backend warm. Share your live URL in the class channel and try each other's apps.
         <p style="margin-top: 0.75rem;">
             <strong>Next:</strong> <a href="class-3-handson.html">Class 3 hands-on</a> — feature branch, PR, and GitHub Actions CI.
         </p>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 10 Class 4 hands-on - Write a PRD and Create GitHub Issues</title>
+    <style>
+        .lab-banner {
+            font-family: system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1.5rem;
+        }
+
+        .lab-banner a {
+            color: #7dd3fc;
+        }
+
+        .exercise-instructions {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 1px dashed #64748b;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .exercise-instructions h2 {
+            margin-top: 0;
+        }
+
+        .exercise-instructions .done-when {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .exercise-instructions pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .exercise-instructions code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .prd-template {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 0 auto 1rem;
+            padding: 1rem 1.25rem;
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            background: #f0f9ff;
+        }
+
+        .troubleshooting {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fff1f2;
+        }
+
+        .practice-shell {
+            font-family: system-ui, sans-serif;
+            max-width: 60rem;
+            margin: 1rem auto 2rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-banner">
+        <strong>Week 10 - Class 4 Lab</strong> -
+        <a href="../slides/session-4.html">Open session deck</a>
+        - Write a PRD and break it into GitHub Issues for the meeting app
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 0 - Read the feature brief</h2>
+        <p>You have been given the following one-paragraph feature description by your product manager:</p>
+        <blockquote style="border-left: 4px solid #8b5cf6; padding: 0.6rem 1rem; background: #faf5ff; margin: 0.75rem 0; border-radius: 0 6px 6px 0;">
+            "We need a chat feature for meeting rooms. When a host creates a room, participants who join should be able to send text messages visible to everyone in the room in real time. Messages should show the sender's display name and timestamp. Message history should be stored so that late joiners can scroll back and see what was discussed. We are not building video or audio in this feature."
+        </blockquote>
+        <p>Your job: turn this brief into a proper PRD.</p>
+        <div class="done-when"><strong>Done when:</strong> you have read the brief and can summarise it back in one sentence without looking.</div>
+    </div>
+
+    <div class="prd-template">
+        <strong>PRD Template — copy this into a GitHub Issue, Notion page, or Google Doc</strong>
+        <pre style="background:#1e3a5f; color:#e2e8f0; border-radius:6px; padding:0.75rem; margin-top:0.75rem; font-size:0.82rem;">
+# PRD: In-Room Text Chat
+
+## Overview
+[One paragraph — what is this feature?]
+
+## Problem statement
+[What problem does this solve? Whose pain is it?]
+
+## Goals
+- [ ] [Measurable outcome 1]
+- [ ] [Measurable outcome 2]
+
+## Non-goals
+- [What is explicitly NOT in scope?]
+- [e.g., "No voice or video in this PRD"]
+
+## User stories
+As a [role], I want [action], so that [benefit].
+1. As a participant, I want to...
+2. As a host, I want to...
+
+## Acceptance criteria
+[Given / When / Then for each story]
+
+## Out of scope / future work
+- [Deferred ideas]
+
+## Open questions
+- [Anything that needs a decision before work starts]</pre>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 1 - Write the PRD (15 minutes)</h2>
+        <p>Fill in the PRD template above for the in-room chat feature. Work individually or in pairs. Focus on:</p>
+        <ul>
+            <li><strong>At least 3 user stories</strong> (host, participant, late joiner)</li>
+            <li><strong>Clear acceptance criteria</strong> using Given / When / Then for at least 2 stories</li>
+            <li><strong>Non-goals</strong> — what are you explicitly not building?</li>
+            <li><strong>1–2 open questions</strong> — things that are unclear from the brief</li>
+        </ul>
+        <p>Example open questions:</p>
+        <ul>
+            <li>"How many messages should be stored per room? Is there a limit?"</li>
+            <li>"Should messages be deleted when the room is deleted?"</li>
+            <li>"Can participants see messages from before they joined?"</li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> your PRD has an overview, 3+ user stories, acceptance criteria for 2+ stories, and at least 1 non-goal.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 2 - Break the PRD into GitHub Issues</h2>
+        <p>Go to your <code>meeting-app</code> GitHub repository → Issues → New Issue. Create <strong>4–6 issues</strong> covering the chat feature. Each issue should have:</p>
+        <pre>
+Title: [type]: short, specific description
+
+## User story
+As a..., I want..., so that...
+
+## Acceptance criteria
+- [ ] Given... When... Then...
+- [ ] Given... When... Then...
+
+## Technical notes
+(optional: data model hints, libs, approach)
+
+Labels: feat  size:M
+Milestone: Sprint 2
+</pre>
+        <p>Suggested issue breakdown for chat:</p>
+        <ul>
+            <li><code>feat: Message entity — store messages with roomId, userId, content, timestamp</code></li>
+            <li><code>feat: POST /rooms/:id/messages — send a message to a room</code></li>
+            <li><code>feat: GET /rooms/:id/messages — retrieve message history</code></li>
+            <li><code>feat: WebSocket gateway — real-time message broadcast to room participants</code></li>
+            <li><code>feat: Message DTO — validate content length, sanitise input</code></li>
+        </ul>
+        <div class="done-when"><strong>Done when:</strong> 4+ GitHub Issues exist with acceptance criteria and a label assigned.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 3 - Create a Sprint 2 milestone and link issues</h2>
+        <ol>
+            <li>Go to <strong>Issues → Milestones → New milestone</strong></li>
+            <li>Name it <strong>"Sprint 2 - In-room chat"</strong> with a due date 2 weeks from today</li>
+            <li>Edit each chat issue and assign it to the Sprint 2 milestone</li>
+            <li>Open your GitHub Project board and add the issues to the <strong>Backlog</strong> column</li>
+        </ol>
+        <div class="done-when"><strong>Done when:</strong> all chat issues are linked to the Sprint 2 milestone and visible on the project board.</div>
+    </div>
+
+    <div class="exercise-instructions">
+        <h2>Exercise 4 - Present your PRD (5 minutes, stretch)</h2>
+        <p>Take turns (2 minutes each group) presenting your PRD to the class. Cover:</p>
+        <ol>
+            <li>The problem statement in one sentence</li>
+            <li>Your 3 user stories (read them out)</li>
+            <li>One open question you identified</li>
+        </ol>
+        <p>The rest of the class: listen for missing acceptance criteria, unclear non-goals, or open questions not raised.</p>
+        <div class="done-when"><strong>Done when:</strong> each group has presented and received at least one piece of feedback from the class.</div>
+    </div>
+
+    <div class="troubleshooting">
+        <h2>Common PRD mistakes to avoid</h2>
+        <ul>
+            <li><strong>Solution-first writing</strong> — "We will use WebSockets" is implementation. The PRD should say "Messages appear in real time" — the how is for engineers to decide.</li>
+            <li><strong>Missing the "so that"</strong> — a user story without a benefit is just a task. The benefit tells you how important the story is.</li>
+            <li><strong>Acceptance criteria that are vague</strong> — "messages appear" is not testable. "Messages from the last 100 exchanges load within 2s" is testable.</li>
+            <li><strong>No non-goals</strong> — without explicit scope limits, every meeting becomes a negotiation about what's included.</li>
+        </ul>
+    </div>
+
+    <div class="practice-shell">
+        <strong>Practice:</strong> Swap PRDs with another group and do a "PRD review" — add comments or questions to their document, just like a code review but for requirements.
+        <p style="margin-top: 0.75rem;">
+            <strong>Next:</strong> start the <a href="../assignment/week-10-assignment.html">Week 10 assignment</a> — PRD, sprint backlog, and Git workflow.
+        </p>
+    </div>
+</body>
+
+</html>
